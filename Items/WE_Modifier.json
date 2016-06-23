@@ -1,0 +1,146 @@
+{
+    "count": 1,
+    "name": "generatedsword",
+    "parameters": {
+        "altStances": {
+            "cooldown": {
+                "armAngle": 0,
+                "duration": 0.2,
+                "handPosition": [
+                    -10,
+                    -7.5
+                ],
+                "statusEffects": [],
+                "swordAngle": -45,
+                "twoHanded": true
+            },
+            "directional": true,
+            "idle": {
+                "armAngle": 0,
+                "duration": 0.1,
+                "handPosition": [
+                    -10,
+                    -7.5
+                ],
+                "swordAngle": -45,
+                "twoHanded": true
+            },
+            "projectile": {
+                "level": 0,
+                "power": 0
+            },
+            "projectileType": "invisibleprojectile",
+            "projectileTypes": [
+                "invisibleprojectile"
+            ],
+            "windup": {
+                "armAngle": 0,
+                "duration": 0,
+                "handPosition": [
+                    -10,
+                    -7.5
+                ],
+                "statusEffects": [],
+                "swordAngle": -45,
+                "twoHanded": true
+            }
+        },
+        "drawables": [
+            {
+              "image": "/objects/outpost/customsign/signplaceholder.png?replace;01000201=1E1E1EFF;02000101=131313FF;02000201=575757FF;02000301=1E1E1EFF;03000101=131313FF;03000201=333333FF;03000301=5A5A5AFF;03000401=1E1E1EFF;04000201=131313FF;04000301=333333FF;04000401=5E5E5EFF;04000501=1E1E1EFF;05000301=131313FF;05000401=333333FF;05000501=626262FF;05000601=1E1E1EFF;06000401=131313FF;06000501=333333FF;06000601=676767FF;06000701=1E1E1EFF;07000501=131313FF;07000601=333333FF;07000701=6C6C6CFF;07000801=1E1E1EFF;08000601=131313FF;08000701=333333FF;08000801=707070FF;09000701=131313FF;09000801=333333FF;10000801=131313FF",
+              "position": [
+                0,
+                0
+              ]
+            },
+            {
+              "image": "/objects/outpost/customsign/signplaceholder.png?replace;04000201=E0D79EAE;05000101=E0D79EAE;05000201=C7B445E4;05000301=E0D79EAE;05000501=E0D79EAE;06000201=E0D79EAE;06000401=E0D79EAE;06000501=C7B445E4;06000601=E0D79EAE;07000301=E0D79EAE;07000401=C7B445E4;07000501=EEDD66FF;07000601=C7B445E4;07000701=E0D79EAE;08000101=1E1E1EFF;08000401=E0D79EAE;08000501=C7B445E4;08000601=E0D79EAE;09000101=747474FF;09000201=1E1E1EFF;09000501=E0D79EAE;10000101=333333FF;10000201=767676FF;10000301=1E1E1EFF;11000101=131313FF;11000201=333333FF;11000301=F4F4F4FF;11000401=ABABABFF;11000701=C7B445E4;12000201=8D8D8DFF;12000301=BFBFBFFF;12000401=F4F4F4FF;12000501=ABABABFF;13000301=8D8D8DFF;13000401=BFBFBFFF;13000501=F4F4F4FF;13000601=ABABABFF;14000401=8D8D8DFF;14000501=BFBFBFFF;15000201=C7B445E4",
+              "position": [
+                0,
+                8
+              ]
+            }
+        ],
+        "fireAfterWindup": false,
+        "firePosition": [
+            0,
+            0
+        ],
+        "fireTime": 1000.0,
+        "generated": true,
+        "inventoryIcon": [
+            {
+              "image": "/objects/outpost/customsign/signplaceholder.png?replace;09000201=1E1E1EFF;10000101=131313FF;10000201=575757FF;10000301=1E1E1EFF;11000101=131313FF;11000201=333333FF;11000301=5A5A5AFF;11000401=1E1E1EFF;12000201=131313FF;12000301=333333FF;12000401=5E5E5EFF;12000501=1E1E1EFF;13000301=131313FF;13000401=333333FF;13000501=626262FF;13000601=1E1E1EFF;14000401=131313FF;14000501=333333FF;14000601=676767FF;14000701=1E1E1EFF;15000501=131313FF;15000601=333333FF;15000701=6C6C6CFF;15000801=1E1E1EFF;16000601=131313FF;16000701=333333FF;16000801=707070FF;17000701=131313FF;17000801=333333FF;18000801=131313FF",
+              "position": [
+                0,
+                0
+              ]
+            },
+            {
+              "image": "/objects/outpost/customsign/signplaceholder.png?replace;12000201=E0D79EAE;13000101=E0D79EAE;13000201=C7B445E4;13000301=E0D79EAE;13000501=E0D79EAE;14000201=E0D79EAE;14000401=E0D79EAE;14000501=C7B445E4;14000601=E0D79EAE;15000301=E0D79EAE;15000401=C7B445E4;15000501=EEDD66FF;15000601=C7B445E4;15000701=E0D79EAE;16000101=1E1E1EFF;16000401=E0D79EAE;16000501=C7B445E4;16000601=E0D79EAE;17000101=747474FF;17000201=1E1E1EFF;17000501=E0D79EAE;18000101=333333FF;18000201=767676FF;18000301=1E1E1EFF;19000101=131313FF;19000201=333333FF;19000301=F4F4F4FF;19000401=ABABABFF;19000701=C7B445E4;20000201=8D8D8DFF;20000301=BFBFBFFF;20000401=F4F4F4FF;20000501=ABABABFF;21000301=8D8D8DFF;21000401=BFBFBFFF;21000501=F4F4F4FF;21000601=ABABABFF;22000401=8D8D8DFF;22000501=BFBFBFFF;23000201=C7B445E4",
+              "position": [
+                0,
+                8
+              ]
+            }
+        ],
+        "itemName": "generatedsword",
+        "level": 1,
+        "parrySound": "",
+        "primaryStances": {
+            "cooldown": {
+                "armAngle": 0,
+                "duration": 0.2,
+                "handPosition": [
+                    -10,
+                    -7.5
+                ],
+                "statusEffects": [],
+                "swordAngle": -45,
+                "twoHanded": true
+            },
+            "directional": true,
+            "idle": {
+                "armAngle": 0,
+                "duration": 0.1,
+                "handPosition": [
+                    -10,
+                    -7.5
+                ],
+                "swordAngle": -45,
+                "twoHanded": true
+            },
+            "projectile": {
+                "level": 0,
+                "power": 0
+            },
+            "projectileType": "invisibleprojectile",
+            "projectileTypes": [
+                "invisibleprojectile"
+            ],
+            "windup": {
+                "armAngle": 0,
+                "duration": 0,
+                "handPosition": [
+                    -10,
+                    -7.5
+                ],
+                "statusEffects": [],
+                "swordAngle": -45,
+                "twoHanded": true
+            }
+        },
+        "rarity": "legendary",
+        "shortdescription": "WE_Modifier",
+        "soundEffect": {
+            "fireSound": [
+                {
+                    "file": "/sfx/instruments/drumkit/mute.ogg"
+                }
+            ]
+        },
+        "tooltipKind": "sword",
+        "twoHanded": true,
+        "weaponType": "Avian Spear"
+    }
+}
