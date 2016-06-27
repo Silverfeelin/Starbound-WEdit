@@ -1,13 +1,13 @@
 --[[
   WEdit library (http://silvermods.com/WEdit/)
-  
+
   The bresemham function falls under a different license, refer to it's documentation for licensing information.
   Hit ALT + 0 in NP++ to fold all, and get an overview of the contents of this script.
 ]]
 
 --[[
   WEdit table, variables and functions accessed with 'wedit.' are stored here.
-  Variables in wedit.user are used over wedit.default; please do not touch wedit.default.
+  Variables in wedit.user are prioritized over wedit.default; please do not touch wedit.default.
 ]]
 wedit = {
   default = {
@@ -696,7 +696,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
 
     -- Set undefined containerLoot option to true if containers with items have been found.
     if copy.options.containerLoot == nil and object.items then copy.options.containerLoot = true end
-
+    
     table.insert(copy.objects, object)
   end
 

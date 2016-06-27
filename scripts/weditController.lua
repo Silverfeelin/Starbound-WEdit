@@ -525,4 +525,22 @@ function weditController.WE_Hydrator()
   -- Scroll available liquids
 end
 
+function weditController.WE_ItemBox()
+  wedit.info("^shadow;^orange;WEdit: Item Box")
+  wedit.info("^shadow;^yellow;Primary Fire: Spawn Tools.", {0,-1})
+
+  if not weditController.fireLock and weditController.primaryFire then
+    weditController.fireLock = true
+
+    local items = root.assetJson("/weditItems/items.json")
+
+    for i=1,#items do
+      world.spawnItem("silverore", mcontroller.position(), 1, items[i])
+    end
+
+  end
+end
+
 sb.logInfo("WEdit: Loaded!")
+
+wedit.logENV()
