@@ -8,11 +8,21 @@
 ]]
 
 require "/scripts/wedit.lua"
+require "/scripts/keybinds.lua"
 
 --[[
   Controller table, variables accessed with 'weditController.' are stored here..
 ]]
 weditController = { }
+
+--- Noclip parameters.
+weditController.useNoclip = true
+-- Bind can be any Keybinds compatible bind string.
+weditController.noclipBind = "g"
+-- Movement speed per tick, in blocks.
+weditController.noclipSpeed = 0.75
+-- Default noclip status (on tech selection or character load)
+weditController.noclipping = false
 
 -- Indices for selected materials, used by the Modifier and Hydrator.
 weditController.modIndex = 39
@@ -45,7 +55,6 @@ weditController.selectedBlock = "dirt"
 
 -- Table used to store copies of areas prior to commands such as fill.
 weditController.backup = {}
-
 
 -- Table used to display information in certain colors. { title & operations, description, variables }
 weditController.colors = { "^orange;", "^yellow;", "^red;"}
@@ -104,6 +113,16 @@ function weditController.update(args)
   weditController.primaryFire = args.moves["primaryFire"]
   weditController.altFire = args.moves["altFire"]
 
+  if weditController.noclipping then
+    mcontroller.controlParameters({
+      collisionEnabled = false,
+      standingPoly = {},
+      crouchingPoly = {},
+      mass = 0,
+      runSpeed = 0,
+      walkSpeed = 0
+    })
+  end
   -- Removes the lock on your fire keys (LMB/RMB) if both have been released.
   if weditController.fireLock and not weditController.primaryFire and not weditController.altFire then
     weditController.fireLock = false
@@ -133,6 +152,35 @@ function weditController.update(args)
       wedit.debugText("WEdit Paste Selection", {weditController.selection[1][1], top}, "cyan")
     end
   end
+end
+
+-- Set up noclip using Keybinds.
+Bind.create(weditController.noclipBind, function()
+  weditController.noclipping = not weditController.noclipping
+  if weditController.noclipping then
+    tech.setParentState("fly")
+    for i,v in ipairs(weditController.noclipBinds) do
+      v:rebind()
+    end
+  else
+    tech.setParentState()
+    for i,v in ipairs(weditController.noclipBinds) do
+      v:unbind()
+    end
+  end
+end)
+
+local adjustPosition = function(offset)
+  local pos = mcontroller.position()
+  mcontroller.setPosition({pos[1] + offset[1], pos[2] + offset[2]})
+end
+weditController.noclipBinds = {}
+table.insert(weditController.noclipBinds, Bind.create("up", function() adjustPosition({0,weditController.noclipSpeed}) end, true))
+table.insert(weditController.noclipBinds, Bind.create("down", function() adjustPosition({0,-weditController.noclipSpeed}) end, true))
+table.insert(weditController.noclipBinds, Bind.create("left", function() adjustPosition({-weditController.noclipSpeed,0}) end, true))
+table.insert(weditController.noclipBinds, Bind.create("right", function() adjustPosition({weditController.noclipSpeed,0}) end, true))
+for i,v in ipairs(weditController.noclipBinds) do
+  v:unbind()
 end
 
 -- Alter update callback.
@@ -525,6 +573,10 @@ function weditController.WE_Hydrator()
   -- Scroll available liquids
 end
 
+--[[
+  Function to obtain all WEdit Tools.
+  Uses weditController.colors to color the names and descriptions of the tools.
+]]
 function weditController.WE_ItemBox()
   wedit.info("^shadow;^orange;WEdit: Item Box")
   wedit.info("^shadow;^yellow;Primary Fire: Spawn Tools.", {0,-1})
@@ -535,12 +587,11 @@ function weditController.WE_ItemBox()
     local items = root.assetJson("/weditItems/items.json")
 
     for i=1,#items do
+      items[i].category = items[i].category:gsub("%^orange;", weditController.colors[1])
+      items[i].description = items[i].description:gsub("%^yellow;", weditController.colors[2])
       world.spawnItem("silverore", mcontroller.position(), 1, items[i])
     end
-
   end
 end
 
 sb.logInfo("WEdit: Loaded!")
-
-wedit.logENV()
