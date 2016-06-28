@@ -736,7 +736,7 @@ function wedit.paste(copy, position)
   if copy.options.background then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      task.parameters.message = string.format("Breaking background blocks (%s/%s).", task.progress - 1, 3)
+      task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, 3)
       if task.progress <= 3 then
         wedit.breakBlocks(position, topRight, "background")
       else
@@ -754,7 +754,7 @@ function wedit.paste(copy, position)
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      task.parameters.message = string.format("Placing background and placeholder blocks (%s/%s).", task.progress - 1, iterations)
+      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, iterations)
 
       if task.progress > iterations then
         task:nextStage()
@@ -773,9 +773,11 @@ function wedit.paste(copy, position)
             if copy.options.foreground then
               -- Add a placeholder that reminds us later to remove the dirt placed here temporarily.
               if not paste.placeholders[i+1] then paste.placeholders[i+1] = {} end
-              paste.placeholders[i+1][j+1] = true
+              if not world.material(pos, "background") then
+                paste.placeholders[i+1][j+1] = true
 
-              world.placeMaterial(pos, "background", "dirt", 0, true)
+                world.placeMaterial(pos, "background", "dirt", 0, true)
+              end
             end
           end
         end
@@ -790,7 +792,7 @@ function wedit.paste(copy, position)
     -- Stage three: If copy has foreground, break it.
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      task.parameters.message = string.format("Breaking foreground blocks (%s/%s).", task.progress - 1, 3)
+      task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, 3)
 
       if task.progress <= 3 then
         wedit.breakBlocks(position, topRight, "foreground")
@@ -805,7 +807,7 @@ function wedit.paste(copy, position)
     -- Stage four: If copy has foreground, place it.
     table.insert(stages, function(task)
 
-      task.parameters.message = string.format("Placing foreground blocks.")
+      task.parameters.message = string.format("^shadow;Placing foreground blocks.")
 
       for i=0, copy.size[1]-1 do
         for j=0, copy.size[2]-1 do
@@ -831,7 +833,7 @@ function wedit.paste(copy, position)
   if copy.options.liquids then
     table.insert(stages, function(task)
 
-      task.parameters.message = string.format("Placing liquids.")
+      task.parameters.message = string.format("^shadow;Placing liquids.")
 
       for i=0,copy.size[1]-1 do
         for j=0,copy.size[2]-1 do
@@ -854,7 +856,7 @@ function wedit.paste(copy, position)
   -- Stage six: If paste has foreground, and thus may need placeholders, remove the placeholders.
   if copy.options.foreground then
     table.insert(stages, function(task)
-      task.parameters.message = "Removing placeholder blocks."
+      task.parameters.message = "^shadow;Removing placeholder blocks."
       for i,v in pairs(paste.placeholders) do
         for j,k in pairs(v) do
           local pos = {position[1] - 0.5 + i, position[2] - 0.5 + j}
@@ -873,7 +875,7 @@ function wedit.paste(copy, position)
     ---
     -- Stage seven: If copy has objects, place them.
     table.insert(stages, function(task)
-      task.parameters.message = "Placing objects."
+      task.parameters.message = "^shadow;Placing objects."
       local centerOffset = copy.size[1] / 2
       for _,v in pairs(copy.objects) do
         -- TODO: Object Direction
@@ -891,7 +893,7 @@ function wedit.paste(copy, position)
     -- Stage eight: If copy has containers, place items in them.
     if copy.options.containerLoot then
       table.insert(stages, function(task)
-        task.parameters.message = "Placing items in containers."
+        task.parameters.message = "^shadow;Placing items in containers."
         if hasItems then
           for i,v in pairs(copy.objects) do
             if v.items then
@@ -915,7 +917,7 @@ function wedit.paste(copy, position)
   -- Stage nine: If copy has matmods, place them
   if copy.options.foregroundMods or copy.options.backgroundMods then
     table.insert(stages, function(task)
-      task.parameters.message = "Placing material mods."
+      task.parameters.message = "^shadow;Placing material mods."
       for i=0, copy.size[1]-1 do
         for j=0, copy.size[2]-1 do
           local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
@@ -940,7 +942,7 @@ function wedit.paste(copy, position)
   ---
   -- Stage ten: Done
   table.insert(stages, function(task)
-    task.parameters.message = "Done pasting!"
+    task.parameters.message = "^shadow;Done pasting!"
     task:complete()
   end)
   -- /Stage ten

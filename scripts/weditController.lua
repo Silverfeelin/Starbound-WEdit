@@ -63,6 +63,11 @@ wedit.colors = weditController.colors
 -- Table used to store the coordinates at which to display the config interface.
 weditController.configLocation = {}
 
+----------------------------------------
+--          Useful functions          --
+-- Primary for use within this script --
+----------------------------------------
+
 --[[
   Returns the currently selected matmod.
   @return - Selected matmod.
@@ -106,6 +111,18 @@ function weditController.updateColor(layer)
 end
 
 --[[
+  Returns a value indicating whether there's currently a valid selection.
+  Does this by confirming both the bottom left and top right point are set.
+]]
+function weditController.validSelection()
+  return next(weditController.selection[1]) and next(weditController.selection[2]) and true or false
+end
+
+---------------------
+-- Update Callback --
+---------------------
+
+--[[
   Update function, called in the main update callback.
 ]]
 function weditController.update(args)
@@ -143,9 +160,9 @@ function weditController.update(args)
   end
 
   -- Draw selections if they have been made.
-  if weditController.selection[1] and weditController.selection[2] and weditController.selection[1][1] and weditController.selection[2][1] then
+  if weditController.validSelection() then
     wedit.debugRectangle(weditController.selection[1], weditController.selection[2])
-    wedit.debugText(string.format("WEdit Selection (%s,%s)", weditController.selection[2][1] - weditController.selection[1][1], weditController.selection[2][2] - weditController.selection[1][2]), {weditController.selection[1][1], weditController.selection[2][2]}, "green")
+    wedit.debugText(string.format("^shadow;WEdit Selection (%s,%s)", weditController.selection[2][1] - weditController.selection[1][1], weditController.selection[2][2] - weditController.selection[1][2]), {weditController.selection[1][1], weditController.selection[2][2]}, "green")
 
     if weditController.copyTable and weditController.copyTable.size and (primaryType == "WE_Select" or primaryType == "WE_Stamp") then
       local copy = weditController.copyTable
@@ -153,7 +170,7 @@ function weditController.update(args)
       wedit.debugRectangle(weditController.selection[1], {weditController.selection[1][1] + copy.size[1], top}, "cyan")
 
       if top == weditController.selection[2][2] then top = weditController.selection[2][2] + 1 end
-      wedit.debugText("WEdit Paste Selection", {weditController.selection[1][1], top}, "cyan")
+      wedit.debugText("^shadow;WEdit Paste Selection", {weditController.selection[1][1], top}, "cyan")
     end
   end
 end
@@ -194,13 +211,17 @@ update = function(args)
   weditController.update(args)
 end
 
+-----------------
+-- WEdit Tools --
+-----------------
+
 --[[
   Sets or updates the selection area.
 ]]
 function weditController.WE_Select()
   wedit.info("^shadow;^orange;WEdit: Selection Tool")
 
-  if weditController.selection[1][1] and weditController.selection[2][1] then
+  if weditController.validSelection() then
     wedit.info("^shadow;^yellow;Alt Fire: Remove selection.", {0,-2})
     wedit.info("^shadow;^yellow;Current Selection: ^red;(" .. (weditController.selection[2][1] - weditController.selection[1][1]) .. "," .. (weditController.selection[2][2] - weditController.selection[1][2]) .. ")^yellow;.", {0,-3})
   end
@@ -279,20 +300,20 @@ function weditController.WE_Erase()
   wedit.info("^shadow;^yellow;Primary Fire: foreground.", {0,-2})
   wedit.info("^shadow;^yellow;Alt Fire: background.", {0,-3})
 
-  if not weditController.fireLock and weditController.selection[1][1] and weditController.selection[2][1] then
+  if not weditController.fireLock and weditController.validSelection() then
     if weditController.primaryFire then
       -- Remove Foreground
       weditController.fireLock = true
       local backup = wedit.breakBlocks(weditController.selection[1], weditController.selection[2], "foreground")
 
-      if backup then weditController.backup[#weditController.backup + 1] = backup end
+      if backup then table.insert(weditController.backup, backup) end
 
     elseif weditController.altFire then
       -- Remove Background
       weditController.fireLock = true
       local backup = wedit.breakBlocks(weditController.selection[1], weditController.selection[2], "background")
 
-      if backup then weditController.backup[#weditController.backup + 1] = backup end
+      if backup then table.insert(weditController.backup, backup) end
     end
   end
 end
@@ -302,18 +323,35 @@ end
   LMB Undoes the last remembered action. RMB removes the last remembered action, allowing for multiple undo steps.
 ]]
 function weditController.WE_Undo()
-  --wedit.info("^shadow;^orange;WEdit: Undo Tool (EXPERIMENTAL)")
-  --wedit.info("^shadow;^yellow;Primary Fire: Undo the last generic action.", {0,-1})
-  --wedit.info("^shadow;^yellow;Alt Fire: Forget the last undo (go back one more step).", {0,-2})
-  --wedit.info("^shadow;^yellow;Only works on Fill and Erase functions.", {0,-3})
-  --wedit.info(string.format("^shadow;^yellow;Undo step: ^red;%s^yellow;.", #weditController.backup), {0,-4})
-  wedit.info("^shadow;^orange;WEdit: Undo Tool")
-  wedit.info("^shadow;^yellow;Some rather cheerful looking giraffes", {0,-1})
-  wedit.info("^shadow;^yellow;have pressed some red buttons!", {0,-2})
-  wedit.info("^shadow;^yellow;This tool currently does not work.", {0,-3})
+  local backupSize = #weditController.backup
+  wedit.info("^shadow;^orange;WEdit: Undo Tool (EXPERIMENTAL)")
+  wedit.info("^shadow;^yellow;Undoes previous action (Fill, Break, Paste, Replace).", {0,-1})
+  wedit.info("^shadow;^yellow;Primary Fire: Undo last action.", {0,-2})
+  wedit.info("^shadow;^yellow;Alt Fire: Forget last undo (go back a step).", {0,-3})
+  wedit.info("^shadow;^yellow;Undo Count: " .. backupSize .. ".", {0,-4})
 
-  -- TODO: Implement
-  --error("Call wedit.paste using a copy table returned by the function called you wish to undo.")
+  if not weditController.fireLock then
+    if weditController.primaryFire then
+      -- Undo
+      weditController.fireLock = true
+      if (backupSize > 0) then
+        wedit.paste(weditController.backup[backupSize], weditController.backup[backupSize].origin)
+      end
+    elseif weditController.altFire then
+      -- Remove Undo
+      weditController.fireLock = true
+      table.remove(weditController.backup, backupSize)
+    end
+  end
+
+  -- Show undo area.
+  if backupSize > 0 then
+    local backup = weditController.backup[backupSize]
+    local top = backup.origin[2] + backup.size[2]
+    if weditController.validSelection() and math.ceil(weditController.selection[2][2]) == math.ceil(top) then top = top + 1 end
+    wedit.debugText("^shadow;WEdit Undo Position", {backup.origin[1], top}, "#FFBF87")
+    wedit.debugRectangle(backup.origin, {backup.origin[1] + backup.size[1], backup.origin[2] + backup.size[2]}, "#FFBF87")
+  end
 end
 
 --[[
@@ -346,19 +384,19 @@ function weditController.WE_Fill()
   wedit.info("^shadow;^yellow;Alt Fire: background.", {0,-3})
   wedit.info("^shadow;^yellow;Current Block: ^red;" .. weditController.selectedBlockToString() .. "^yellow;.", {0,-4})
 
-  if not weditController.fireLock and weditController.selection[1][1] then
+  if not weditController.fireLock and weditController.validSelection() then
     if weditController.primaryFire then
       weditController.fireLock = true
 
       local backup = wedit.fillBlocks(weditController.selection[1], weditController.selection[2], "foreground", weditController.selectedBlock)
 
-      if backup then weditController.backup[#weditController.backup + 1] = backup end
+      if backup then table.insert(weditController.backup, backup) end
     elseif weditController.altFire then
       weditController.fireLock = true
 
       local backup = wedit.fillBlocks(weditController.selection[1], weditController.selection[2], "background", weditController.selectedBlock)
 
-      if backup then weditController.backup[#weditController.backup + 1] = backup end
+      if backup then table.insert(weditController.backup, backup) end
     end
   end
 end
@@ -392,14 +430,16 @@ function weditController.WE_Stamp()
   wedit.info("^shadow;^yellow;Alt Fire: Paste selection.", {0,-2})
   wedit.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
 
-  if not weditController.fireLock and weditController.primaryFire and weditController.selection[2] and weditController.selection[2][1] then
+  if not weditController.fireLock and weditController.primaryFire and weditController.validSelection() then
     -- Store copy
     weditController.copyTable = wedit.copy(weditController.selection[1], weditController.selection[2])
     weditController.fireLock = true
-  elseif not weditController.fireLock and weditController.altFire and weditController.selection[2] and weditController.selection[2][1] then
+  elseif not weditController.fireLock and weditController.altFire and weditController.validSelection() then
     -- Start paste
     local position = {weditController.selection[1][1], weditController.selection[1][2]}
-    wedit.paste(weditController.copyTable, position)
+    local backup = wedit.paste(weditController.copyTable, position)
+    if backup then table.insert(weditController.backup, backup) end
+
     weditController.fireLock = true
   end
 end
@@ -440,15 +480,17 @@ function weditController.WE_Replace()
     wedit.info("^shadow;^yellow;Replace Block: ^red;" .. tile, {0,-5})
   end
 
-  if not weditController.fireLock and weditController.selection[1][1] then
+  if not weditController.fireLock and weditController.validSelection() then
     if weditController.primaryFire and tile then
       weditController.fireLock = true
 
-      wedit.replace(weditController.selection[1], weditController.selection[2], weditController.layer, weditController.selectedBlock, tile)
+      local backup = wedit.replace(weditController.selection[1], weditController.selection[2], weditController.layer, weditController.selectedBlock, tile)
+      if backup then table.insert(weditController.backup, backup) end
     elseif weditController.altFire then
       weditController.fireLock = true
 
-      wedit.replace(weditController.selection[1], weditController.selection[2], weditController.layer, weditController.selectedBlock)
+      local backup = wedit.replace(weditController.selection[1], weditController.selection[2], weditController.layer, weditController.selectedBlock)
+      if backup then table.insert(weditController.backup, backup) end
     end
   end
 end
@@ -546,7 +588,7 @@ function weditController.WE_Dehydrator()
   wedit.info("^shadow;^orange;WEdit: Dehydrator")
   wedit.info("^shadow;^yellow;Primary Fire: Dehydrate selection.", {0,-1})
 
-  if not weditController.fireLock and weditController.primaryFire and weditController.selection[2] and weditController.selection[2][1] then
+  if not weditController.fireLock and weditController.primaryFire and weditController.validSelection() then
     weditController.fireLock = true
     wedit.drain(weditController.selection[1], weditController.selection[2])
   end
@@ -562,7 +604,7 @@ function weditController.WE_Hydrator()
   wedit.info("^shadow;^yellow;Current Liquid: ^red;" .. wedit.liquids[weditController.liquidIndex].name .. "^yellow;.", {0,-3})
 
  -- Execute
-  if not weditController.fireLock and weditController.primaryFire and weditController.selection[2] and weditController.selection[2][1] then
+  if not weditController.fireLock and weditController.primaryFire and weditController.validSelection() then
     weditController.fireLock = true
     wedit.hydrate(weditController.selection[1], weditController.selection[2], wedit.liquids[weditController.liquidIndex].id)
   end
