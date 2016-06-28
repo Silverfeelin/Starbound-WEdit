@@ -749,7 +749,6 @@ function wedit.paste(copy, position)
 
   local iterations = wedit.calculateIterations(position, copy.size)
 
-  ---
   -- Stage two: If copy has background OR foreground, place background and/or placeholders.
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(task)
@@ -788,7 +787,6 @@ function wedit.paste(copy, position)
   ---
 
   if copy.options.foreground then
-    ---
     -- Stage three: If copy has foreground, break it.
     table.insert(stages, function(task)
       task.progress = task.progress + 1
@@ -803,7 +801,6 @@ function wedit.paste(copy, position)
     -- /Stage three
     ---
 
-    ---
     -- Stage four: If copy has foreground, place it.
     table.insert(stages, function(task)
 
@@ -828,7 +825,6 @@ function wedit.paste(copy, position)
     ---
   end
 
-  ---
   -- Stage five: If copy has liquids, place them.
   if copy.options.liquids then
     table.insert(stages, function(task)
@@ -852,7 +848,6 @@ function wedit.paste(copy, position)
   -- /Stage five
   ---
 
-  ---
   -- Stage six: If paste has foreground, and thus may need placeholders, remove the placeholders.
   if copy.options.foreground then
     table.insert(stages, function(task)
@@ -872,7 +867,6 @@ function wedit.paste(copy, position)
   if copy.options.objects and #copy.objects > 0 then
     local hasItems = false
 
-    ---
     -- Stage seven: If copy has objects, place them.
     table.insert(stages, function(task)
       task.parameters.message = "^shadow;Placing objects."
@@ -880,7 +874,16 @@ function wedit.paste(copy, position)
       for _,v in pairs(copy.objects) do
         -- TODO: Object Direction
         local dir = v.offset[1] < centerOffset and 1 or -1
+
+        -- Create unique ID
+        local tempId = nil
+        if v.parameters and v.parameters.uniqueId then
+          tempId, v.parameters.uniqueId = v.parameters.uniqueId, sb.makeUuid()
+        end
         world.placeObject(v.name, {position[1] + v.offset[1], position[2] + v.offset[2]}, dir, v.parameters)
+
+        -- Restore unique ID of original object.
+        if tempId then v.parameters.uniqueId = tempId end
 
         if v.items ~= nil then hasItems = true end
       end
@@ -889,7 +892,6 @@ function wedit.paste(copy, position)
     -- /Stage seven
     ---
 
-    ---
     -- Stage eight: If copy has containers, place items in them.
     if copy.options.containerLoot then
       table.insert(stages, function(task)
@@ -913,7 +915,6 @@ function wedit.paste(copy, position)
     ---
   end
 
-  ---
   -- Stage nine: If copy has matmods, place them
   if copy.options.foregroundMods or copy.options.backgroundMods then
     table.insert(stages, function(task)
@@ -939,7 +940,6 @@ function wedit.paste(copy, position)
   -- /Stage nine
   ---
 
-  ---
   -- Stage ten: Done
   table.insert(stages, function(task)
     task.parameters.message = "^shadow;Done pasting!"
