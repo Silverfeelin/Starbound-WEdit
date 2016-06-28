@@ -147,7 +147,7 @@ function weditController.update(args)
     wedit.debugRectangle(weditController.selection[1], weditController.selection[2])
     wedit.debugText(string.format("WEdit Selection (%s,%s)", weditController.selection[2][1] - weditController.selection[1][1], weditController.selection[2][2] - weditController.selection[1][2]), {weditController.selection[1][1], weditController.selection[2][2]}, "green")
 
-    if weditController.copyTable and weditController.copyTable.size then
+    if weditController.copyTable and weditController.copyTable.size and (primaryType == "WE_Select" or primaryType == "WE_Stamp") then
       local copy = weditController.copyTable
       local top = weditController.selection[1][2] + copy.size[2]
       wedit.debugRectangle(weditController.selection[1], {weditController.selection[1][1] + copy.size[1], top}, "cyan")
