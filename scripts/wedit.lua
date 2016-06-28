@@ -118,43 +118,51 @@ function wedit.debugRectangle(bottomLeft, topRight, color)
   world.debugLine({bottomLeft[1], bottomLeft[2]}, {topRight[1], bottomLeft[2]}, color) -- bottom edge
 end
 
----
--- Draws debug text below the user's character, or with an offset relative to it.
--- @param str - Text to draw.
--- @param [offset={0,0}] - {x,y} Offset relative to the feet of the player's character.
+--[[
+  Draws debug text below the user's character, or with an offset relative to it.
+  @param str - Text to draw.
+  @param [offset={0,0}] - {x,y} Offset relative to the feet of the player's character.
+]]
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
   wedit.debugText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
----
--- Draws debug text at the given world position.
--- @param str - Text to draw.
--- @param pos - Position in blocks.
--- @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
+--[[
+  Draws debug text at the given world position.
+  @param str - Text to draw.
+  @param pos - Position in blocks.
+  @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
+]]
 function wedit.debugText(str, pos, color)
   color = type(color) == "table" and color or type(color) == "string" and color or "green"
   world.debugText(str, pos, color)
 end
 
----
--- Logs the given string with a WEdit prefix.
--- @param str - Text to log.
+--[[
+  Logs the given string with a WEdit prefix.
+  @param str - Text to log.
+]]
 function wedit.logInfo(str)
   sb.logInfo("WEdit: %s", str)
 end
 
----
--- Adds an entry to the debug log map, with a WEdit prefix.
---
+--[[
+  Adds an entry to the debug log map, with a WEdit prefix.
+  @param key - Log map key. 'WEdit' is added in front of this key.
+  @param val - Log map value.
+]]
 function wedit.setLogMap(key, val)
   sb.setLogMap(string.format("^cyan;WEdit %s", key), val)
 end
 
----
--- Returns a copy of the given point.
--- Generally used to prevent having a bunch of references to the same points,
--- meaning asynchronous tasks will have undesired effects when changing your selection mid-task.
+--[[
+  Returns a copy of the given point.
+  Generally used to prevent having a bunch of references to the same points,
+  meaning asynchronous tasks will have undesired effects when changing your selection mid-task.
+  @param point - Point to clone.
+  @return - Cloned point.
+]]
 function wedit.clonePoint(point)
   return {point[1], point[2]}
 end
@@ -696,7 +704,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
 
     -- Set undefined containerLoot option to true if containers with items have been found.
     if copy.options.containerLoot == nil and object.items then copy.options.containerLoot = true end
-    
+
     table.insert(copy.objects, object)
   end
 

@@ -369,17 +369,16 @@ end
 ]]
 function weditController.WE_Pencil()
   wedit.info("^shadow;^orange;WEdit: Pencil")
-  wedit.info("^shadow;^yellow;Primary Fire: Draw selected block.", {0,-1})
-  wedit.info("^shadow;^yellow;Alt Fire: ^orange;Color Picker^yellow;.", {0,-2})
+  wedit.info("^shadow;^yellow;Primary Fire: Draw on foreground.", {0,-1})
+  wedit.info("^shadow;^yellow;Alt Fire: Draw on background.", {0,-2})
   wedit.info("^shadow;^yellow;Current Block: ^red;" .. weditController.selectedBlockToString() .. "^yellow;.", {0,-3})
-  wedit.info("^shadow;^yellow;Current Layer: ^red;" .. weditController.layer .. "^yellow;.", {0,-4})
 
-  if weditController.primaryFire and weditController.selectedBlock ~= nil then
-    wedit.pencil(tech.aimPosition(), weditController.layer, weditController.selectedBlock)
-
-  elseif weditController.altFire then
-    -- Alt fire on the Pencil serves as the color picker tool.
-    weditController.updateColor()
+  if weditController.selectedBlock ~= nil then
+    if weditController.primaryFire then
+      wedit.pencil(tech.aimPosition(), "foreground", weditController.selectedBlock)
+    elseif weditController.altFire then
+      wedit.pencil(tech.aimPosition(), "background", weditController.selectedBlock)
+    end
   end
 end
 
