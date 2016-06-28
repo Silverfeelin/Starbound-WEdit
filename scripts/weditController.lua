@@ -115,6 +115,7 @@ function weditController.update(args)
 
   if weditController.noclipping then
     mcontroller.controlParameters({
+      gravityEnabled = false,
       collisionEnabled = false,
       standingPoly = {},
       crouchingPoly = {},
@@ -122,6 +123,9 @@ function weditController.update(args)
       runSpeed = 0,
       walkSpeed = 0
     })
+    wedit.setLogMap("Noclip", string.format("Press '%s' to stop flying.", weditController.noclipBind))
+  else
+    wedit.setLogMap("Noclip", string.format("Press '%s' to fly.", weditController.noclipBind))
   end
   -- Removes the lock on your fire keys (LMB/RMB) if both have been released.
   if weditController.fireLock and not weditController.primaryFire and not weditController.altFire then
