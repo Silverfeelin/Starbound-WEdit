@@ -330,20 +330,6 @@ function weditController.WE_Undo()
   wedit.info("^shadow;^yellow;Alt Fire: Forget last undo (go back a step).", {0,-3})
   wedit.info("^shadow;^yellow;Undo Count: " .. backupSize .. ".", {0,-4})
 
-  if not weditController.fireLock then
-    if weditController.primaryFire then
-      -- Undo
-      weditController.fireLock = true
-      if (backupSize > 0) then
-        wedit.paste(weditController.backup[backupSize], weditController.backup[backupSize].origin)
-      end
-    elseif weditController.altFire then
-      -- Remove Undo
-      weditController.fireLock = true
-      table.remove(weditController.backup, backupSize)
-    end
-  end
-
   -- Show undo area.
   if backupSize > 0 then
     local backup = weditController.backup[backupSize]
@@ -351,6 +337,23 @@ function weditController.WE_Undo()
     if weditController.validSelection() and math.ceil(weditController.selection[2][2]) == math.ceil(top) then top = top + 1 end
     wedit.debugText("^shadow;WEdit Undo Position", {backup.origin[1], top}, "#FFBF87")
     wedit.debugRectangle(backup.origin, {backup.origin[1] + backup.size[1], backup.origin[2] + backup.size[2]}, "#FFBF87")
+  end
+
+  -- Actions
+  if not weditController.fireLock then
+    if weditController.primaryFire then
+      -- Undo
+      weditController.fireLock = true
+      if backupSize > 0 then
+        wedit.paste(weditController.backup[backupSize], weditController.backup[backupSize].origin)
+      end
+    elseif weditController.altFire then
+      -- Remove Undo
+      weditController.fireLock = true
+      if backupSize > 0 then
+        table.remove(weditController.backup, backupSize)
+      end
+    end
   end
 end
 
