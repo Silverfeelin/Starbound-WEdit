@@ -18,9 +18,9 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
  * In singleplayer, use `/enabletech dash` and `/spawnitem techconsole` with your cursor pointed near your character. Place the tech console down and activate the tech from the tech console.
 
 ## Usage
-*It is recommended to have `/debug` on at all times when using WEdit. Although WEdit will function fine without enabling the debug mode, vital information can only be seen with this mode enabled.*
+*It is recommended to have `/debug` on at all times while using WEdit. Although WEdit will function fine without enabling the debug mode, vital information can only be seen with this mode enabled.*
 
-To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and using the item.
+To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and then using the item given to you. The command will spawn the item at the position of your cursor.
 Note that this will add 13 items to your tools/etc. tab in your inventory. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.
 ```
 /spawnitem silverore 1 '{"itemTags":[], "radioMessagesOnPickup":[], "learnBlueprintsOnPickup":[], "twoHanded":true, "shortdescription":"WE_ItemBox", "category":"^orange;WEdit: Item Box", "description":"^yellow;^yellow;Primary Fire: Spawn Tools.^reset;", "inventoryIcon":"/objects/floran/chestfloran1/chestfloran1icon.png"}'
@@ -30,7 +30,18 @@ By holding one of these tools, you can access the corresponding feature. The usa
 You can toggle the built-in noclip mode by pressing your second tech action key (`G` by default).
 
 ## Using a different tech
-**TODO**
+* Unpack `WEdit.modpak`.
+* Remove `/tech/dash/dash.lua` from the unpacked mod.
+* Copy a different tech script from unpacked assets for the current version of the game.
+* Place the copied tech script in the unpacked WEdit folder. Make sure the file name and directories match up with those of the game assets (eg. `\assets\tech\jump\multijump.lua` to `\unpackedWEdit\tech\jump\multijump.lua`).
+* Open the new tech script in a text editor of your choice.
+* Start a new line following the line `function init()`, and place the code below on this new line.
+```
+require "/scripts/weditController.lua"
+```
+* Save the file.
+* Repack the unpacked mod. Make sure you first delete the original packed mod.
+* (Optional) Enable the new tech using `/enabletech <techname>` in singleplayer. Activate the tech through a tech console, obtainable by using the command `/spawnitem techconsole`.
 
 ## Features
 **TODO**
