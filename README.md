@@ -44,16 +44,58 @@ require "/scripts/weditController.lua"
 * (Optional) Enable the new tech using `/enabletech <techname>` in singleplayer. Activate the tech through a tech console, obtainable by using the command `/spawnitem techconsole`.
 
 ## Features
+Quick Navigation: [Selection Tool](#selection-tool), [Layer Tool](#layer-tool), [Color Picker](#color-picker), [Paint Bucket](#paint-bucket), [Eraser](#eraser), [Replace Tool](#replace-tool), [Pencil](#pencil), [Stamp](#stamp), [Modifier](#modifier), [Ruler](#ruler), [Hydrator](#hydrator), [Dehydrator](#dehydrator), [Undo Tool](#undo-tool).
+
+#### Selection Tool
+**TODO**
+
+#### Layer Tool
+**TODO**
+
+#### Color Picker
+**TODO**
+
+#### Paint Bucket
+**TODO**
+
+#### Eraser
+**TODO**
+
+#### Replace Tool
+**TODO**
+
+#### Pencil
+**TODO**
+
+#### Stamp
+**TODO**
+
+#### Modifier
+**TODO**
+
+#### Ruler
+**TODO**
+
+#### Hydrator
+**TODO**
+
+#### Dehydrator
+**TODO**
+
+#### Undo Tool
 **TODO**
 
 ## Planned
-**TODO**
+No additional features planned yet. Feel free to suggest them [on the discussion page]!
 
 ## Potential Issues
-**TODO**
+* Blocks can not be placed directly in front of or behind empty space, when there are no adjacent blocks on the same layer. Some actions may not yield the result you expected initially because of this. The script tries to work around this issue by running the same actions multiple times.
+* Server lag can cause synchronization issues; the script continues working while the world hasn't updated yet.
+* Undo Tool should not be completely relied upon; it's probably pretty buggy. It is recommended to back up worlds before making any major changes.
 
 ## Contributing
-**TODO**
+If you have any suggestions or feedback that might help improve this mod, please do post them [on the discussion page]!
+You can also create pull requests and contribute directly to the mod!
 
 ## Licenses
 Most of the icons used for the tools are courtesy of [Yusuke Kamiyamane](http://p.yusukekamiyamane.com/about/), and can be found in his [Fugue Icons](http://p.yusukekamiyamane.com/) pack. Some have been modified slightly to fit better into the game.
