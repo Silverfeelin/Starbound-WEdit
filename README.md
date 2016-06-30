@@ -13,10 +13,9 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
 
 ## Installation
 * [Download](https://github.com/Silverfeelin/Starbound-WEdit/releases) the release for the current version of Starbound.
-* Unpack the archive.
-* Place the `WEdit.modpak` file in your mods folder (eg. `D:\Steam\steamapps\common\Starbound\mods\`).
+* Place the `WEdit.modpak` file in your mods folder (eg. `D:\Steam\steamapps\common\Starbound\mods\`). Overwrite the existing file if necessary.
 * Activate the `dash` tech on your character.
- * In singleplayer, use `/enabletech dash` and `/spawnitem techconsole` with your cursor pointed near your character. Place the tech console down and activate the tech from the tech interface.
+ * In singleplayer, use `/enabletech dash` and `/spawnitem techconsole` with your cursor pointed near your character. Place the tech console down and activate the tech from the tech console.
 
 ## Usage
 **TODO**
