@@ -1,3 +1,12 @@
 {
-  "name" : "WEdit"
+  "name" : "WEdit",
+  "friendlyName" : "WEdit - World Edit Tech",
+  "priority" : 0,
+  "version" : "1.0",
+  "author" : "Silverfeelin",
+  "description" : "Allows you to edit the world around you on a larger scale.
+
+For usage instructions, see: ^#61b3de;https://github.com/Silverfeelin/Starbound-WEdit^reset;",
+  "requires" : [],
+  "includes" : []
 }
