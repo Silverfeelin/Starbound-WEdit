@@ -20,7 +20,8 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
  * The actual bind used is `PlayerTechAction2`. Other mods that use this bind may cause conflicts.
 
 ## Usage
-> It is recommended to have `/debug` on at all times while using WEdit. Although WEdit will function fine without enabling the debug mode, vital information can only be seen with this mode enabled.
+> It is recommended to have `/debug` on at all times while using WEdit. Although WEdit will function fine without enabling the debug mode, vital information can only be seen with this mode enabled.  
+> If `/debug` does not work for you, manually set `allowAdminCommandsFromAnyone` to true in your `/storage/starbound.config`.
 
 To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and then using the item given to you. The command will spawn the item at the position of your cursor.  
 Note that this will add 13 items to your tools/etc. tab in your inventory. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.
