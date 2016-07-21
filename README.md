@@ -44,7 +44,8 @@ You can toggle the built-in noclip mode by pressing your second tech action key 
 require "/scripts/weditController.lua"
 ```
 * Save the file.
-* Repack the unpacked mod. Make sure you first delete the original packed mod.
+* Delete the original packed mod.
+* (Optional) Repack the unpacked and updated mod.
 * (Optional) Enable the new tech using `/enabletech <techname>` in singleplayer. Activate the tech through a tech console, obtainable by using the command `/spawnitem techconsole`.
 
 ## Features
