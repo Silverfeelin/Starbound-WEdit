@@ -53,7 +53,7 @@ require "/scripts/weditController.lua"
 A full list of features can be found on the [WEdit Wiki page](https://github.com/Silverfeelin/Starbound-WEdit/wiki/Features).
 
 ## Planned
-No additional features planned yet. Feel free to suggest them [on the discussion page]!
+No additional features planned yet. Feel free to suggest them [on the discussion page](http://community.playstarbound.com/threads/wedit.116953/)!
 
 ## Potential Issues
 * Blocks can not be placed directly in front of or behind empty space, when there are no adjacent blocks on the same layer. Some actions may not yield the result you expected initially because of this. The script tries to work around this issue by running the same actions multiple times.
@@ -61,7 +61,7 @@ No additional features planned yet. Feel free to suggest them [on the discussion
 * Undo Tool should not be completely relied upon; it's probably pretty buggy. It is recommended to back up worlds before making any major changes.
 
 ## Contributing
-If you have any suggestions or feedback that might help improve this mod, please do post them [on the discussion page]!
+If you have any suggestions or feedback that might help improve this mod, please do post them [on the discussion page](http://community.playstarbound.com/threads/wedit.116953/)!
 You can also create pull requests and contribute directly to the mod!
 
 ## Licenses
