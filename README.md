@@ -13,15 +13,19 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
 
 ## Installation
 * [Download](https://github.com/Silverfeelin/Starbound-WEdit/releases) the release for the current version of Starbound.
-* Place the `WEdit.modpak` file in your mods folder (eg. `D:\Steam\steamapps\common\Starbound\mods\`). Overwrite the existing file if necessary.
+* Place the `WEdit.pak` file in your mods folder (eg. `D:\Steam\steamapps\common\Starbound\mods\`). Overwrite the existing file if necessary.
 * Activate the `dash` tech on your character.
  * In singleplayer, use `/enabletech dash` and `/spawnitem techconsole` with your cursor pointed near your character. Place the tech console down and activate the tech from the tech console.
+* Bind `WEdit Toggle Noclip` in the controls menu. In `/debug`, it will show *Press 'g'* regardless of your choice.
+ * The actual bind used is `PlayerTechAction2`. Other mods that use this bind may cause conflicts.
 
 ## Usage
 > It is recommended to have `/debug` on at all times while using WEdit. Although WEdit will function fine without enabling the debug mode, vital information can only be seen with this mode enabled.
 
-To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and then using the item given to you. The command will spawn the item at the position of your cursor.
+To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and then using the item given to you. The command will spawn the item at the position of your cursor.  
 Note that this will add 13 items to your tools/etc. tab in your inventory. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.
+
+If you can't paste the command, your copy probably ends with a line break character. Line breaks prevent pasting in chat, so make sure you've only copied the actual command!
 ```
 /spawnitem silverore 1 '{"itemTags":[], "radioMessagesOnPickup":[], "learnBlueprintsOnPickup":[], "twoHanded":true, "shortdescription":"WE_ItemBox", "category":"^orange;WEdit: Item Box", "description":"^yellow;^yellow;Primary Fire: Spawn Tools.^reset;", "inventoryIcon":"/objects/floran/chestfloran1/chestfloran1icon.png"}'
 ```
