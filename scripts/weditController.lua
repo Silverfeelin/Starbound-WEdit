@@ -62,6 +62,7 @@ wedit.colors = weditController.colors
 
 -- Table used to store the coordinates at which to display the config interface.
 weditController.configLocation = {}
+storage.weditCopy = storage.weditCopy or nil
 
 ----------------------------------------
 --          Useful functions          --
@@ -165,8 +166,8 @@ function weditController.update(args)
     wedit.debugRectangle(weditController.selection[1], weditController.selection[2])
     wedit.debugText(string.format("^shadow;WEdit Selection (%s,%s)", weditController.selection[2][1] - weditController.selection[1][1], weditController.selection[2][2] - weditController.selection[1][2]), {weditController.selection[1][1], weditController.selection[2][2]}, "green")
 
-    if weditController.copyTable and weditController.copyTable.size and (primaryType == "WE_Select" or primaryType == "WE_Stamp") then
-      local copy = weditController.copyTable
+    if storage.weditCopy and storage.weditCopy.size and (primaryType == "WE_Select" or primaryType == "WE_Stamp") then
+      local copy = storage.weditCopy
       local top = weditController.selection[1][2] + copy.size[2]
       wedit.debugRectangle(weditController.selection[1], {weditController.selection[1][1] + copy.size[1], top}, "cyan")
 
@@ -498,12 +499,12 @@ function weditController.WE_Stamp()
 
   if not weditController.fireLock and weditController.primaryFire and weditController.validSelection() then
     -- Store copy
-    weditController.copyTable = wedit.copy(weditController.selection[1], weditController.selection[2])
+    storage.weditCopy = wedit.copy(weditController.selection[1], weditController.selection[2])
     weditController.fireLock = true
   elseif not weditController.fireLock and weditController.altFire and weditController.validSelection() then
     -- Start paste
     local position = {weditController.selection[1][1], weditController.selection[1][2]}
-    local backup = wedit.paste(weditController.copyTable, position)
+    local backup = wedit.paste(storage.weditCopy, position)
     if backup then table.insert(weditController.backup, backup) end
 
     weditController.fireLock = true
