@@ -8,5 +8,7 @@
 
 For usage instructions, see: ^#61b3de;https://github.com/Silverfeelin/Starbound-WEdit^reset;",
   "requires" : [],
-  "includes" : []
+  "includes" : [],
+  "link" : "steam://url/CommunityFilePage/734859295",
+  "steamContentId" : "734859295"
 }
