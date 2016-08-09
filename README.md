@@ -35,7 +35,7 @@ By holding one of these tools, you can access the corresponding feature. The usa
 You can toggle the built-in noclip mode by pressing your second tech action key (`G` by default).
 
 ## Using a different tech
-* Unpack `WEdit.modpak`.
+* Unpack `WEdit.pak`.
 * Remove `/tech/dash/dash.lua` from the unpacked mod.
 * Copy a different tech script from unpacked assets for the current version of the game.
 * Place the copied tech script in the unpacked WEdit folder. Make sure the file name and directories match up with those of the game assets (eg. `\assets\tech\jump\multijump.lua` to `\unpackedWEdit\tech\jump\multijump.lua`).
