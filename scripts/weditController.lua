@@ -425,6 +425,9 @@ function weditController.WE_Pencil()
   end
 end
 
+--[[
+  Function to spawn a tool similar to the Pencil, dedicated to a single selected block.
+]]
 function weditController.WE_BlockPinner()
   wedit.info("^shadow;^orange;WEdit: Block Pinner")
   wedit.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
@@ -466,6 +469,10 @@ function weditController.WE_BlockPinner()
   end
 end
 
+--[[
+  Function to draw the block of the item under the cursor like the Pencil tool.
+  Existing blocks will be replaced.
+]]
 function weditController.WE_Block()
   wedit.info("^shadow;^orange;WEdit: Material Placer")
   wedit.info("^shadow;^yellow;Primary Fire: Place in foreground.", {0,-1})
@@ -583,6 +590,9 @@ function weditController.WE_Modifier()
   end
 end
 
+--[[
+  Function to spawn a tool similar to the Modifier, dedicated to a single selected material mod.
+]]
 function weditController.WE_ModPinner()
   wedit.info("^shadow;^orange;WEdit: MatMod Pinner")
   wedit.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
@@ -617,6 +627,9 @@ function weditController.WE_ModPinner()
   end
 end
 
+--[[
+  Function to add the material modification of the item under the cursor like the Modifier tool.
+]]
 function weditController.WE_Mod()
   wedit.info("^shadow;^orange;WEdit: Modifier")
   wedit.info("^shadow;^yellow;Primary Fire: Modify foreground.", {0,-1})
@@ -761,6 +774,16 @@ function weditController.WE_ItemBox()
   end
 end
 
+--[[
+  Returns parameters for a silver ore used for WEdit tools.
+  Vanilla parameters such as blueprints and radio messages are removed.
+  @param shortDescription - Visual item name, used to identify WEdit functions.
+  @param description - Item description displayed in the item tooltip.
+  @param category - Item header, displayed below the item shortDescription.
+  @param inventoryIcon - Path to an icon. Supports directives.
+  @param rarity - Item rarity. Defaults to common.
+  @return - Altered item parameters (for a silverore).
+]]
 function silverOreParameters(shortDescription, description, category, inventoryIcon, rarity)
  rarity = rarity or "common"
   return {
@@ -776,7 +799,14 @@ function silverOreParameters(shortDescription, description, category, inventoryI
   }
 end
 
+--[[
+  Returns a corrected asset path to the given image.
+  @param path - Nil or path leading up to the image. Path should end with a /.
+  @param image - Absolute asset path or just the file name (including the extension).
+  @return - Absolute asset path to the image.
+]]
 function fixImagePath(path, image)
   return not path and image or image:find("^/") and image or (path .. image):gsub("//", "/")
 end
+
 sb.logInfo("WEdit: Loaded!")
