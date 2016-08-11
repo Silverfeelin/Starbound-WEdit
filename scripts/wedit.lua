@@ -967,6 +967,62 @@ function wedit.paste(copy, position)
 end
 
 --[[
+  Flips the given copy horizontally or vertically.
+  Affects blocks, objects and matmods.
+  Vertically flipping will cause issues with objects and matmods, since
+  most objects can not be placed on air and some matmods will still appear
+  on the top (or bottom) side of the flipped block.
+  @param copy - Copy to flip, made by wedit.copy().
+  @param direction - horizontal or vertical.
+  @return - Flipped copy. Note that the original Lua object is being modified.
+]]
+function wedit.flip(copy, direction)
+  direction = direction:lower()
+  
+  if direction == "horizontal" then
+    -- Flip blocks horizontally
+    for i=1, math.floor(#copy.blocks / 2) do
+      for j,v in ipairs(copy.blocks[i]) do
+        v.offset[1] = copy.size[1] - i
+      end
+      for j,v in ipairs(copy.blocks[#copy.blocks - i + 1]) do
+        v.offset[1] = i - 1
+      end
+      copy.blocks[i], copy.blocks[#copy.blocks - i + 1] = copy.blocks[#copy.blocks - i + 1], copy.blocks[i]
+    end
+    
+    -- Flip objects horizontally
+    for i,v in ipairs(copy.objects) do
+      v.offset[1] = copy.size[1] - v.offset[1]
+    end
+    
+    copy.flipX = not copy.flipX
+  elseif direction == "vertical" then
+    for _,w in ipairs(copy.blocks) do
+      for i=1, math.floor(#w / 2) do
+        for j,v in ipairs(w[i]) do
+          v.offset[1] = copy.size[1] - i
+        end
+        for j,v in ipairs(w[#w- i + 1]) do
+          v.offset[1] = i - 1
+        end
+        w[i], w[#w- i + 1] = w[#w - i + 1], w[i]
+      end
+    end
+    
+    for i,v in ipairs(copy.objects) do
+      v.offset[2] = copy.size[2] - v.offset[2]
+    end
+    
+    copy.flipY = not copy.flipY
+  else
+    wedit.logInfo("Could not flip copy in direction '" .. direction .. "'.")
+  end
+  
+  return copy
+end
+
+--[[
   Initializes and begins a replace operation.
   @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
   @param topRight - [X2, Y2], representing the top right corner of the rectangle.

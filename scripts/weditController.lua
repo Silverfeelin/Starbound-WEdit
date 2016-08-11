@@ -519,6 +519,116 @@ function weditController.WE_Stamp()
 end
 
 --[[
+  Function to flip the current copy horizontally or vertically.
+  Vertical flips may cause issues with objects, matmods and liquids.
+  Does not work with Schematics.
+]]
+function weditController.WE_Flip()
+  wedit.info("^shadow;^orange;WEdit: Flip Tool")
+  wedit.info("^shadow;^yellow;Primary Fire: Flip copy horizontally.", {0,-1})
+  wedit.info("^shadow;^yellow;Alt Fire: Flip copy vertically.", {0,-2})
+  wedit.info("^shadow;^yellow;Flipping vertically will cause issues with objects, matmods and liquids.", {0,-3})
+  
+  local c = storage.weditCopy
+  if c then
+    local msg = "^shadow;^yellow;Flipped: ^red;"
+    local dir = c.flipX and c.flipY and "Horizontally and Vertically"
+    or c.flipX and "Horizontally"
+    or c.flipY and "Vertically"
+    or "None"
+    
+    wedit.info(msg .. dir, {0,-4})
+  end
+  
+  if not weditController.fireLock and weditController.primaryFire then
+    weditController.fireLock = true
+    if c then
+      storage.weditCopy = wedit.flip(storage.weditCopy, "horizontal")
+    end
+  elseif not weditController.fireLock and weditController.altFire then
+    weditController.fireLock = true
+    if c then
+      storage.weditCopy = wedit.flip(storage.weditCopy, "vertical")
+    end
+  end
+end
+
+--[[
+  Function to create a schematic item for the given selection, which
+  allows you to paste the selection later.
+]]
+function weditController.WE_SchematicMaker()
+  wedit.info("^shadow;^orange;WEdit: Schematic Maker")
+  wedit.info("^shadow;^yellow;Primary Fire: Create Schematic.", {0,-1})
+  
+  if not weditController.fireLock and weditController.primaryFire and weditController.validSelection() then
+    weditController.fireLock = true
+    
+    local copy = wedit.copy(weditController.selection[1], weditController.selection[2])
+
+    local icon = "/assetMissing.png?replace;00000000=ffffff;ffffff00=ffffff?setcolor=ffffff?scalenearest=1?crop=0;0;16;15?blendmult=/objects/outpost/customsign/signplaceholder.png;0;0?replace;01000101=FFFFFF00;01000201=FFFFFF00;01000301=090A0BFF;01000401=090A0BFF;01000501=090A0BFF;01000601=090A0BFF;01000701=090A0BFF;01000801=090A0BFF;02000101=FFFFFF00;02000201=090A0BFF;02000301=1B63ABFF;02000401=5796D5FF;02000501=5796D5FF;02000601=5796D5FF;02000701=5796D5FF;02000801=5796D5FF;03000101=FFFFFF00;03000201=090A0BFF;03000301=5796D5FF;03000401=77B9EAFF;03000501=9ED1F7FF;03000601=77B9EAFF;03000701=77B9EAFF;03000801=9ED1F7FF;04000101=FFFFFF00;04000201=090A0BFF;04000301=5796D5FF;04000401=77B9EAFF;04000501=5796D5FF;04000601=77B9EAFF;04000701=090A0BFF;04000801=090A0BFF;05000101=FFFFFF00;05000201=090A0BFF;05000301=5796D5FF;05000401=77B9EAFF;05000501=9ED1F7FF;05000601=090A0BFF;05000701=B1B1B1FF;05000801=B1B1B1FF;06000101=FFFFFF00;06000201=090A0BFF;06000301=5796D5FF;06000401=77B9EAFF;06000501=090A0BFF;06000601=B1B1B1FF;06000701=566EB1FF;06000801=749FC7FF;07000101=FFFFFF00;07000201=090A0BFF;07000301=5796D5FF;07000401=090A0BFF;07000501=B1B1B1FF;07000601=566EB1FF;07000701=CBECF4FF;07000801=CBECF4FF;08000101=FFFFFF00;08000201=090A0BFF;08000301=5796D5FF;08000401=090A0BFF;08000501=B1B1B1FF;08000601=749FC7FF;08000701=CBECF4FF;08000801=CBECF4FF;09000101=FFFFFF00;09000201=090A0BFF;09000301=5796D5FF;09000401=090A0BFF;09000501=B1B1B1FF;09000601=749FC7FF;09000701=9DD7E6FF;09000801=9DD7E6FF;10000101=FFFFFF00;10000201=090A0BFF;10000301=5796D5FF;10000401=090A0BFF;10000501=B1B1B1FF;10000601=566EB1FF;10000701=9DD7E6FF;10000801=9DD7E6FF;11000101=FFFFFF00;11000201=090A0BFF;11000301=5796D5FF;11000401=090A0BFF;11000501=743D23FF;11000601=B1B1B1FF;11000701=566EB1FF;11000801=749FC7FF;12000101=FFFFFF00;12000201=090A0BFF;12000301=090A0BFF;12000401=743D23FF;12000501=8D5834FF;12000601=BD8549FF;12000701=B1B1B1FF;12000801=B1B1B1FF;13000101=FFFFFF00;13000201=090A0BFF;13000301=743D23FF;13000401=8D5834FF;13000501=BD8549FF;13000601=090A0BFF;13000701=090A0BFF;13000801=090A0BFF;14000101=090A0BFF;14000201=743D23FF;14000301=8D5834FF;14000401=BD8549FF;14000501=090A0BFF;14000601=5796D5FF;14000701=5796D5FF;14000801=5796D5FF;15000101=090A0BFF;15000201=743D23FF;15000301=BD8549FF;15000401=090A0BFF;15000501=090A0BFF;15000601=090A0BFF;15000701=090A0BFF;15000801=090A0BFF;16000101=FFFFFF00;16000201=090A0BFF;16000301=090A0BFF;16000401=FFFFFF00;16000501=FFFFFF00;16000601=FFFFFF00;16000701=FFFFFF00;16000801=FFFFFF00?blendmult=/objects/outpost/customsign/signplaceholder.png;0;-8?replace;01000101=090A0BFF;01000201=090A0BFF;01000301=090A0BFF;01000401=090A0BFF;01000501=090A0BFF;01000601=090A0BFF;01000701=FFFFFF00;02000101=5796D5FF;02000201=5796D5FF;02000301=5796D5FF;02000401=5796D5FF;02000501=5796D5FF;02000601=1B63ABFF;02000701=090A0BFF;03000101=77B9EAFF;03000201=9ED1F7FF;03000301=77B9EAFF;03000401=9ED1F7FF;03000501=77B9EAFF;03000601=5796D5FF;03000701=090A0BFF;04000101=090A0BFF;04000201=090A0BFF;04000301=77B9EAFF;04000401=9ED1F7FF;04000501=77B9EAFF;04000601=5796D5FF;04000701=090A0BFF;05000101=B1B1B1FF;05000201=B1B1B1FF;05000301=090A0BFF;05000401=9ED1F7FF;05000501=77B9EAFF;05000601=5796D5FF;05000701=090A0BFF;06000101=749FC7FF;06000201=566EB1FF;06000301=B1B1B1FF;06000401=090A0BFF;06000501=77B9EAFF;06000601=5796D5FF;06000701=090A0BFF;07000101=9DD7E6FF;07000201=9DD7E6FF;07000301=566EB1FF;07000401=B1B1B1FF;07000501=090A0BFF;07000601=5796D5FF;07000701=090A0BFF;08000101=9DD7E6FF;08000201=9DD7E6FF;08000301=749FC7FF;08000401=B1B1B1FF;08000501=090A0BFF;08000601=5796D5FF;08000701=090A0BFF;09000101=9DD7E6FF;09000201=9DD7E6FF;09000301=749FC7FF;09000401=B1B1B1FF;09000501=090A0BFF;09000601=5796D5FF;09000701=090A0BFF;10000101=9DD7E6FF;10000201=9DD7E6FF;10000301=566EB1FF;10000401=B1B1B1FF;10000501=090A0BFF;10000601=5796D5FF;10000701=090A0BFF;11000101=749FC7FF;11000201=566EB1FF;11000301=B1B1B1FF;11000401=090A0BFF;11000501=77B9EAFF;11000601=5796D5FF;11000701=090A0BFF;12000101=B1B1B1FF;12000201=B1B1B1FF;12000301=090A0BFF;12000401=9ED1F7FF;12000501=77B9EAFF;12000601=5796D5FF;12000701=090A0BFF;13000101=090A0BFF;13000201=090A0BFF;13000301=77B9EAFF;13000401=77B9EAFF;13000501=77B9EAFF;13000601=5796D5FF;13000701=090A0BFF;14000101=5796D5FF;14000201=5796D5FF;14000301=5796D5FF;14000401=5796D5FF;14000501=5796D5FF;14000601=1B63ABFF;14000701=090A0BFF;15000101=090A0BFF;15000201=090A0BFF;15000301=090A0BFF;15000401=090A0BFF;15000501=090A0BFF;15000601=090A0BFF;15000701=FFFFFF00;16000101=FFFFFF00;16000201=FFFFFF00;16000301=FFFFFF00;16000401=FFFFFF00;16000501=FFFFFF00;16000601=FFFFFF00;16000701=FFFFFF00"
+
+    local schematicID = storage.weditNextID or 1
+    storage.weditNextID = schematicID + 1
+    
+    if not storage.weditSchematics then storage.weditSchematics = {} end
+    storage.weditSchematics[schematicID] = { id = schematicID, copy = copy }
+    
+    local params = silverOreParameters("WE_Schematic", "^yellow;Primary Fire: Paste Schematic.", "^orange;WEdit: Schematic " .. schematicID, icon, "essential")
+    params.wedit = { schematicID = schematicID }
+    
+    world.spawnItem("silverore", mcontroller.position(), 1, params)
+  end
+end
+
+--[[
+  Function to paste the schematic tied to this schematic item.
+  The link is made through a schematicID, since storing the copy
+  in the actual item causes massive lag.
+  Deleting schematics is possible (to save memory).
+]]
+function weditController.WE_Schematic()
+  wedit.info("^shadow;^orange;WEdit: Schematic")
+  wedit.info("^shadow;^yellow;Primary Fire: Paste Schematic.", {0,-1})
+  wedit.info("^shadow;^yellow;Alt Fire: DELETE Schematic.", {0,-2})
+  wedit.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
+  
+  if not storage.weditSchematics then return end
+  
+  local schematicID = weditController.itemData and weditController.itemData.schematicID
+  local schematic
+  local storageSchematicKey
+  for i,v in pairs(storage.weditSchematics) do
+    if v.id == schematicID then
+      schematic = v.copy
+      storageSchematicKey = i
+      goto brk
+    end
+  end
+  ::brk::
+  
+  if weditController.validSelection() and schematicID and schematic then
+    local top = weditController.selection[1][2] + schematic.size[2]
+    wedit.debugRectangle(weditController.selection[1], {weditController.selection[1][1] + schematic.size[1], top}, "cyan")
+
+    if top == weditController.selection[2][2] then top = weditController.selection[2][2] + 1 end
+    wedit.debugText("^shadow;WEdit Schematic Paste Area", {weditController.selection[1][1], top}, "cyan")
+  else
+    wedit.info("^shadow;^yellow;No schematic found! Did you delete it?", {0,-4})
+  end
+  
+  if weditController.primaryFire and weditController.validSelection() and not weditController.fireLock and schematic then
+    weditController.fireLock = true
+     
+    local position = {weditController.selection[1][1], weditController.selection[1][2]}
+    local backup = wedit.paste(schematic, position)
+    if backup then table.insert(weditController.backup, backup) end
+  elseif weditController.altFire and not weditController.fireLock and schematic then
+    storage.weditSchematics[storageSchematicKey] = nil
+  end
+end
+
+--[[
   Function to select certain parameters for the tech.
 ]]
 function weditController.WE_Config()
