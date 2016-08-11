@@ -753,9 +753,14 @@ function wedit.paste(copy, position)
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, iterations)
+      
+      local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
+      sb.logInfo("%s %s", iterations, lessIterations)
+      lessIterations = iterations < lessIterations and iterations or lessIterations
+      
+      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, lessIterations)
 
-      if task.progress > iterations then
+      if task.progress > lessIterations then
         task:nextStage()
         return
       end
