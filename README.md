@@ -24,7 +24,7 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
 > If `/debug` does not work for you, manually set `allowAdminCommandsFromAnyone` to true in your `/storage/starbound.config`.
 
 To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and then using the item given to you. The command will spawn the item at the position of your cursor.  
-Note that this will add 13 items to your tools/etc. tab in your inventory. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.
+Note that this will add a bunch of items to your tools/etc. tab in your inventory. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.
 
 If you can't paste the command, your copy probably ends with a line break character. Line breaks prevent pasting in chat, so make sure you've only copied the actual command!
 ```
