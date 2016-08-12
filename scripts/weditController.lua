@@ -15,12 +15,32 @@ require "/scripts/keybinds.lua"
 ]]
 weditController = { }
 
+if not root.getConfigurationPath("wedit") then root.setConfigurationPath("wedit", {}) end
+-- Retrieve parameters stored in the starbound.config.
+-- The parameters are set by the WEdit Interface for MUI.
+function weditController.setConfigData(key, value)
+  root.setConfigurationPath("wedit." .. key, value)
+end
+function weditController.getConfigData(key)
+  return root.getConfigurationPath("wedit." .. key)
+end
+
+wedit.user.delay = weditController.getConfigData("iterationDelay") or 15
+wedit.user.doubleIterations = weditController.getConfigData("doubleIterations")
+
+if weditController.getConfigData("clearSchematics") then
+    storage.weditSchematics = {}
+  weditController.setConfigData("clearSchematics", false)
+end
+
+wedit.user.lineSpacing = weditController.getConfigData("lineSpacing") or nil
+
 --- Noclip parameters.
 weditController.useNoclip = true
 -- Bind can be any Keybinds compatible bind string.
-weditController.noclipBind = "g"
+weditController.noclipBind = weditController.getConfigData("noclipBind") or "g"
 -- Movement speed per tick, in blocks.
-weditController.noclipSpeed = 0.75
+weditController.noclipSpeed = weditController.getConfigData("noclipSpeed") or 0.75
 -- Default noclip status (on tech selection or character load)
 weditController.noclipping = false
 
@@ -43,9 +63,6 @@ weditController.selection = {{},{}}
 
 weditController.lineStage = 0
 weditController.line = {{},{}}
-
--- Number used to display the selection with particles every x ticks.
-weditController.selectionTicks = 0
 
 -- String used to determine what layer the Eraser, Color Picker, Paint Bucket and Pencil affect.
 weditController.layer = "foreground"
@@ -598,6 +615,7 @@ function weditController.WE_Schematic()
   local schematicID = weditController.itemData and weditController.itemData.schematicID
   local schematic
   local storageSchematicKey
+  
   for i,v in pairs(storage.weditSchematics) do
     if v.id == schematicID then
       schematic = v.copy

@@ -125,6 +125,7 @@ end
 ]]
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
+  if wedit.user.lineSpacing then offset[2] = offset[2] * wedit.user.lineSpacing end
   wedit.debugText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
@@ -200,6 +201,7 @@ function wedit.calculateIterations(bottomLeft, size, layer)
     end
   end
 
+  if iterations and wedit.user.doubleIterations then iterations = iterations * 2 end
   return airFound and iterations or 1
 end
 
@@ -271,6 +273,8 @@ function wedit.Task.create(stages, delay, synchronized, description)
   task.stages = type(stages) == "table" and stages or {stages}
 
   task.delay = delay or wedit.user.delay or wedit.default.delay
+  if wedit.user.doubleIterations then task.delay = math.ceil(task.delay / 2) end
+  
   if type(synchronized) == "boolean" then
     task.synchronized = synchronized
   elseif type(wedit.user.synchronized) == "boolean" then
@@ -736,8 +740,11 @@ function wedit.paste(copy, position)
   if copy.options.background then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, 3)
-      if task.progress <= 3 then
+      
+      local it = wedit.user.doubleIterations and 6 or 3
+      task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, it)
+      
+      if task.progress <= it then
         wedit.breakBlocks(position, topRight, "background")
       else
         task:nextStage()
@@ -755,7 +762,6 @@ function wedit.paste(copy, position)
       task.progress = task.progress + 1
       
       local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
-      sb.logInfo("%s %s", iterations, lessIterations)
       lessIterations = iterations < lessIterations and iterations or lessIterations
       
       task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, lessIterations)
@@ -795,9 +801,11 @@ function wedit.paste(copy, position)
     -- Stage three: If copy has foreground, break it.
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, 3)
-
-      if task.progress <= 3 then
+      
+      local it = wedit.user.doubleIterations and 6 or 3
+      task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, it)
+      
+      if task.progress <= it then
         wedit.breakBlocks(position, topRight, "foreground")
       else
         task:nextStage()
