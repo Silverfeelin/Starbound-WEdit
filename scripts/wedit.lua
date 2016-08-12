@@ -103,6 +103,11 @@ wedit.liquids = {
   [11] = { name = "jellyliquid", id = 17 }
 }
 
+wedit.liquidsByID = {}
+for i,v in ipairs(wedit.liquids) do
+  wedit.liquidsByID[v.id] = v.name
+end
+
 --[[
   Draws lines on the edges of the given rectangle.
   @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
@@ -663,7 +668,16 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
   -- Table set containing objects in the selection.
   -- objectIds[id] = true
   local objectIds = {}
+  
+  local materialCount = {}
+  local matmodCount = {}
+  local liquidCount = {}
 
+  local increaseCount = function(tbl, key)
+    if not tbl or not key then return end
+    if not tbl[key] then tbl[key] = 1 else tbl[key] = tbl[key] + 1 end
+  end
+      
   -- Iterate over every block
   for i=0,width-1 do
     copy.blocks[i+1] = {}
@@ -685,7 +699,17 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
       -- Block check
       local block = wedit.Block.create(pos, {i, j})
       copy.blocks[i+1][j+1] = block
-
+      
+      -- Count materials.
+      increaseCount(materialCount, block.foreground.material)
+      increaseCount(materialCount, block.background.material)
+      increaseCount(matmodCount, block.foreground.mod)
+      increaseCount(matmodCount, block.background.mod)
+      if block.liquid then
+        local liqName = wedit.liquidsByID[block.liquid[1]] or "unknown"
+        increaseCount(liquidCount, liqName)
+      end
+      
       if copy.options.foreground == nil and block.foreground.material then copy.options.foreground = true end
       if copy.options.foregroundMods == nil and block.foreground.mod then copy.options.foregroundMods = true end
       if copy.options.background == nil and block.background.material then copy.options.background = true end
@@ -696,6 +720,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
 
   if copy.options.objects == nil and #objectIds > 0 then copy.options.objects = true end
 
+  local objectCount = {}
   -- Iterate over every found object
   for id,_ in pairs(objectIds) do
     local offset = world.entityPosition(id)
@@ -705,13 +730,34 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
     }
 
     local object = wedit.Object.create(id, offset)
-
+    
+    -- Count objects.
+    increaseCount(objectCount, object.name)
+    
     -- Set undefined containerLoot option to true if containers with items have been found.
     if copy.options.containerLoot == nil and object.items then copy.options.containerLoot = true end
 
     table.insert(copy.objects, object)
   end
 
+  -- Logging materials found in the copy.
+  local sLog = "WEdit: A new copy has been made. Copy details:\nBlocks: %s\nMatMods: %s\nObjects: %s\nLiquids: %s"
+  local formatString = function(list)
+    local s = ""
+    for i,v in pairs(list) do
+      s = s .. i .. " x" .. v .. ", "
+    end
+    if s ~= "" then s = s:sub(1, -3) .. "." end
+    return s
+  end
+  
+  local sMaterials = formatString(materialCount)
+  local sObjects = formatString(objectCount)
+  local sMatmods = formatString(matmodCount)
+  local sLiquids = formatString(liquidCount)
+  
+  sb.logInfo(sLog, sMaterials, sMatmods, sObjects, sLiquids)
+  
   return copy
 end
 
