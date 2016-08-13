@@ -629,7 +629,7 @@ end
     foreground, foregroundMods, background, backgroundMods, liquids, objects, containerLoot
     Options not defined will be set to true if any match has been found in the selection.
 ]]
-function wedit.copy(bottomLeft, topRight, copyOptions)
+function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
 
@@ -701,13 +701,15 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
       copy.blocks[i+1][j+1] = block
       
       -- Count materials.
-      increaseCount(materialCount, block.foreground.material)
-      increaseCount(materialCount, block.background.material)
-      increaseCount(matmodCount, block.foreground.mod)
-      increaseCount(matmodCount, block.background.mod)
-      if block.liquid then
-        local liqName = wedit.liquidsByID[block.liquid[1]] or "unknown"
-        increaseCount(liquidCount, liqName)
+      if logMaterials then
+        increaseCount(materialCount, block.foreground.material)
+        increaseCount(materialCount, block.background.material)
+        increaseCount(matmodCount, block.foreground.mod)
+        increaseCount(matmodCount, block.background.mod)
+        if block.liquid then
+          local liqName = wedit.liquidsByID[block.liquid[1]] or "unknown"
+          increaseCount(liquidCount, liqName)
+        end
       end
       
       if copy.options.foreground == nil and block.foreground.material then copy.options.foreground = true end
@@ -732,7 +734,9 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
     local object = wedit.Object.create(id, offset)
     
     -- Count objects.
-    increaseCount(objectCount, object.name)
+    if logMaterials then
+      increaseCount(objectCount, object.name)
+    end
     
     -- Set undefined containerLoot option to true if containers with items have been found.
     if copy.options.containerLoot == nil and object.items then copy.options.containerLoot = true end
@@ -740,24 +744,25 @@ function wedit.copy(bottomLeft, topRight, copyOptions)
     table.insert(copy.objects, object)
   end
 
-  -- Logging materials found in the copy.
-  local sLog = "WEdit: A new copy has been made. Copy details:\nBlocks: %s\nMatMods: %s\nObjects: %s\nLiquids: %s"
-  local formatString = function(list)
-    local s = ""
-    for i,v in pairs(list) do
-      s = s .. i .. " x" .. v .. ", "
+  if logMaterials then
+    -- Logging materials found in the copy.
+    local sLog = "WEdit: A new copy has been made. Copy details:\nBlocks: %s\nMatMods: %s\nObjects: %s\nLiquids: %s"
+    local formatString = function(list)
+      local s = ""
+      for i,v in pairs(list) do
+        s = s .. i .. " x" .. v .. ", "
+      end
+      if s ~= "" then s = s:sub(1, -3) .. "." end
+      return s
     end
-    if s ~= "" then s = s:sub(1, -3) .. "." end
-    return s
+    
+    local sMaterials = formatString(materialCount)
+    local sObjects = formatString(objectCount)
+    local sMatmods = formatString(matmodCount)
+    local sLiquids = formatString(liquidCount)
+    
+    sb.logInfo(sLog, sMaterials, sMatmods, sObjects, sLiquids)
   end
-  
-  local sMaterials = formatString(materialCount)
-  local sObjects = formatString(objectCount)
-  local sMatmods = formatString(matmodCount)
-  local sLiquids = formatString(liquidCount)
-  
-  sb.logInfo(sLog, sMaterials, sMatmods, sObjects, sLiquids)
-  
   return copy
 end
 
