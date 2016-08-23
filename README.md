@@ -50,7 +50,7 @@ require "/scripts/weditController.lua"
 * (Optional) Enable the new tech using `/enabletech <techname>` in singleplayer. Activate the tech through a tech console, obtainable by using the command `/spawnitem techconsole`.
 
 ## Features
-A full list of features can be found on the [WEdit Wiki page](https://github.com/Silverfeelin/Starbound-WEdit/wiki/Features).
+A full list of features can be found on the [WEdit Wiki](https://github.com/Silverfeelin/Starbound-WEdit/wiki).
 
 ## Planned
 No additional features planned yet. Feel free to suggest them [on the discussion page](http://community.playstarbound.com/threads/wedit.116953/)!
