@@ -159,9 +159,52 @@ for i,v in ipairs(wedit.liquids) do
 end
 
 --[[
+  Storage for positions that should be ignored by certain tools, such as the pencil.
+  This is to prevent multiple tasks from being created for the same tile.
+  Regular usage: wedit.lockedPositions[x .. "-" .. y .. layer] = true to lock and = nil to unlock.
+]]
+wedit.lockedPositions = {}
+
+--[[
+  Locks the block at the given position, which prevents the usage of the wedit.pencil
+  and wedit.removeMod on this block.
+  @param pos - {X, Y}, representing the position of the block to lock.
+  @param layer - "foreground" or "background".
+  @return - True if locking succeeded, false if it's already locked.
+]]
+function wedit.lockPosition(pos, layer)
+  layer = layer or "foreground"
+  local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
+  if wedit.lockedPositions[p] then
+    return false
+  else
+    wedit.lockedPositions[p] = true
+    return true
+  end
+end
+
+--[[
+  Unlocks the block at the given position, which allows the usage of the wedit.pencil
+  and wedit.removeMod on this block if it was already locked.
+  @param pos - {X, Y}, representing the position of the block to lock.
+  @param layer - "foreground" or "background".
+  @return - True if unlocking succeeded, false if it's already unlocked.
+]]
+function wedit.unlockPosition(pos, layer)
+  layer = layer or "foreground"
+  local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
+  if wedit.lockedPositions[p] then
+    wedit.lockedPositions[p] = nil
+    return true
+  else
+    return false
+  end
+end
+
+--[[
   Draws lines on the edges of the given rectangle.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
 ]]
 function wedit.debugRectangle(bottomLeft, topRight, color)
@@ -555,8 +598,8 @@ end
 --[[
   Fills all air blocks in the given layer between the two points.
   Calls wedit.breakBlocks using the given arguments if the block is nil, false or "air".
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param layer - "foreground" or "background".
   @param block - String representation of material to use.
   @return - Copy of the selection prior to the fill command.
@@ -618,8 +661,8 @@ end
 
 --[[
   Break all blocks in the given layer between the two points.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param layer - "foreground" or "background".
   @return - Copy of the selection prior to the break command.
 ]]
@@ -668,10 +711,10 @@ function wedit.pencil(pos, layer, block)
   local mat = world.material(pos, layer)
   if (mat and mat ~= block) or not block then
     world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-    if block then
-      -- TODO: Time out task for same block within wedit.user.delay, to prevent multiple tasks trying to place the same block.
+    if block and wedit.lockPosition(pos, layer) then
       wedit.Task.create({function(task)
         world.placeMaterial(pos, layer, block, 0, true)
+        wedit.unlockPosition(pos, layer)
         task:complete()
       end}, nil, false):start()
     end
@@ -684,8 +727,8 @@ end
 
 --[[
   Copies and returns the given selection. Used in combination with wedit.paste.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param [copyOptions] - Table with options representing what should be copied. Default is all-true.
     Supported options:
     foreground, foregroundMods, background, backgroundMods, liquids, objects, containerLoot
@@ -1150,8 +1193,8 @@ end
 
 --[[
   Initializes and begins a replace operation.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param layer - "foreground" or "background".
   @param toBlock - String representation of material to replace blocks with. Replaces with air when value is nil or false.
   @param [fromBlock] - String representation of material to replace. Replaces all blocks when value is nil or false.
@@ -1262,19 +1305,19 @@ end
   @param layer - "foreground" or "background"
 ]]
 function wedit.removeMod(pos, layer)
-  pos = {math.floor(pos[1]), math.floor(pos[2])}
   local mod = world.mod(pos, layer)
   local mat = world.material(pos, layer)
   if not mod or not mat then return end
 
   if not wedit.breakMods[mod] then
     world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
-  else
+  elseif wedit.lockPosition(pos, layer) then
     wedit.Task.create({function(task)
-      world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
+      world.placeMod(pos, layer, "grass", nil, false)
       task:nextStage()
     end, function(task)
-      world.placeMaterial(pos, layer, mat, 0, true)
+      world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
+      wedit.unlockPosition(pos, layer)
       task:complete()
     end}):start()
   end
@@ -1282,8 +1325,8 @@ end
 
 --[[
   Drains any liquid in the given selection.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
 ]]
 function wedit.drain(bottomLeft, topRight)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
@@ -1295,8 +1338,8 @@ end
 
 --[[
   Fills the given selection with liquid.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param liquidId - ID of the liquid to use.
 ]]
 function wedit.hydrate(bottomLeft, topRight, liquidId)
@@ -1310,8 +1353,8 @@ end
 --[[
   Runs callback function with parameters (currentX, currentY) for each block in a line between the given points using Bresenham's Line Algorithm.
   Base code found at https://github.com/kikito/bresenham.lua is licensed under https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt
-  @param startPos - [X1, Y1], representing the start of the line.
-  @param endPos - [X2, Y2], representing the end of the line.
+  @param startPos - {X1, Y1}, representing the start of the line.
+  @param endPos - {X2, Y2}, representing the end of the line.
   @param callback - Callback function, called for every block on the line with the X and Y value as separate arguments.
 ]]
 function wedit.bresenham(startPos, endPos, callback)
@@ -1357,8 +1400,8 @@ end
 
 --[[
   Call bresenham function with a callback function to place the given block.
-  @param startPos - [X1, Y1], representing the start of the line.
-  @param endPos - [X2, Y2], representing the end of the line.
+  @param startPos - {X1, Y1}, representing the start of the line.
+  @param endPos - {X2, Y2}, representing the end of the line.
   @param layer - "foreground" or background".
   @param block - String representation of material to use.
 ]]
