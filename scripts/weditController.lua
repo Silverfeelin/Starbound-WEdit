@@ -25,22 +25,8 @@ function weditController.getConfigData(key)
   return root.getConfigurationPath("wedit." .. key)
 end
 
-wedit.user.delay = weditController.getConfigData("iterationDelay") or 15
-wedit.user.doubleIterations = weditController.getConfigData("doubleIterations")
-
-if weditController.getConfigData("clearSchematics") then
-    storage.weditSchematics = {}
-  weditController.setConfigData("clearSchematics", false)
-end
-
-wedit.user.lineSpacing = weditController.getConfigData("lineSpacing") or nil
-
 --- Noclip parameters.
 weditController.useNoclip = true
--- Bind can be any Keybinds compatible bind string.
-weditController.noclipBind = weditController.getConfigData("noclipBind") or "g"
--- Movement speed per tick, in blocks.
-weditController.noclipSpeed = weditController.getConfigData("noclipSpeed") or 0.75
 -- Default noclip status (on tech selection or character load)
 weditController.noclipping = false
 
@@ -80,6 +66,8 @@ wedit.colors = weditController.colors
 -- Table used to store the coordinates at which to display the config interface.
 weditController.configLocation = {}
 storage.weditCopy = storage.weditCopy or nil
+
+weditController.lastUpdate = os.clock()
 
 ----------------------------------------
 --          Useful functions          --
@@ -136,6 +124,34 @@ function weditController.validSelection()
   return next(weditController.selection[1]) and next(weditController.selection[2]) and true or false
 end
 
+function weditController.updateUserConfig(initializing)
+  if initializing or weditController.getConfigData("updateConfig") then
+    weditController.setConfigData("updateConfig", false)
+
+    if weditController.getConfigData("clearSchematics") then
+      storage.weditSchematics = {}
+      weditController.setConfigData("clearSchematics", false)
+    end
+
+    wedit.user.lineSpacing = weditController.getConfigData("lineSpacing") or nil
+
+    wedit.user.delay = weditController.getConfigData("iterationDelay") or 15
+    wedit.user.doubleIterations = weditController.getConfigData("doubleIterations")
+    wedit.user.brushShape = weditController.getConfigData("brushShape")
+    wedit.user.pencilSize = weditController.getConfigData("pencilSize")
+    wedit.user.blockSize = weditController.getConfigData("blockSize")
+    wedit.user.matmodSize = weditController.getConfigData("matmodSize")
+
+    -- Bind can be any Keybinds compatible bind string.
+    weditController.noclipBind = weditController.getConfigData("noclipBind") or "g"
+    -- Movement speed per tick, in blocks.
+    weditController.noclipSpeed = weditController.getConfigData("noclipSpeed") or 0.75
+  end
+end
+
+-- Run it once before the first update.
+weditController.updateUserConfig(true)
+
 ---------------------
 -- Update Callback --
 ---------------------
@@ -144,6 +160,13 @@ end
   Update function, called in the main update callback.
 ]]
 function weditController.update(args)
+  -- Update parameters every 2.5 seconds
+  local clock = os.clock()
+  if clock > weditController.lastUpdate + 1 then
+    weditController.lastUpdate = clock
+    weditController.updateUserConfig()
+  end
+
   -- Check if LMB / RMB are held down this game tick.
   weditController.primaryFire = args.moves["primaryFire"]
   weditController.altFire = args.moves["altFire"]
