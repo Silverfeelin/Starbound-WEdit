@@ -116,6 +116,7 @@ wedit.breakMods = {
   crystal = true,
   diamond = true,
   durasteel = true,
+  erchius = true,
   ferozium = true,
   gold = true,
   iron = true,
