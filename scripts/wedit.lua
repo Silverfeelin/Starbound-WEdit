@@ -65,46 +65,74 @@ wedit.mods = {
   [16] = "crystalgrass",
   [17] = "diamond",
   [18] = "durasteel",
-  [19] = "ferozium",
-  [20] = "fleshgrass",
-  [21] = "flowerygrass",
-  [22] = "gold",
-  [23] = "grass",
-  [24] = "heckgrass",
-  [25] = "hiveceilinggrass",
-  [26] = "hivegrass",
-  [27] = "iron",
-  [28] = "junglegrass",
-  [29] = "lead",
-  [30] = "metal",
-  [31] = "moonstone",
-  [32] = "moss",
-  [33] = "platinum",
-  [34] = "plutonium",
-  [35] = "prisilite",
-  [36] = "roots",
-  [37] = "sand",
-  [38] = "savannahgrass",
-  [39] = "silver",
-  [40] = "slimegrass",
-  [41] = "snow",
-  [42] = "snowygrass",
-  [43] = "solarium",
-  [44] = "sulphur",
-  [45] = "tar",
-  [46] = "tarceiling",
-  [47] = "tentaclegrass",
-  [48] = "thickgrass",
-  [49] = "tilled",
-  [50] = "tilleddry",
-  [51] = "titanium",
-  [52] = "toxicgrass",
-  [53] = "trianglium",
-  [54] = "tungsten",
-  [55] = "undergrowth",
-  [56] = "uranium",
-  [57] = "veingrowth",
-  [58] = "violium"
+  [19] = "erchius",
+  [20] = "ferozium",
+  [21] = "fleshgrass",
+  [22] = "flowerygrass",
+  [23] = "gold",
+  [24] = "grass",
+  [25] = "heckgrass",
+  [26] = "hiveceilinggrass",
+  [27] = "hivegrass",
+  [28] = "iron",
+  [29] = "junglegrass",
+  [30] = "lead",
+  [31] = "metal",
+  [32] = "moonstone",
+  [33] = "moss",
+  [34] = "platinum",
+  [35] = "plutonium",
+  [36] = "prisilite",
+  [37] = "roots",
+  [38] = "sand",
+  [39] = "savannahgrass",
+  [40] = "silver",
+  [41] = "slimegrass",
+  [42] = "snow",
+  [43] = "snowygrass",
+  [44] = "solarium",
+  [45] = "sulphur",
+  [46] = "tar",
+  [47] = "tarceiling",
+  [48] = "tentaclegrass",
+  [49] = "thickgrass",
+  [50] = "tilled",
+  [51] = "tilleddry",
+  [52] = "titanium",
+  [53] = "toxicgrass",
+  [54] = "trianglium",
+  [55] = "tungsten",
+  [56] = "undergrowth",
+  [57] = "uranium",
+  [58] = "veingrowth",
+  [59] = "violium"
+}
+
+wedit.breakMods = {
+  aegisalt = true,
+  coal = true,
+  copper = true,
+  corefragment = true,
+  crystal = true,
+  diamond = true,
+  durasteel = true,
+  ferozium = true,
+  gold = true,
+  iron = true,
+  lead = true,
+  metal = true,
+  moonstone = true,
+  platinum = true,
+  plutonium = true,
+  prisilite = true,
+  silver = true,
+  solarium = true,
+  sulphur = true,
+  titanium = true,
+  trianglium = true,
+  tungsten = true,
+  uranium = true,
+  violium = true
 }
 
 --[[
@@ -211,8 +239,8 @@ end
   For each block, see if there's a foreground material. If there is, see how far it's away from the furthest edge.
   If this number is smaller than than the current amount of iterations, less iterations are needed.
   Problem: Since every block is compared to the furthest edge and not other blocks, this generally misses a lot of skippable iterations.
-  @param bottomLeft - [X, Y], representing the bottom left corner of the rectangle.
-  @param size - [X, Y], representing the dimensions of the rectangle.
+  @param bottomLeft - {X, Y}, representing the bottom left corner of the rectangle.
+  @param size - {X, Y}, representing the dimensions of the rectangle.
   @param layer - "foreground" or "background", representing the layer to calculate iterations needed to fill for.
     Note: The algorithm will check the OPPOSITE layer, as it assumes the given layer will be emptied before filling.
 ]]
@@ -802,7 +830,7 @@ end
 --[[
   Initializes and begins a paste with the given values. The position represents the bottom left corner of the paste.
   @param copy - Copy table; see wedit.copy.
-  @param position - [X, Y], representing the bottom left corner of the paste area.
+  @param position - {X, Y}, representing the bottom left corner of the paste area.
   @return - Copy of the selection prior to the paste command.
 ]]
 function wedit.paste(copy, position)
@@ -1218,12 +1246,37 @@ end
 
 --[[
   Modifies the block at the given position, using a (hopefully validated) material mod type.
-  @param pos - [X, Y], representing the block position.
+  @param pos - {X, Y}, representing the block position.
   @param layer - "foreground" or "background".
   @param block - String representation of material to replace blocks with. Replaces with air when value is nil or false.
 ]]
 function wedit.placeMod(pos, layer, block)
   world.placeMod(pos, layer, block, nil, false)
+end
+
+--[[
+  Removes the matmod at the given position and layer.
+  Uses wedit.breakMods to determine whether the block has to be broken and replaced or not.
+  @param pos - {X, Y}, representing the block position.
+  @param layer - "foreground" or "background"
+]]
+function wedit.removeMod(pos, layer)
+  pos = {math.floor(pos[1]), math.floor(pos[2])}
+  local mod = world.mod(pos, layer)
+  local mat = world.material(pos, layer)
+  if not mod or not mat then return end
+
+  if not wedit.breakMods[mod] then
+    world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
+  else
+    wedit.Task.create({function(task)
+      world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
+      task:nextStage()
+    end, function(task)
+      world.placeMaterial(pos, layer, mat, 0, true)
+      task:complete()
+    end}):start()
+  end
 end
 
 --[[

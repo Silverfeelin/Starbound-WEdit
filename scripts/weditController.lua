@@ -774,6 +774,23 @@ function weditController.WE_Modifier()
 end
 
 --[[
+  Function to remove modifications from terrain (matmods).
+]]
+function weditController.WE_ModRemover()
+  wedit.info("^shadow;^orange;WEdit: MatMod Remover")
+  wedit.info("^shadow;^yellow;Primary Fire: Remove from foreground.", {0,-1})
+  wedit.info("^shadow;^yellow;Alt Fire: Remove from background.", {0,-2})
+
+  if not weditController.fireLock then
+    if weditController.primaryFire then
+      wedit.removeMod(tech.aimPosition(), "foreground")
+    elseif weditController.altFire then
+      wedit.removeMod(tech.aimPosition(), "background")
+    end
+  end
+end
+
+--[[
   Function to spawn a tool similar to the Modifier, dedicated to a single selected material mod.
 ]]
 function weditController.WE_ModPinner()
