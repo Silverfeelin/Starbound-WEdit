@@ -8,19 +8,40 @@
 --[[
   WEdit table, variables and functions accessed with 'wedit.' are stored here.
   Variables in wedit.user are prioritized over wedit.default; please do not touch wedit.default.
+  Note that variables in wedit.user can be set by the script (EG. from the configuration interface).
+  This may override values set below.
 ]]
 wedit = {
   default = {
     delay = 15,
     -- Tasks with a blank description aren't logged.
     description = "",
-    -- Note: synchronization is not optimized; setting this value to true may cause critical issues.
-    synchronized = false
-    },
+    -- Note: synchronization is not optimized; setting this value to true will cause critical issues.
+    synchronized = false,
+    lineSpacing = 1,
+    pencilSize = 1,
+    blockSize = 1,
+    matmodSize = 1,
+    brushShape = "square"
+  },
   user = {
 
-  }
+  },
+  config = {}
 }
+
+-- Set wedit.config to return the value found in wedit.user or in wedit.default.
+setmetatable(wedit.config, {__index = wedit.user})
+setmetatable(wedit.default, {
+  __index = function(t, k)
+    error("SIP: Could not find the default value for the parameter '" .. k .. "'.")
+  end
+})
+setmetatable(wedit.user, {
+  __index = function(t, k)
+    return wedit.default[k]
+  end
+})
 
 --[[
   Available matmods. Has to be updated when game updates add or remove options.
@@ -121,6 +142,18 @@ function wedit.debugRectangle(bottomLeft, topRight, color)
   world.debugLine(bottomLeft, {bottomLeft[1], topRight[2]}, color) -- left edge
   world.debugLine({topRight[1], bottomLeft[2]}, {topRight[1], topRight[2]}, color) -- right edge
   world.debugLine({bottomLeft[1], bottomLeft[2]}, {topRight[1], bottomLeft[2]}, color) -- bottom edge
+end
+
+--[[
+  Calls wedit.debugRectangle for the block at the given position.
+  @param pos - Position of the block, can be a floating-point number.
+  @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
+]]
+function wedit.debugBlock(pos, color)
+  local bl, tr = {math.floor(pos[1]), math.floor(pos[2])}, {math.ceil(pos[1]), math.ceil(pos[2])}
+  if bl[1] == tr[1] then tr[1] = tr[1] + 1 end
+  if bl[2] == tr[2] then tr[2] = tr[2] + 1 end
+  wedit.debugRectangle(bl, tr, color)
 end
 
 --[[
@@ -279,7 +312,7 @@ function wedit.Task.create(stages, delay, synchronized, description)
 
   task.delay = delay or wedit.user.delay or wedit.default.delay
   if wedit.user.doubleIterations then task.delay = math.ceil(task.delay / 2) end
-  
+
   if type(synchronized) == "boolean" then
     task.synchronized = synchronized
   elseif type(wedit.user.synchronized) == "boolean" then
@@ -668,7 +701,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   -- Table set containing objects in the selection.
   -- objectIds[id] = true
   local objectIds = {}
-  
+
   local materialCount = {}
   local matmodCount = {}
   local liquidCount = {}
@@ -677,7 +710,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
     if not tbl or not key then return end
     if not tbl[key] then tbl[key] = 1 else tbl[key] = tbl[key] + 1 end
   end
-      
+
   -- Iterate over every block
   for i=0,width-1 do
     copy.blocks[i+1] = {}
@@ -699,7 +732,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
       -- Block check
       local block = wedit.Block.create(pos, {i, j})
       copy.blocks[i+1][j+1] = block
-      
+
       -- Count materials.
       if logMaterials then
         increaseCount(materialCount, block.foreground.material)
@@ -711,7 +744,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
           increaseCount(liquidCount, liqName)
         end
       end
-      
+
       if copy.options.foreground == nil and block.foreground.material then copy.options.foreground = true end
       if copy.options.foregroundMods == nil and block.foreground.mod then copy.options.foregroundMods = true end
       if copy.options.background == nil and block.background.material then copy.options.background = true end
@@ -732,12 +765,12 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
     }
 
     local object = wedit.Object.create(id, offset)
-    
+
     -- Count objects.
     if logMaterials then
       increaseCount(objectCount, object.name)
     end
-    
+
     -- Set undefined containerLoot option to true if containers with items have been found.
     if copy.options.containerLoot == nil and object.items then copy.options.containerLoot = true end
 
@@ -755,12 +788,12 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
       if s ~= "" then s = s:sub(1, -3) .. "." end
       return s
     end
-    
+
     local sMaterials = formatString(materialCount)
     local sObjects = formatString(objectCount)
     local sMatmods = formatString(matmodCount)
     local sLiquids = formatString(liquidCount)
-    
+
     sb.logInfo(sLog, sMaterials, sMatmods, sObjects, sLiquids)
   end
   return copy
@@ -791,10 +824,10 @@ function wedit.paste(copy, position)
   if copy.options.background then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      
+
       local it = wedit.user.doubleIterations and 6 or 3
       task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, it)
-      
+
       if task.progress <= it then
         wedit.breakBlocks(position, topRight, "background")
       else
@@ -811,10 +844,10 @@ function wedit.paste(copy, position)
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      
+
       local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
       lessIterations = iterations < lessIterations and iterations or lessIterations
-      
+
       task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, lessIterations)
 
       if task.progress > lessIterations then
@@ -852,10 +885,10 @@ function wedit.paste(copy, position)
     -- Stage three: If copy has foreground, break it.
     table.insert(stages, function(task)
       task.progress = task.progress + 1
-      
+
       local it = wedit.user.doubleIterations and 6 or 3
       task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, it)
-      
+
       if task.progress <= it then
         wedit.breakBlocks(position, topRight, "foreground")
       else
@@ -1042,7 +1075,7 @@ end
 ]]
 function wedit.flip(copy, direction)
   direction = direction:lower()
-  
+
   if direction == "horizontal" then
     -- Flip blocks horizontally
     for i=1, math.floor(#copy.blocks / 2) do
@@ -1054,12 +1087,12 @@ function wedit.flip(copy, direction)
       end
       copy.blocks[i], copy.blocks[#copy.blocks - i + 1] = copy.blocks[#copy.blocks - i + 1], copy.blocks[i]
     end
-    
+
     -- Flip objects horizontally
     for i,v in ipairs(copy.objects) do
       v.offset[1] = copy.size[1] - v.offset[1]
     end
-    
+
     copy.flipX = not copy.flipX
   elseif direction == "vertical" then
     for _,w in ipairs(copy.blocks) do
@@ -1073,16 +1106,16 @@ function wedit.flip(copy, direction)
         w[i], w[#w- i + 1] = w[#w - i + 1], w[i]
       end
     end
-    
+
     for i,v in ipairs(copy.objects) do
       v.offset[2] = copy.size[2] - v.offset[2]
     end
-    
+
     copy.flipY = not copy.flipY
   else
     wedit.logInfo("Could not flip copy in direction '" .. direction .. "'.")
   end
-  
+
   return copy
 end
 
@@ -1281,6 +1314,50 @@ function wedit.line(startPos, endPos, layer, block)
   else
     wedit.bresenham(startPos, endPos, function(x, y) world.damageTiles({{x,y}}, layer, {x,y}, "blockish", 9999, 0) end)
   end
+end
+
+--[[
+  Runs the callback function with the position of each block in a rectangle around the given position and dimensions.
+  @param pos - {X1, Y1}, representing the center of the rectangle.
+  @param width - Horizontal size of the rectangle.
+  @param [height=width] - Vertical size of the rectangle.
+  @param callback - Callback function, called for every block in the circle.
+]]
+function wedit.rectangle(pos, width, height, callback)
+  height = height or width
+  local blocks = {}
+  local left, bottom  = (width - 1) / 2, (height - 1) / 2
+  for x=0,width-1 do
+    for y=0, height-1 do
+      local block = {pos[1] - left + x, pos[2] - bottom + y}
+      table.insert(blocks, block)
+      if callback then
+        callback(block)
+      end
+    end
+  end
+  return blocks
+end
+
+--[[
+  Runs the callback function with the position of each block in a circle around the given position and radius.
+  @param pos - {X1, Y1}, representing the center of the circle.
+  @param radius - Radius of the circle from the center, in blocks. This does not include the center block.
+  @param callback - Callback function, called for every block in the circle.
+]]
+function wedit.circle(pos, radius, callback)
+  radius = radius and math.abs(radius) or 1
+  local blocks = {}
+  for y=-radius,radius do
+    for x=-radius,radius do
+      if (x*x)+(y*y) <= (radius*radius) then
+        local block = {pos[1] + x, pos[2] + y}
+        table.insert(blocks, block)
+        callback(block)
+      end
+    end
+  end
+  return blocks
 end
 
 --[[
