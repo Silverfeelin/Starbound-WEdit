@@ -31,7 +31,7 @@ weditController.useNoclip = true
 weditController.noclipping = false
 
 -- Indices for selected materials, used by the Modifier and Hydrator.
-weditController.modIndex = 39
+weditController.modIndex = 1
 weditController.liquidIndex = 1
 
 -- Variables used to determine if LMB and/or RMB are held down this tick.
