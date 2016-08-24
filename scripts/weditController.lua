@@ -133,19 +133,18 @@ function weditController.updateUserConfig(initializing)
       weditController.setConfigData("clearSchematics", false)
     end
 
-    wedit.user.lineSpacing = weditController.getConfigData("lineSpacing") or nil
-
-    wedit.user.delay = weditController.getConfigData("iterationDelay") or 15
-    wedit.user.doubleIterations = weditController.getConfigData("doubleIterations")
-    wedit.user.brushShape = weditController.getConfigData("brushShape")
-    wedit.user.pencilSize = weditController.getConfigData("pencilSize")
-    wedit.user.blockSize = weditController.getConfigData("blockSize")
-    wedit.user.matmodSize = weditController.getConfigData("matmodSize")
+    wedit.user.lineSpacing = weditController.getConfigData("lineSpacing") or wedit.config.lineSpacing
+    wedit.user.delay = weditController.getConfigData("iterationDelay") or wedit.config.iterationDelay
+    wedit.user.doubleIterations = weditController.getConfigData("doubleIterations") or wedit.config.doubleIterations
+    wedit.user.brushShape = weditController.getConfigData("brushShape") or wedit.config.brushShape
+    wedit.user.pencilSize = weditController.getConfigData("pencilSize") or wedit.config.pencilSize
+    wedit.user.blockSize = weditController.getConfigData("blockSize") or wedit.config.blockSize
+    wedit.user.matmodSize = weditController.getConfigData("matmodSize") or wedit.config.matmodSize
 
     -- Bind can be any Keybinds compatible bind string.
-    weditController.noclipBind = weditController.getConfigData("noclipBind") or "g"
+    weditController.noclipBind = weditController.getConfigData("noclipBind") or wedit.config.noclipBind
     -- Movement speed per tick, in blocks.
-    weditController.noclipSpeed = weditController.getConfigData("noclipSpeed") or 0.75
+    weditController.noclipSpeed = weditController.getConfigData("noclipSpeed") or wedit.config.noclipSpeed
   end
 end
 

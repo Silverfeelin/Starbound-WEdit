@@ -7,9 +7,9 @@
 
 --[[
   WEdit table, variables and functions accessed with 'wedit.' are stored here.
-  Variables in wedit.user are prioritized over wedit.default; please do not touch wedit.default.
-  Note that variables in wedit.user can be set by the script (EG. from the configuration interface).
-  This may override values set below.
+  Configuration values should be accessed with 'wedit.config.key'.
+  Variables in wedit.user are prioritized over wedit.default.
+  Variables in wedit.user are primarily set by the WEdit configuration interface, it is not recommended to set them in this script.
 ]]
 wedit = {
   default = {
@@ -18,15 +18,19 @@ wedit = {
     description = "",
     -- Note: synchronization is not optimized; setting this value to true will cause critical issues.
     synchronized = false,
+    doubleIterations = false,
+    clearSchematics = false,
+    iterationDelay = 15,
     lineSpacing = 1,
     pencilSize = 1,
     blockSize = 1,
     matmodSize = 1,
-    brushShape = "square"
+    brushShape = "square",
+    noclipBind = "g",
+    noclipSpeed = 0.75,
+    updateConfig = false
   },
-  user = {
-
-  },
+  user = {},
   config = {}
 }
 
@@ -235,7 +239,7 @@ end
 ]]
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
-  if wedit.user.lineSpacing then offset[2] = offset[2] * wedit.user.lineSpacing end
+  if wedit.config.lineSpacing and wedit.config.lineSpacing ~= 1 then offset[2] = offset[2] * wedit.config.lineSpacing end
   wedit.debugText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
@@ -311,7 +315,7 @@ function wedit.calculateIterations(bottomLeft, size, layer)
     end
   end
 
-  if iterations and wedit.user.doubleIterations then iterations = iterations * 2 end
+  if iterations and wedit.config.doubleIterations then iterations = iterations * 2 end
   return airFound and iterations or 1
 end
 
@@ -372,9 +376,9 @@ wedit.Task.__tostring = function() return "weditTask" end
     task.parameters: Empty table that can be used to save and read parameters, without having to worry about reserved names.
     task.complete(): Sets task.completed to true. Does not abort remaining code when called in a stage function.
     task.callback: Function called every tick, regardless of delay and stage.
-  @param [delay=wedit.user.delay] - Delay, in game ticks, between each step.
-  @param [synchronized=wedit.user.synchronized] - Value indicating whether this task should run synchronized (true) or asynchronized (false).
-  @param [description=wedit.user.description] - Description used to log task details.
+  @param [delay=wedit.config.delay] - Delay, in game ticks, between each step.
+  @param [synchronized=wedit.config.synchronized] - Value indicating whether this task should run synchronized (true) or asynchronized (false).
+  @param [description=wedit.config.description] - Description used to log task details.
   @return - Task object.
 ]]
 function wedit.Task.create(stages, delay, synchronized, description)
@@ -382,17 +386,15 @@ function wedit.Task.create(stages, delay, synchronized, description)
 
   task.stages = type(stages) == "table" and stages or {stages}
 
-  task.delay = delay or wedit.user.delay or wedit.default.delay
-  if wedit.user.doubleIterations then task.delay = math.ceil(task.delay / 2) end
+  task.delay = delay or wedit.config.delay
+  if wedit.config.doubleIterations then task.delay = math.ceil(task.delay / 2) end
 
   if type(synchronized) == "boolean" then
     task.synchronized = synchronized
-  elseif type(wedit.user.synchronized) == "boolean" then
-    task.synchronized = wedit.user.synchronized
   else
-    task.synchronized = wedit.default.synchronized
+    task.synchronized = wedit.config.synchronized
   end
-  task.description = description or wedit.user.description or wedit.default.description
+  task.description = description or wedit.config.description
   task.stage = 1
   task.tick = 0
   task.progress = 0
@@ -897,7 +899,7 @@ function wedit.paste(copy, position)
     table.insert(stages, function(task)
       task.progress = task.progress + 1
 
-      local it = wedit.user.doubleIterations and 6 or 3
+      local it = wedit.config.doubleIterations and 6 or 3
       task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, it)
 
       if task.progress <= it then
@@ -958,7 +960,7 @@ function wedit.paste(copy, position)
     table.insert(stages, function(task)
       task.progress = task.progress + 1
 
-      local it = wedit.user.doubleIterations and 6 or 3
+      local it = wedit.config.doubleIterations and 6 or 3
       task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, it)
 
       if task.progress <= it then
