@@ -1044,7 +1044,9 @@ function wedit.paste(copy, position)
       local centerOffset = copy.size[1] / 2
       for _,v in pairs(copy.objects) do
         -- TODO: Object Direction
-        local dir = v.offset[1] < centerOffset and 1 or -1
+        local dir = v.parameters and v.parameters.direction == "left" and -1 or
+          v.parameters and v.parameters.direction == "right" and 1 or
+          v.offset[1] < centerOffset and 1 or -1
 
         -- Create unique ID
         local tempId = nil
@@ -1165,6 +1167,9 @@ function wedit.flip(copy, direction)
     -- Flip objects horizontally
     for i,v in ipairs(copy.objects) do
       v.offset[1] = copy.size[1] - v.offset[1]
+      if v.parameters and v.parameters.direction then
+        v.parameters.direction = v.parameters.direction == "right" and "left" or "right"
+      end
     end
 
     copy.flipX = not copy.flipX
