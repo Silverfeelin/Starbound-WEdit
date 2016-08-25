@@ -216,6 +216,13 @@ function weditController.update(args)
   end
 end
 
+--[[
+  Uninit function, called in the main uninit callback.
+]]
+function weditController.uninit()
+  tech.setParentState()
+end
+
 -- Set up noclip using Keybinds.
 Bind.create(weditController.noclipBind, function()
   weditController.noclipping = not weditController.noclipping
@@ -250,6 +257,13 @@ local oldUpdate = update
 update = function(args)
   oldUpdate(args)
   weditController.update(args)
+end
+
+-- Alter uninit callback.
+local oldUninit = uninit
+uninit = function()
+  oldUninit()
+  weditController.uninit()
 end
 
 -----------------
