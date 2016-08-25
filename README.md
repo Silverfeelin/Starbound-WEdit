@@ -23,16 +23,20 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
 > It is recommended to have `/debug` on at all times while using WEdit. Although WEdit will function fine without enabling the debug mode, vital information can only be seen with this mode enabled.  
 > If `/debug` does not work for you, manually set `allowAdminCommandsFromAnyone` to true in your `/storage/starbound.config`.
 
-To use any of the features WEdit offers, you must first obtain all WEdit Tools. You can obtain them by running the below command in singleplayer, and then using the item given to you. The command will spawn the item at the position of your cursor.  
-Note that this will add a bunch of items to your tools/etc. tab in your inventory. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.
+To use any of the features WEdit offers, you must first obtain all WEdit Tools.
 
+By opening your basic crafting menu (`C` by default), you can craft the `WE_ItemBox`. Note that this will add a bunch of items to your tools/etc. tab in your inventory when used. If there's not enough space in your inventory, the items will be dropped on the ground at the position of your character.  
+Just like any other WEdit tool, this tool requires the `dash` tech to be active on your character to function.
+
+You can also obtain them by running the below command in singleplayer. The command will spawn the item at the position of your cursor.  
 If you can't paste the command, your copy probably ends with a line break character. Line breaks prevent pasting in chat, so make sure you've only copied the actual command!
 ```
 /spawnitem silverore 1 '{"itemTags":[], "radioMessagesOnPickup":[], "learnBlueprintsOnPickup":[], "twoHanded":true, "shortdescription":"WE_ItemBox", "category":"^orange;WEdit: Item Box", "description":"^yellow;^yellow;Primary Fire: Spawn Tools.^reset;", "inventoryIcon":"/objects/floran/chestfloran1/chestfloran1icon.png"}'
 ```
-By holding one of these tools, you can access the corresponding feature. The usage of each feature is described in the below section [Features](#features). Generally, the left and right mouse buttons (primary fire and alt fire) are used to activate the items.
 
-You can toggle the built-in noclip mode by pressing your second tech action key (`G` by default).
+By holding one of the WEdit tools, you can access the corresponding feature. The usage of each feature is described in the [Wiki - Features](https://github.com/Silverfeelin/Starbound-WEdit/wiki/Features) section. Generally, the left and right mouse buttons (primary fire and alt fire) are used to activate the items.
+
+You can also toggle the built-in noclip mode by pressing your second tech action key (`G` by default).
 
 ## Using a different tech
 * Unpack `WEdit.pak`.
