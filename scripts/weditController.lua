@@ -598,7 +598,7 @@ function weditController.WE_Flip()
   wedit.info("^shadow;^orange;WEdit: Flip Tool")
   wedit.info("^shadow;^yellow;Primary Fire: Flip copy horizontally.", {0,-1})
   wedit.info("^shadow;^yellow;Alt Fire: Flip copy vertically.", {0,-2})
-  wedit.info("^shadow;^yellow;Flipping vertically will cause issues with objects, matmods and liquids.", {0,-3})
+  wedit.info("^shadow;^yellow;Flipping copies may cause issues with objects, matmods and liquids.", {0,-3})
 
   local c = storage.weditCopy
   if c then
