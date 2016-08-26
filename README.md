@@ -31,7 +31,7 @@ Just like any other WEdit tool, this tool requires the `dash` tech to be active 
 You can also obtain them by running the below command in singleplayer. The command will spawn the item at the position of your cursor.  
 If you can't paste the command, your copy probably ends with a line break character. Line breaks prevent pasting in chat, so make sure you've only copied the actual command!
 ```
-/spawnitem silverore 1 '{"itemTags":[], "radioMessagesOnPickup":[], "learnBlueprintsOnPickup":[], "twoHanded":true, "shortdescription":"WE_ItemBox", "category":"^orange;WEdit: Item Box", "description":"^yellow;^yellow;Primary Fire: Spawn Tools.^reset;", "inventoryIcon":"/objects/floran/chestfloran1/chestfloran1icon.png"}'
+/spawnitem triangliumore 1 '{"itemTags":[], "radioMessagesOnPickup":[], "learnBlueprintsOnPickup":[], "twoHanded":true, "shortdescription":"WE_ItemBox", "category":"^orange;WEdit: Item Box", "description":"^yellow;^yellow;Primary Fire: Spawn Tools.^reset;", "inventoryIcon":"/objects/floran/chestfloran1/chestfloran1icon.png"}'
 ```
 
 By holding one of the WEdit tools, you can access the corresponding feature. The usage of each feature is described in the [Wiki - Features](https://github.com/Silverfeelin/Starbound-WEdit/wiki/Features) section. Generally, the left and right mouse buttons (primary fire and alt fire) are used to activate the items.
