@@ -1,8 +1,6 @@
---[[ Keybinds Library
-Official page: http://SilverMods.com/Keybinds/
-
-Questions, suggestions, bug reports?
-Contact me at Silverfeelin@gmail.com
+--[[
+Keybinds Library
+https://github.com/Silverfeelin/Starbound-Keybinds
 ]]
 
 keybinds = {
@@ -22,6 +20,7 @@ keybinds.availableInputs = {
   onGround = true,
   running = true,
   walking = true,
+  jumping = true,
   facingDirection = true,
   liquidPercentage = true,
   position = true,
@@ -45,6 +44,7 @@ keybinds.inputStrings = {
   onground = "onGround",
   running = "running",
   walking = "walking",
+  jumping = "jumping",
   facingdirection = "facingDirection",
   liquidpercentage = "liquidPercentage",
   position = "position",
@@ -61,7 +61,7 @@ keybinds.inputStrings = {
 keybinds.input = {
   up = false, left = false, down = false, right = false,
   primaryFire = false, altFire = false,
-  onGround = true, running = false, walking = false,
+  onGround = true, running = false, walking = false, jumping = false,
   facingDirection = 1, liquidPercentage = 0,
   position = {0, 0}, aimPosition = {0, 0}, aimOffset = {2, 2}, aimRelative = {0, 0},
   f = false, g = false, h = false
@@ -149,7 +149,7 @@ function keybinds.updateInput(args)
   input.onGround = mcontroller.onGround()
   input.running = mcontroller.running()
   input.walking = mcontroller.walking()
-
+  input.jumping = args.moves.jump
   input.facingDirection = mcontroller.facingDirection()
   input.liquidPercentage = mcontroller.liquidPercentage()
 
