@@ -7,9 +7,9 @@
 
 --[[
   WEdit table, variables and functions accessed with 'wedit.' are stored here.
-  Variables in wedit.user are prioritized over wedit.default; please do not touch wedit.default.
-  Note that variables in wedit.user can be set by the script (EG. from the configuration interface).
-  This may override values set below.
+  Configuration values should be accessed with 'wedit.config.key'.
+  Variables in wedit.user are prioritized over wedit.default.
+  Variables in wedit.user are primarily set by the WEdit configuration interface, it is not recommended to set them in this script.
 ]]
 wedit = {
   default = {
@@ -18,15 +18,19 @@ wedit = {
     description = "",
     -- Note: synchronization is not optimized; setting this value to true will cause critical issues.
     synchronized = false,
+    doubleIterations = false,
+    clearSchematics = false,
+    iterationDelay = 15,
     lineSpacing = 1,
     pencilSize = 1,
     blockSize = 1,
     matmodSize = 1,
-    brushShape = "square"
+    brushShape = "square",
+    noclipBind = "g",
+    noclipSpeed = 0.75,
+    updateConfig = false
   },
-  user = {
-
-  },
+  user = {},
   config = {}
 }
 
@@ -65,46 +69,75 @@ wedit.mods = {
   [16] = "crystalgrass",
   [17] = "diamond",
   [18] = "durasteel",
-  [19] = "ferozium",
-  [20] = "fleshgrass",
-  [21] = "flowerygrass",
-  [22] = "gold",
-  [23] = "grass",
-  [24] = "heckgrass",
-  [25] = "hiveceilinggrass",
-  [26] = "hivegrass",
-  [27] = "iron",
-  [28] = "junglegrass",
-  [29] = "lead",
-  [30] = "metal",
-  [31] = "moonstone",
-  [32] = "moss",
-  [33] = "platinum",
-  [34] = "plutonium",
-  [35] = "prisilite",
-  [36] = "roots",
-  [37] = "sand",
-  [38] = "savannahgrass",
-  [39] = "silver",
-  [40] = "slimegrass",
-  [41] = "snow",
-  [42] = "snowygrass",
-  [43] = "solarium",
-  [44] = "sulphur",
-  [45] = "tar",
-  [46] = "tarceiling",
-  [47] = "tentaclegrass",
-  [48] = "thickgrass",
-  [49] = "tilled",
-  [50] = "tilleddry",
-  [51] = "titanium",
-  [52] = "toxicgrass",
-  [53] = "trianglium",
-  [54] = "tungsten",
-  [55] = "undergrowth",
-  [56] = "uranium",
-  [57] = "veingrowth",
-  [58] = "violium"
+  [19] = "erchius",
+  [20] = "ferozium",
+  [21] = "fleshgrass",
+  [22] = "flowerygrass",
+  [23] = "gold",
+  [24] = "grass",
+  [25] = "heckgrass",
+  [26] = "hiveceilinggrass",
+  [27] = "hivegrass",
+  [28] = "iron",
+  [29] = "junglegrass",
+  [30] = "lead",
+  [31] = "metal",
+  [32] = "moonstone",
+  [33] = "moss",
+  [34] = "platinum",
+  [35] = "plutonium",
+  [36] = "prisilite",
+  [37] = "roots",
+  [38] = "sand",
+  [39] = "savannahgrass",
+  [40] = "silver",
+  [41] = "slimegrass",
+  [42] = "snow",
+  [43] = "snowygrass",
+  [44] = "solarium",
+  [45] = "sulphur",
+  [46] = "tar",
+  [47] = "tarceiling",
+  [48] = "tentaclegrass",
+  [49] = "thickgrass",
+  [50] = "tilled",
+  [51] = "tilleddry",
+  [52] = "titanium",
+  [53] = "toxicgrass",
+  [54] = "trianglium",
+  [55] = "tungsten",
+  [56] = "undergrowth",
+  [57] = "uranium",
+  [58] = "veingrowth",
+  [59] = "violium"
+}
+
+wedit.breakMods = {
+  aegisalt = true,
+  coal = true,
+  copper = true,
+  corefragment = true,
+  crystal = true,
+  diamond = true,
+  durasteel = true,
+  erchius = true,
+  ferozium = true,
+  gold = true,
+  iron = true,
+  lead = true,
+  metal = true,
+  moonstone = true,
+  platinum = true,
+  plutonium = true,
+  prisilite = true,
+  silver = true,
+  solarium = true,
+  sulphur = true,
+  titanium = true,
+  trianglium = true,
+  tungsten = true,
+  uranium = true,
+  violium = true
 }
 
 --[[
@@ -130,9 +163,52 @@ for i,v in ipairs(wedit.liquids) do
 end
 
 --[[
+  Storage for positions that should be ignored by certain tools, such as the pencil.
+  This is to prevent multiple tasks from being created for the same tile.
+  Regular usage: wedit.lockedPositions[x .. "-" .. y .. layer] = true to lock and = nil to unlock.
+]]
+wedit.lockedPositions = {}
+
+--[[
+  Locks the block at the given position, which prevents the usage of the wedit.pencil
+  and wedit.removeMod on this block.
+  @param pos - {X, Y}, representing the position of the block to lock.
+  @param layer - "foreground" or "background".
+  @return - True if locking succeeded, false if it's already locked.
+]]
+function wedit.lockPosition(pos, layer)
+  layer = layer or "foreground"
+  local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
+  if wedit.lockedPositions[p] then
+    return false
+  else
+    wedit.lockedPositions[p] = true
+    return true
+  end
+end
+
+--[[
+  Unlocks the block at the given position, which allows the usage of the wedit.pencil
+  and wedit.removeMod on this block if it was already locked.
+  @param pos - {X, Y}, representing the position of the block to lock.
+  @param layer - "foreground" or "background".
+  @return - True if unlocking succeeded, false if it's already unlocked.
+]]
+function wedit.unlockPosition(pos, layer)
+  layer = layer or "foreground"
+  local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
+  if wedit.lockedPositions[p] then
+    wedit.lockedPositions[p] = nil
+    return true
+  else
+    return false
+  end
+end
+
+--[[
   Draws lines on the edges of the given rectangle.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
 ]]
 function wedit.debugRectangle(bottomLeft, topRight, color)
@@ -163,7 +239,7 @@ end
 ]]
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
-  if wedit.user.lineSpacing then offset[2] = offset[2] * wedit.user.lineSpacing end
+  if wedit.config.lineSpacing and wedit.config.lineSpacing ~= 1 then offset[2] = offset[2] * wedit.config.lineSpacing end
   wedit.debugText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
@@ -211,8 +287,8 @@ end
   For each block, see if there's a foreground material. If there is, see how far it's away from the furthest edge.
   If this number is smaller than than the current amount of iterations, less iterations are needed.
   Problem: Since every block is compared to the furthest edge and not other blocks, this generally misses a lot of skippable iterations.
-  @param bottomLeft - [X, Y], representing the bottom left corner of the rectangle.
-  @param size - [X, Y], representing the dimensions of the rectangle.
+  @param bottomLeft - {X, Y}, representing the bottom left corner of the rectangle.
+  @param size - {X, Y}, representing the dimensions of the rectangle.
   @param layer - "foreground" or "background", representing the layer to calculate iterations needed to fill for.
     Note: The algorithm will check the OPPOSITE layer, as it assumes the given layer will be emptied before filling.
 ]]
@@ -239,7 +315,7 @@ function wedit.calculateIterations(bottomLeft, size, layer)
     end
   end
 
-  if iterations and wedit.user.doubleIterations then iterations = iterations * 2 end
+  if iterations and wedit.config.doubleIterations then iterations = iterations * 2 end
   return airFound and iterations or 1
 end
 
@@ -300,9 +376,9 @@ wedit.Task.__tostring = function() return "weditTask" end
     task.parameters: Empty table that can be used to save and read parameters, without having to worry about reserved names.
     task.complete(): Sets task.completed to true. Does not abort remaining code when called in a stage function.
     task.callback: Function called every tick, regardless of delay and stage.
-  @param [delay=wedit.user.delay] - Delay, in game ticks, between each step.
-  @param [synchronized=wedit.user.synchronized] - Value indicating whether this task should run synchronized (true) or asynchronized (false).
-  @param [description=wedit.user.description] - Description used to log task details.
+  @param [delay=wedit.config.delay] - Delay, in game ticks, between each step.
+  @param [synchronized=wedit.config.synchronized] - Value indicating whether this task should run synchronized (true) or asynchronized (false).
+  @param [description=wedit.config.description] - Description used to log task details.
   @return - Task object.
 ]]
 function wedit.Task.create(stages, delay, synchronized, description)
@@ -310,17 +386,15 @@ function wedit.Task.create(stages, delay, synchronized, description)
 
   task.stages = type(stages) == "table" and stages or {stages}
 
-  task.delay = delay or wedit.user.delay or wedit.default.delay
-  if wedit.user.doubleIterations then task.delay = math.ceil(task.delay / 2) end
+  task.delay = delay or wedit.config.delay
+  if wedit.config.doubleIterations then task.delay = math.ceil(task.delay / 2) end
 
   if type(synchronized) == "boolean" then
     task.synchronized = synchronized
-  elseif type(wedit.user.synchronized) == "boolean" then
-    task.synchronized = wedit.user.synchronized
   else
-    task.synchronized = wedit.default.synchronized
+    task.synchronized = wedit.config.synchronized
   end
-  task.description = description or wedit.user.description or wedit.default.description
+  task.description = description or wedit.config.description
   task.stage = 1
   task.tick = 0
   task.progress = 0
@@ -526,8 +600,8 @@ end
 --[[
   Fills all air blocks in the given layer between the two points.
   Calls wedit.breakBlocks using the given arguments if the block is nil, false or "air".
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param layer - "foreground" or "background".
   @param block - String representation of material to use.
   @return - Copy of the selection prior to the fill command.
@@ -589,8 +663,8 @@ end
 
 --[[
   Break all blocks in the given layer between the two points.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param layer - "foreground" or "background".
   @return - Copy of the selection prior to the break command.
 ]]
@@ -639,10 +713,10 @@ function wedit.pencil(pos, layer, block)
   local mat = world.material(pos, layer)
   if (mat and mat ~= block) or not block then
     world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-    if block then
-      -- TODO: Time out task for same block within wedit.user.delay, to prevent multiple tasks trying to place the same block.
+    if block and wedit.lockPosition(pos, layer) then
       wedit.Task.create({function(task)
         world.placeMaterial(pos, layer, block, 0, true)
+        wedit.unlockPosition(pos, layer)
         task:complete()
       end}, nil, false):start()
     end
@@ -655,8 +729,8 @@ end
 
 --[[
   Copies and returns the given selection. Used in combination with wedit.paste.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param [copyOptions] - Table with options representing what should be copied. Default is all-true.
     Supported options:
     foreground, foregroundMods, background, backgroundMods, liquids, objects, containerLoot
@@ -802,7 +876,7 @@ end
 --[[
   Initializes and begins a paste with the given values. The position represents the bottom left corner of the paste.
   @param copy - Copy table; see wedit.copy.
-  @param position - [X, Y], representing the bottom left corner of the paste area.
+  @param position - {X, Y}, representing the bottom left corner of the paste area.
   @return - Copy of the selection prior to the paste command.
 ]]
 function wedit.paste(copy, position)
@@ -825,7 +899,7 @@ function wedit.paste(copy, position)
     table.insert(stages, function(task)
       task.progress = task.progress + 1
 
-      local it = wedit.user.doubleIterations and 6 or 3
+      local it = wedit.config.doubleIterations and 6 or 3
       task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, it)
 
       if task.progress <= it then
@@ -886,7 +960,7 @@ function wedit.paste(copy, position)
     table.insert(stages, function(task)
       task.progress = task.progress + 1
 
-      local it = wedit.user.doubleIterations and 6 or 3
+      local it = wedit.config.doubleIterations and 6 or 3
       task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, it)
 
       if task.progress <= it then
@@ -970,7 +1044,9 @@ function wedit.paste(copy, position)
       local centerOffset = copy.size[1] / 2
       for _,v in pairs(copy.objects) do
         -- TODO: Object Direction
-        local dir = v.offset[1] < centerOffset and 1 or -1
+        local dir = v.parameters and v.parameters.direction == "left" and -1 or
+          v.parameters and v.parameters.direction == "right" and 1 or
+          v.offset[1] < centerOffset and 1 or -1
 
         -- Create unique ID
         local tempId = nil
@@ -1091,6 +1167,9 @@ function wedit.flip(copy, direction)
     -- Flip objects horizontally
     for i,v in ipairs(copy.objects) do
       v.offset[1] = copy.size[1] - v.offset[1]
+      if v.parameters and v.parameters.direction then
+        v.parameters.direction = v.parameters.direction == "right" and "left" or "right"
+      end
     end
 
     copy.flipX = not copy.flipX
@@ -1121,8 +1200,8 @@ end
 
 --[[
   Initializes and begins a replace operation.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param layer - "foreground" or "background".
   @param toBlock - String representation of material to replace blocks with. Replaces with air when value is nil or false.
   @param [fromBlock] - String representation of material to replace. Replaces all blocks when value is nil or false.
@@ -1218,7 +1297,7 @@ end
 
 --[[
   Modifies the block at the given position, using a (hopefully validated) material mod type.
-  @param pos - [X, Y], representing the block position.
+  @param pos - {X, Y}, representing the block position.
   @param layer - "foreground" or "background".
   @param block - String representation of material to replace blocks with. Replaces with air when value is nil or false.
 ]]
@@ -1227,9 +1306,34 @@ function wedit.placeMod(pos, layer, block)
 end
 
 --[[
+  Removes the matmod at the given position and layer.
+  Uses wedit.breakMods to determine whether the block has to be broken and replaced or not.
+  @param pos - {X, Y}, representing the block position.
+  @param layer - "foreground" or "background"
+]]
+function wedit.removeMod(pos, layer)
+  local mod = world.mod(pos, layer)
+  local mat = world.material(pos, layer)
+  if not mod or not mat then return end
+
+  if not wedit.breakMods[mod] then
+    world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
+  elseif wedit.lockPosition(pos, layer) then
+    wedit.Task.create({function(task)
+      world.placeMod(pos, layer, "grass", nil, false)
+      task:nextStage()
+    end, function(task)
+      world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
+      wedit.unlockPosition(pos, layer)
+      task:complete()
+    end}):start()
+  end
+end
+
+--[[
   Drains any liquid in the given selection.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
 ]]
 function wedit.drain(bottomLeft, topRight)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
@@ -1241,8 +1345,8 @@ end
 
 --[[
   Fills the given selection with liquid.
-  @param bottomLeft - [X1, Y1], representing the bottom left corner of the rectangle.
-  @param topRight - [X2, Y2], representing the top right corner of the rectangle.
+  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
+  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
   @param liquidId - ID of the liquid to use.
 ]]
 function wedit.hydrate(bottomLeft, topRight, liquidId)
@@ -1256,8 +1360,8 @@ end
 --[[
   Runs callback function with parameters (currentX, currentY) for each block in a line between the given points using Bresenham's Line Algorithm.
   Base code found at https://github.com/kikito/bresenham.lua is licensed under https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt
-  @param startPos - [X1, Y1], representing the start of the line.
-  @param endPos - [X2, Y2], representing the end of the line.
+  @param startPos - {X1, Y1}, representing the start of the line.
+  @param endPos - {X2, Y2}, representing the end of the line.
   @param callback - Callback function, called for every block on the line with the X and Y value as separate arguments.
 ]]
 function wedit.bresenham(startPos, endPos, callback)
@@ -1303,8 +1407,8 @@ end
 
 --[[
   Call bresenham function with a callback function to place the given block.
-  @param startPos - [X1, Y1], representing the start of the line.
-  @param endPos - [X2, Y2], representing the end of the line.
+  @param startPos - {X1, Y1}, representing the start of the line.
+  @param endPos - {X2, Y2}, representing the end of the line.
   @param layer - "foreground" or background".
   @param block - String representation of material to use.
 ]]
