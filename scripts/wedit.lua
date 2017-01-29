@@ -1,12 +1,14 @@
 --[[
   WEdit library (http://silvermods.com/WEdit/)
 
-  The bresemham function falls under a different license, refer to it's documentation for licensing information.
+  The bresemham function falls under a different license; refer to it's documentation for licensing information.
+
   Hit ALT + 0 in NP++ to fold all, and get an overview of the contents of this script.
 ]]
 
 --[[
   WEdit table, variables and functions accessed with 'wedit.' are stored here.
+
   Configuration values should be accessed with 'wedit.config.key'.
   Variables in wedit.user are prioritized over wedit.default.
   Variables in wedit.user are primarily set by the WEdit configuration interface, it is not recommended to set them in this script.
@@ -36,14 +38,14 @@ wedit = {
 
 -- Set wedit.config to return the value found in wedit.user or in wedit.default.
 setmetatable(wedit.config, {__index = wedit.user})
-setmetatable(wedit.default, {
-  __index = function(t, k)
-    error("SIP: Could not find the default value for the parameter '" .. k .. "'.")
+setmetatable(wedit.user, {
+  __index = function(_, k)
+    return wedit.default[k]
   end
 })
-setmetatable(wedit.user, {
-  __index = function(t, k)
-    return wedit.default[k]
+setmetatable(wedit.default, {
+  __index = function(_, k)
+    error("SIP: Default value for the parameter '" .. k .. "' not set.")
   end
 })
 
