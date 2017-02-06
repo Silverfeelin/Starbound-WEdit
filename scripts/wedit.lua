@@ -921,12 +921,16 @@ function wedit.paste(copy, position)
     table.insert(stages, function(task)
       task.progress = task.progress + 1
 
+      -- TODO: Fixed some issue here where pasting would cut off, but this hotfix resulted in messy code that has to be cleaned up.
+      -- I should really figure out an alternative to calculateIterations.
       local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
-      lessIterations = iterations < lessIterations and iterations or lessIterations
+      if lessIterations + task.progress - 1 < iterations then
+        iterations = lessIterations + task.progress - 2
+      end
 
-      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, lessIterations)
+      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, iterations)
 
-      if task.progress > lessIterations then
+      if task.progress > iterations then
         task:nextStage()
         return
       end

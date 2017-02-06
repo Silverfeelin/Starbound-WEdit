@@ -231,6 +231,10 @@ function controller.update(args)
 
     wedit.actions[action]()
   end
+
+  if controller.validSelection() then
+    controller.showSelection()
+  end
 end
 
 --[[

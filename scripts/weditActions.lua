@@ -27,8 +27,6 @@ function wedit.actions.WE_Select()
     wedit.info("^shadow;^yellow;Alt Fire: Remove selection.", {0,-2})
     local w, h = wedit.controller.selection[2][1] - wedit.controller.selection[1][1], wedit.controller.selection[2][2] - wedit.controller.selection[1][2]
     wedit.info(string.format("^shadow;^yellow;Current Selection: ^red;(%sx%s)^yellow;.", w, h), {0,-3})
-
-    wedit.controller.showSelection()
   end
 
   -- RMB resets selection entirely
