@@ -641,6 +641,8 @@ function wedit.actions.WE_Ruler()
   wedit.info("^shadow;^yellow;Current Block: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-3})
   wedit.info("^shadow;^yellow;Current Layer: ^red;" .. wedit.controller.layer .. "^yellow;.", {0,-4})
 
+  local line = wedit.controller.line
+
   -- Make selection (similar to WE_Select, but doesn't convert the two points to the bottom left and top right corner).
   if wedit.controller.lineStage == 0 then
     -- Select stage 0: Not selecting.
@@ -649,8 +651,8 @@ function wedit.actions.WE_Ruler()
     if wedit.controller.primaryFire then
       -- Start selection; set first point.
       wedit.controller.lineStage = 1
-      wedit.controller.line[2] = {}
-      wedit.controller.line[1] = tech.aimPosition()
+      line[2] = {}
+      line[1] = tech.aimPosition()
     end
 
   elseif wedit.controller.lineStage == 1 then
@@ -658,14 +660,14 @@ function wedit.actions.WE_Ruler()
     -- Select stage 1: Selection started.
     if wedit.controller.primaryFire then
       -- Dragging selection; update second point.
-      wedit.controller.line[2] = tech.aimPosition()
+      line[2] = tech.aimPosition()
 
       -- Round each value down.
-      wedit.controller.line[1][1] = math.floor(wedit.controller.line[1][1])
-      wedit.controller.line[2][1] = math.floor(wedit.controller.line[2][1])
+      line[1][1] = math.floor(line[1][1])
+      line[2][1] = math.floor(line[2][1])
 
-      wedit.controller.line[1][2] = math.floor(wedit.controller.line[1][2])
-      wedit.controller.line[2][2] = math.floor(wedit.controller.line[2][2])
+      line[1][2] = math.floor(line[1][2])
+      line[2][2] = math.floor(line[2][2])
     else
       -- Selection ended; reset stage to allow next selection.
       wedit.controller.lineStage = 0
@@ -676,9 +678,9 @@ function wedit.actions.WE_Ruler()
   end
 
   -- Drawing and allowing RMB only works with a valid selection
-  if wedit.controller.line[1] and wedit.controller.line[1][1] and wedit.controller.line[2] and wedit.controller.line[2][1] then
+  if line[1] and line[1][1] and line[2] and line[2][1] then
     -- Draw boxes around every block in the current selection.
-    wedit.bresenham(wedit.controller.line[1], wedit.controller.line[2],
+    wedit.bresenham(line[1], line[2],
     function(x, y)
       world.debugLine({x, y}, {x + 1, y}, "green")
       world.debugLine({x, y + 1}, {x + 1, y + 1}, "green")
@@ -686,12 +688,15 @@ function wedit.actions.WE_Ruler()
       world.debugLine({x + 1, y}, {x + 1, y + 1}, "green")
     end)
 
-    wedit.info("^shadow;^yellow;Current line is indicated with green blocks.", {0,-5})
+    -- Calculate line length for display
+    local w, h = math.abs(line[1][1] - line[2][1]) + 1, math.abs(line[1][2] - line[2][2]) + 1
+    local length = w > h and w or h
+    wedit.info("^shadow;^yellow;Current Length: ^red;" .. length .. " ^yellow;blocks ^red;(" .. w .. "x" .. h .. ")^yellow;.", {0,-5})
 
     -- RMB : Fill selection.
     if not wedit.controller.fireLocked and wedit.controller.altFire then
       wedit.controller.fireLock()
-      wedit.line(wedit.controller.line[1], wedit.controller.line[2], wedit.controller.layer, wedit.controller.selectedBlockToString())
+      wedit.line(line[1], line[2], wedit.controller.layer, wedit.controller.selectedBlockToString())
     end
   end
 end

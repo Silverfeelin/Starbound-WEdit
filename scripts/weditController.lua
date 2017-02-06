@@ -119,7 +119,7 @@ function controller.showSelection()
   -- Draw selections if they have been made.
   if controller.validSelection() then
     wedit.debugRectangle(controller.selection[1], controller.selection[2])
-    wedit.debugText(string.format("^shadow;WEdit Selection (%s,%s)", controller.selection[2][1] - controller.selection[1][1], controller.selection[2][2] - controller.selection[1][2]), {controller.selection[1][1], controller.selection[2][2]}, "green")
+    wedit.debugText(string.format("^shadow;WEdit Selection (%sx%s)", controller.selection[2][1] - controller.selection[1][1], controller.selection[2][2] - controller.selection[1][2]), {controller.selection[1][1], controller.selection[2][2]}, "green")
 
     if storage.weditCopy and storage.weditCopy.size then
       local copy = storage.weditCopy
