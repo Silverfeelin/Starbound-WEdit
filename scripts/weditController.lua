@@ -23,6 +23,9 @@ function controller.getConfigData(key)
   return root.getConfigurationPath("wedit." .. key)
 end
 
+-- Failsafe: If the WEdit configuration table wasn't set, set it.
+if not root.getConfigurationPath("wedit") then root.setConfigurationPath("wedit", {}) end
+
 -- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
 status.setStatusProperty("wedit.compact.open", false)
 
