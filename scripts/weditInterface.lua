@@ -22,7 +22,7 @@ function weditInterface.init()
   mui.setTitle("^shadow;WEdit", "^shadow;Configure settings.")
   mui.setIcon("/interface/wedit/icon.png")
 
-  if not root.getConfigurationPath("wedit") then root.setConfigurationPath("wedit", {}) end
+  if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
 
   widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "g")
   widget.setText(widgets.noclipSpeed, weditInterface.getConfigData("noclipSpeed") or 0.75)
@@ -37,12 +37,16 @@ function weditInterface.init()
 end
 
 function weditInterface.setConfigData(key, value)
-  root.setConfigurationPath("wedit." .. key, value)
-  root.setConfigurationPath("wedit.updateConfig", true)
+  local config = status.statusProperty("wedit") or {}
+  config[key] = value
+  status.setStatusProperty("wedit", config)
+
+  world.sendEntityMessage(player.id(), "wedit.updateConfig")
 end
 
 function weditInterface.getConfigData(key)
-  return root.getConfigurationPath("wedit." .. key)
+  local config = status.statusProperty("wedit") or {}
+  return key == nil and config or config[key]
 end
 
 function weditInterface.changeNoClipBind()
