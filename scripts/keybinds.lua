@@ -6,7 +6,7 @@ https://github.com/Silverfeelin/Starbound-Keybinds
 keybinds = {
   binds = {},
   initialized = false,
-  version = "1.2"
+  version = "1.3.0"
 }
 
 -- For every type of input, set whether it can be bound.
@@ -33,7 +33,8 @@ keybinds.availableInputs = {
   specialOne = true,
   specialTwo = true,
   specialThree = true,
-  -- Don't set this one to false!
+  time = true,
+  -- Don't set this one to false, ever!
   aimOffset = true
 }
 
@@ -60,7 +61,7 @@ keybinds.inputStrings = {
   specialone = "specialOne",
   specialtwo = "specialTwo",
   specialthree = "specialThree",
-  -- Don't set this one to false!
+  time = "time",
   aimoffset = "aimOffset"
 }
 
@@ -71,8 +72,14 @@ keybinds.input = {
   onGround = true, running = false, walking = false, jumping = false,
   facingDirection = 1, liquidPercentage = 0,
   position = {0, 0}, aimPosition = {0, 0}, aimOffset = {2, 2}, aimRelative = {0, 0},
-  f = false, g = false, h = false, specialOne = false, specialTwo = false, specialThree = false
+  f = false, g = false, h = false, specialOne = false, specialTwo = false, specialThree = false,
+  time = 0
 }
+
+-- Unique Bind identifier, used to track time without worrying about shifting indices.
+local uid = 1
+
+local timeActive = {}
 
 --[[ Finalizes Keybinds by injecting function keybinds.update in the tech's main update function.]]
 function keybinds.initialize()
@@ -95,40 +102,17 @@ function keybinds.initialize()
         originalUpdate(args)
       end
     end
+
+    sb.logInfo("Keybinds v%s initialized.", keybinds.version)
   end
 end
 
 function keybinds.update(args)
   keybinds.updateInput(args)
 
-  for _,bind in pairs(keybinds.binds) do
+  for id,bind in pairs(keybinds.binds) do
 
-    runFunction = true
-
-    -- For every bind, check every arg.
-    -- If an arg does not match the current input, prevent the function for this bind from being called.
-    for k,v in pairs(bind.args) do
-      -- AimOffset is a (static) parameter for other input methods.
-      if k ~= "aimOffset" then
-        if runFunction and v ~= keybinds.input[k] then
-          -- Value for this argument does not match expected value for keybind.
-
-          if tostring(v) == "vec2" then
-            -- Check if positions are within the allowed range.
-            local dx = math.abs(v[1] - keybinds.input[k][1])
-            local dy = math.abs(v[2] - keybinds.input[k][2])
-
-            local offset = bind.args.aimOffset or keybinds.input.aimOffset
-
-            if dx > offset[1] or dy > offset[2] then
-              runFunction = false
-            end
-          else
-            runFunction = false
-          end
-        end
-      end
-    end
+    local runFunction = bind:matches(keybinds.input)
 
     -- Run function if the current input matches the arguments of the bind.
     -- Disables consecutive calls unless the bind is repeatable.
@@ -168,11 +152,11 @@ function keybinds.updateInput(args)
   }
   sb.setLogMap("player_rel", string.format("%s %s", input.aimRelative[1], input.aimRelative[2]))
 
-  input.f = args.moves.special == 1
+  input.f = args.moves.special1
   input.specialOne = input.f
-  input.g = args.moves.special == 2
+  input.g = args.moves.special2
   input.specialTwo = input.g
-  input.h = args.moves.special == 3
+  input.h = args.moves.special3
   input.specialThree = input.h
 end
 
@@ -233,16 +217,22 @@ end
 Bind = {}
 Bind.__index = Bind
 
-function Bind.create(args, f, repeatable)
+function Bind.create(args, f, repeatable, disable)
   -- Creating a bind will finalize the set-up, if not done already.
   keybinds.initialize()
 
   local bind = {}
-  setmetatable(bind, Bind)
+  bind.id = uid
+  uid = uid + 1
 
+  setmetatable(bind, Bind)
   bind:change(args, f, repeatable)
-  table.insert(keybinds.binds, bind)
-  bind.active = true
+
+  bind.active = not disable
+  if bind.active then
+    keybinds.binds[bind.id] = bind
+  end
+
   return bind
 end
 
@@ -268,25 +258,74 @@ function Bind:swap(otherBind)
   self.f, otherBind.f = otherBind.f, self.f
 end
 
-function Bind:rebind()
-  local bound = false
-  for i,v in pairs(keybinds.binds) do
-    if v == self then return end
+function Bind:toggle()
+  self.active = not self.active
+  if self.active then
+    self:rebind()
+  else
+    self:unbind()
   end
-  table.insert(keybinds.binds, self)
+end
+
+function Bind:rebind()
   self.active = true
+  keybinds.binds[self.id] = self
 end
 
 function Bind:unbind()
   self.active = false
-  for i,v in pairs(keybinds.binds) do
-    if v == self then
-      table.remove(keybinds.binds, i)
-      return
-    end
-  end
+  keybinds.binds[self.id] = nil
 end
 
 function Bind:isActive()
   return self.active
+end
+Bind.active = Bind.isActive
+
+function Bind:matches(input)
+  local runFunction = true
+
+  -- For every bind, check every arg.
+  -- If an arg does not match the current input, prevent the function for this bind from being called.
+  for k,v in pairs(self.args) do
+
+    if k == "aimOffset" or k == "time" then
+        goto nextArg
+    end
+
+    if runFunction and v ~= keybinds.input[k] then
+      -- Value for this argument does not match expected value for keybind.
+
+      if tostring(v) == "vec2" then
+        -- Check if positions are within the allowed range.
+        local dx = math.abs(v[1] - keybinds.input[k][1])
+        local dy = math.abs(v[2] - keybinds.input[k][2])
+
+        local offset = bind.args.aimOffset or keybinds.input.aimOffset
+
+        if dx > offset[1] or dy > offset[2] then
+          runFunction = false
+        end
+      else
+        runFunction = false
+      end
+    end
+
+    ::nextArg::
+  end
+
+  -- Special handling for timed binds.
+  if self.args.time then
+    local clock = os.clock()
+    if not runFunction then
+      timeActive[self.id] = nil
+    elseif not timeActive[self.id] then
+      timeActive[self.id] = clock + self.args.time
+      runFunction = false
+    elseif timeActive[self.id] > clock then
+      runFunction = false
+    end
+  end
+
+  return runFunction
 end
