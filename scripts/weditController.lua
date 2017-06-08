@@ -12,19 +12,23 @@ local startTime = os.clock()
 require "/scripts/wedit.lua"
 require "/scripts/weditActions.lua"
 require "/scripts/keybinds.lua"
+require "/scripts/messageutil.lua"
 
 local controller = { }
 wedit.controller = controller
 
 function controller.setConfigData(key, value)
-  root.setConfigurationPath("wedit." .. key, value)
+  local cfg = status.statusProperty("wedit") or {}
+  cfg[key] = value
+  status.setStatusProperty("wedit", cfg)
 end
 function controller.getConfigData(key)
-  return root.getConfigurationPath("wedit." .. key)
+  local cfg = status.statusProperty("wedit") or {}
+  return key == nil and cfg or cfg[key]
 end
 
 -- Failsafe: If the WEdit configuration table wasn't set, set it.
-if not root.getConfigurationPath("wedit") then root.setConfigurationPath("wedit", {}) end
+if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
 
 -- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
 status.setStatusProperty("wedit.compact.open", false)
@@ -58,8 +62,6 @@ controller.selectedBlock = "dirt"
 controller.backup = {}
 -- Table used to display information in certain colors. { title & operations, description, variables }
 controller.colors = { "^orange;", "^yellow;", "^red;"}
--- Variable used to determine when to poll the config for updates from the MUI configuration interface.
-controller.lastUpdate = os.clock()
 
 ----------------------------------------
 --          Useful functions          --
@@ -148,24 +150,20 @@ end
   wedit.default.
   @see wedit.config, wedit.user, wedit.default
 ]]
-function controller.updateUserConfig(initializing)
-  if initializing or controller.getConfigData("updateConfig") then
-    controller.setConfigData("updateConfig", false)
-
+function controller.updateUserConfig()
     -- Load config data
-    local cfg = root.getConfigurationPath("wedit")
-    for k in pairs(wedit.user) do
-      wedit.user[k] = nil
-    end
-    for k,v in pairs(cfg) do
-      wedit.user[k] = v
-    end
+  local cfg = controller.getConfigData()
+  for k in pairs(wedit.user) do
+    wedit.user[k] = nil
+  end
+  for k,v in pairs(cfg) do
+    wedit.user[k] = v
+  end
 
-    if wedit.config.clearSchematics then
-      storage.weditSchematics = {}
-      controller.setConfigData("clearSchematics", false)
-      wedit.user.clearSchematics = false
-    end
+  if wedit.config.clearSchematics then
+    storage.weditSchematics = {}
+    controller.setConfigData("clearSchematics", false)
+    wedit.user.clearSchematics = false
   end
 end
 
@@ -187,13 +185,6 @@ end
   Update function, called in the main update callback.
 ]]
 function controller.update(args)
-  -- Update parameters every 2.5 seconds
-  local clock = os.clock()
-  if clock > controller.lastUpdate + 1 then
-    controller.lastUpdate = clock
-    controller.updateUserConfig()
-  end
-
   -- Check if LMB / RMB are held down this game tick.
   controller.primaryFire = args.moves["primaryFire"]
   controller.altFire = args.moves["altFire"]
@@ -328,7 +319,8 @@ end
 ----------
 
 -- Load config once while still initializing.
-controller.updateUserConfig(true)
+controller.updateUserConfig()
+message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfig))
 
 -- Script loaded.
 loadTime = os.clock() - startTime

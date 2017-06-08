@@ -14,7 +14,18 @@ wedit.actions = wedit.actions or {}
   Function that appears to lack functionality, yet mysteriously accomplishes just about everything.
 ]]
 function wedit.actions.WE_AllInOne()
-  -- This tool has no code
+  if not status.statusProperty("wedit.compact.open") then
+    wedit.info("^shadow;^orange;WEdit: All in One")
+    wedit.info("^shadow;^yellow;Please open the compact interface first!", {0,-1})
+    wedit.info("^shadow;^yellow;Switch to ^red;WE_CompactInterface^yellow;.", {0,-2})
+  end
+end
+
+function wedit.actions.WE_CompactInterface()
+  wedit.info("^shadow;^orange;WEdit: Compact Interface")
+  wedit.info("^shadow;^yellow;Primary Fire: Open Interface.", {0,-1})
+  wedit.info("^shadow;^yellow;Requires the ^red;ItemInterfaces^yellow; mod!", {0,-2})
+  wedit.info("^shadow;^yellow;Hold the ^red;WE_AllInOne^yellow; tool with the interface open.", {0,-3})
 end
 
 --[[
