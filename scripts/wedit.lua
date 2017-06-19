@@ -235,6 +235,20 @@ function wedit.debugBlock(pos, color)
 end
 
 --[[
+  Recolors the info text to use the controller color scheme.
+  @param str - A string of text.
+  @return A string with the recolors applied.
+]]
+wedit.colorLevel = {yellow = 1, orange = 2, red = 3}
+function wedit.colorText(str)
+  if not wedit.controller.colors then return str;
+  else
+    return str:gsub("%^(.-);",function(code)
+      return wedit.controller.colors[wedit.colorLevel[code]]
+    end)
+  end
+end
+--[[
   Draws debug text below the user's character, or with an offset relative to it.
   @param str - Text to draw.
   @param [offset={0,0}] - {x,y} Offset relative to the feet of the player's character.
@@ -242,7 +256,7 @@ end
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
   if wedit.config.lineSpacing and wedit.config.lineSpacing ~= 1 then offset[2] = offset[2] * wedit.config.lineSpacing end
-  wedit.debugText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
+  wedit.debugText(wedit.colorText(str), {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
 --[[
