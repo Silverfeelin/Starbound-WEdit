@@ -1,0 +1,101 @@
+{
+  "global": {
+    "type": "table",
+    "fields": {
+      "wedit": {
+        "type": "table",
+        "fields": {
+          "controller" : {
+            "type" : "table",
+            "fields" : {
+
+            }
+          },
+
+          "breakBlocks": {
+            "type": "function",
+            "description": "Breaks all blocks in a rectangular selection.\n\nReturns a copy of the area before any blocks are modified.",
+            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}]
+          },
+          "bresenham": {
+            "type": "function",
+            "description": "For each block in a line between two points, calls the callback function.\n\nThis uses the bresenham algorithm implementation by **kikito**, licensed under the [MIT license](https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt).",
+            "link": "https://github.com/kikito/bresenham.lua",
+            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "callback"}]
+          },
+          "circle": {
+            "type": "function",
+            "description": "For each block in a circle around the given position and radius, calls the callback function with the block position `{x,y}`.",
+            "args": [{ "name": "position" }, { "name": "radius" }, { "name": "callback"}]
+          },
+          "copy": {
+            "type": "function",
+            "description": "Creates a copy of the rectangular selection. The optional `copyOptions` table defines what parts should be copied, with all being true by default (E.g. copyOptions.foreground = true). If given, any missing option will be automatically determined by the copy.\n\nAvailable options: `foreground`, `foregroundMods`, `background`, `backgroundMods`, `liquids`, `objects`, `containerLoot`.\n\nIf `logMaterials` is true, the total objects and blocks copied are logged.",
+            "args": [{ "name": "bottomLeft" }, { "name": "topRight" }, { "name": "copyOptions" }, { "name": "logMaterials" }],
+            "argsDisplay": "bottomLeft, topRight[, copyOptions[, logMaterials]]"
+          },
+          "drain": {
+            "type": "function",
+            "description": "Drains any liquid from the rectangular selection. Both positions are included in this rectangle.",
+            "args": [{ "name": "bottomLeft" }, { "name": "topRight" }]
+          },
+          "fillBlocks": {
+            "type": "function",
+            "description": "Fills all air blocks in a rectangular selection. The operation will take time to complete.\n\nReturns a copy of the area before any blocks are modified.",
+            "args": [{ "name": "bottomLeft" }, { "name": "topRight"}, { "name": "layer"}, { "name": "block"}]
+          },
+          "flip": {
+            "type": "function",
+            "description": "Starts a flip operation. The operation will take time to complete. Direction can be `horizontal` or `vertical`. Vertically flipping can cause issues with objects and matmods. See `wedit.copy`.\n\nNote that the given copy is directly modified!",
+            "args": [{ "name": "copy" }, { "name": "direction" }]
+          },
+          "hydrate": {
+            "type": "function",
+            "description": "Fills a rectangular selection with a liquid. Both positions are included in this rectangle.",
+            "args": [{ "name": "bottomLeft" }, { "name": "topRight" }, { "name": "liquidId"}]
+          },
+          "line": {
+            "type": "function",
+            "description": "Place a block at every position on a line between two points. Uses `wedit.bresenham`.",
+            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}, { "name": "callback"}]
+          },
+          "logENV": {
+            "type": "function",
+            "description": "Dumps the _ENV values and table subvalues. Can't have enough of these at hand."
+          },
+          "paste": {
+            "type": "function",
+            "description": "Starts a paste operation. The operation will take time to complete. See `wedit.copy`.\n\nReturns a copy of the area before any blocks are modified.",
+            "args": [{ "name": "copy" }, { "name": "position" }]
+          },
+          "pencil": {
+            "type": "function",
+            "description": "Draws, replaces or breaks a block.",
+            "args": [{ "name": "pos" }, { "name": "layer" }, { "name": "block" }],
+            "argsDisplay": "bottomLeft, topRight[, block]"
+          },
+          "placeMod": {
+            "type": "function",
+            "description": "Places a material mod at the given position and layer.",
+            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}, { "name": "callback"}]
+          },
+          "rectangle": {
+            "type": "function",
+            "description": "For each block in a rectangle around the given center position, calls the callback function with the block position `{x,y}`.",
+            "args": [{ "name": "center" }, { "name": "width" }, { "name": "height"}, { "name": "callback"}]
+          },
+          "removeMod": {
+            "type": "function",
+            "description": "Removes a material mod at the given position and layer.\n\nIf a mod is present in `wedit.breakMods` and must be broken to get rid of the mod, the mod is first replaced with grass.",
+            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}, { "name": "callback"}]
+          },
+          "replace": {
+            "type": "function",
+            "description": "Starts a block replace operation. The operation will take time to complete. If a `fromBlock` is given, only replaces blocks of this type.\n\nReturns a copy of the area before any blocks are modified.",
+            "args": [{ "name": "bottomLeft" }, { "name": "topRight" }, { "name": "layer"}, { "name": "toBlock"}, { "name": "fromBlock", "displayName": "[fromBlock]"}]
+          },
+        }
+      }
+    }
+  }
+}

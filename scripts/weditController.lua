@@ -32,6 +32,7 @@ if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {})
 
 -- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
 status.setStatusProperty("wedit.compact.open", false)
+status.setStatusProperty("wedit.dyePicker.open", false)
 
 -- Default noclip status (on tech selection or character load)
 controller.noclipping = false
@@ -188,6 +189,7 @@ function controller.update(args)
   -- Check if LMB / RMB are held down this game tick.
   controller.primaryFire = args.moves["primaryFire"]
   controller.altFire = args.moves["altFire"]
+  controller.shiftHeld = not args.moves["running"]
 
   -- Removes the lock on your fire keys (LMB/RMB) if both have been released.
   if controller.fireLocked and not controller.primaryFire and not controller.altFire then
@@ -201,9 +203,12 @@ function controller.update(args)
       collisionEnabled = false,
       standingPoly = {},
       crouchingPoly = {},
+      physicsEffectCategories = {"immovable"},
       mass = 0,
       runSpeed = 0,
-      walkSpeed = 0
+      walkSpeed = 0,
+      airFriction = 99999,
+      airForce = 99999
     })
     wedit.setLogMap("Noclip", string.format("Press '%s' to stop flying.", wedit.config.noclipBind))
   else
@@ -275,12 +280,14 @@ end)
 local adjustPosition = function(offset)
   local pos = mcontroller.position()
   mcontroller.setPosition({pos[1] + offset[1], pos[2] + offset[2]})
+  mcontroller.setVelocity({0,0})
 end
 controller.noclipBinds = {}
 table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.config.noclipSpeed}) end, true))
 table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.config.noclipSpeed}) end, true))
 table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.config.noclipSpeed,0}) end, true))
 table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.config.noclipSpeed,0}) end, true))
+table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false))
 for _,v in ipairs(controller.noclipBinds) do
   v:unbind()
 end

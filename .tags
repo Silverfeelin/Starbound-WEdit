@@ -1,0 +1,155 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+) adjustPosition	.\scripts\weditController.lua	/^table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.config.noclipSpeed}) end, true))$/;"	f
+) adjustPosition	.\scripts\weditController.lua	/^table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.config.noclipSpeed,0}) end, true))$/;"	f
+) adjustPosition	.\scripts\weditController.lua	/^table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.config.noclipSpeed,0}) end, true))$/;"	f
+) adjustPosition	.\scripts\weditController.lua	/^table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.config.noclipSpeed}) end, true))$/;"	f
+Bind.create	.\scripts\keybinds.lua	/^function Bind.create(args, f, repeatable, disable)$/;"	f
+Bind:change	.\scripts\keybinds.lua	/^function Bind:change(args, f, repeatable)$/;"	f
+Bind:isActive	.\scripts\keybinds.lua	/^function Bind:isActive()$/;"	f
+Bind:matches	.\scripts\keybinds.lua	/^function Bind:matches(input)$/;"	f
+Bind:rebind	.\scripts\keybinds.lua	/^function Bind:rebind()$/;"	f
+Bind:swap	.\scripts\keybinds.lua	/^function Bind:swap(otherBind)$/;"	f
+Bind:toggle	.\scripts\keybinds.lua	/^function Bind:toggle()$/;"	f
+Bind:unbind	.\scripts\keybinds.lua	/^function Bind:unbind()$/;"	f
+__index 	.\scripts\wedit.lua	/^  __index = function(_, k)$/;"	f
+__tostring 	.\scripts\keybinds.lua	/^    __tostring = function() return "vec2" end$/;"	f
+actionSelected	.\interface\wedit\compact\compact.lua	/^function actionSelected(_, action)$/;"	f
+callback 	.\scripts\weditActions.lua	/^    callback = function(pos)$/;"	f
+canvasClickEvent	.\interface\wedit\dyePicker\dyePicker.lua	/^function canvasClickEvent(position, button, isButtonDown)$/;"	f
+clamp	.\interface\wedit\dyePicker\dyePicker.lua	/^function clamp(i, low, high)$/;"	f
+clearColor	.\interface\wedit\dyePicker\dyePicker.lua	/^function clearColor()$/;"	f
+controller.fireLock	.\scripts\weditController.lua	/^function controller.fireLock()$/;"	f
+controller.fixImagePath	.\scripts\weditController.lua	/^function controller.fixImagePath(path, image)$/;"	f
+controller.getConfigData	.\scripts\weditController.lua	/^function controller.getConfigData(key)$/;"	f
+controller.getSelectedMod	.\scripts\weditController.lua	/^function controller.getSelectedMod()$/;"	f
+controller.selectedBlockToString	.\scripts\weditController.lua	/^function controller.selectedBlockToString()$/;"	f
+controller.setConfigData	.\scripts\weditController.lua	/^function controller.setConfigData(key, value)$/;"	f
+controller.showSelection	.\scripts\weditController.lua	/^function controller.showSelection()$/;"	f
+controller.spawnOreParameters	.\scripts\weditController.lua	/^function controller.spawnOreParameters(shortDescription, description, category, inventoryIcon, rarity)$/;"	f
+controller.uninit	.\scripts\weditController.lua	/^function controller.uninit()$/;"	f
+controller.update	.\scripts\weditController.lua	/^function controller.update(args)$/;"	f
+controller.updateColor	.\scripts\weditController.lua	/^function controller.updateColor(layer)$/;"	f
+controller.updateUserConfig	.\scripts\weditController.lua	/^function controller.updateUserConfig()$/;"	f
+controller.validSelection	.\scripts\weditController.lua	/^function controller.validSelection()$/;"	f
+endDash	.\tech\dash\dash.lua	/^function endDash()$/;"	f
+groundValid	.\tech\dash\dash.lua	/^function groundValid()$/;"	f
+if action and type(wedit.actions[action]) 	.\scripts\weditController.lua	/^  if action and type(wedit.actions[action]) == "function" then$/;"	f
+init	.\interface\wedit\compact\compact.lua	/^function init()$/;"	f
+init	.\interface\wedit\dyePicker\dyePicker.lua	/^function init()$/;"	f
+init	.\tech\dash\dash.lua	/^function init()$/;"	f
+input 	.\scripts\keybinds.lua	/^      input = function(args)$/;"	f
+keybinds.initialize	.\scripts\keybinds.lua	/^function keybinds.initialize()$/;"	f
+keybinds.setVec2	.\scripts\keybinds.lua	/^function keybinds.setVec2(point)$/;"	f
+keybinds.stringToKeybind	.\scripts\keybinds.lua	/^function keybinds.stringToKeybind(s)$/;"	f
+keybinds.update	.\scripts\keybinds.lua	/^function keybinds.update(args)$/;"	f
+keybinds.updateInput	.\scripts\keybinds.lua	/^function keybinds.updateInput(args)$/;"	f
+local adjustPosition 	.\scripts\weditController.lua	/^local adjustPosition = function(offset)$/;"	f
+local debugCallback 	.\scripts\weditActions.lua	/^  local debugCallback = function(pos)$/;"	f
+local formatString 	.\scripts\wedit.lua	/^    local formatString = function(list)$/;"	f
+local increaseCount 	.\scripts\wedit.lua	/^  local increaseCount = function(tbl, key)$/;"	f
+num2hex	.\interface\wedit\dyePicker\dyePicker.lua	/^function num2hex(num)$/;"	f
+of a base tech script 	.\scripts\weditController.lua	/^  To load this script, it has to be required -inside- the init function of a base tech script (EG. distortionsphere.lua).$/;"	f
+selectColor	.\interface\wedit\dyePicker\dyePicker.lua	/^function selectColor(pos)$/;"	f
+self.doubleTap 	.\tech\dash\dash.lua	/^  self.doubleTap = DoubleTap:new({"left", "right"}, config.getParameter("maximumDoubleTapTime"), function(dashKey)$/;"	f
+self:gsub(pattern, function(c) fields[#fields+1] 	.\scripts\keybinds.lua	/^  self:gsub(pattern, function(c) fields[#fields+1] = c end)$/;"	f
+startDash	.\tech\dash\dash.lua	/^function startDash(direction)$/;"	f
+string:split	.\scripts\keybinds.lua	/^function string:split(sep)$/;"	f
+table.insert(controller.noclipBinds, Bind.create("up	.\scripts\weditController.lua	/^table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false))$/;"	f
+task.callback 	.\scripts\wedit.lua	/^  task.callback = function()$/;"	f
+task.coroutine 	.\scripts\wedit.lua	/^  task.coroutine = coroutine.create(function()$/;"	f
+uninit	.\interface\wedit\compact\compact.lua	/^function uninit()$/;"	f
+uninit	.\interface\wedit\dyePicker\dyePicker.lua	/^function uninit()$/;"	f
+uninit	.\tech\dash\dash.lua	/^function uninit()$/;"	f
+uninit 	.\scripts\weditController.lua	/^uninit = function()$/;"	f
+update	.\interface\wedit\dyePicker\dyePicker.lua	/^function update()$/;"	f
+update	.\tech\dash\dash.lua	/^function update(args)$/;"	f
+update 	.\scripts\keybinds.lua	/^      update = function(args)$/;"	f
+update 	.\scripts\wedit.lua	/^update = function(args)$/;"	f
+update 	.\scripts\weditController.lua	/^update = function(args)$/;"	f
+wedit.Block.__tostring 	.\scripts\wedit.lua	/^wedit.Block.__tostring = function() return "starboundBlock" end$/;"	f
+wedit.Block.create	.\scripts\wedit.lua	/^function wedit.Block.create(position, offset, foreground, foregroundMod, background, backgroundMod, liquid)$/;"	f
+wedit.Block:getLiquid	.\scripts\wedit.lua	/^function wedit.Block:getLiquid()$/;"	f
+wedit.Block:getMaterial	.\scripts\wedit.lua	/^function wedit.Block:getMaterial(layer)$/;"	f
+wedit.Block:getMod	.\scripts\wedit.lua	/^function wedit.Block:getMod(layer)$/;"	f
+wedit.Object.__tostring 	.\scripts\wedit.lua	/^wedit.Object.__tostring = function() return "starboundObject" end$/;"	f
+wedit.Object.create	.\scripts\wedit.lua	/^function wedit.Object.create(id, offset, name, parameters)$/;"	f
+wedit.Object:getItems	.\scripts\wedit.lua	/^function wedit.Object:getItems(clearTreasure)$/;"	f
+wedit.Object:getName	.\scripts\wedit.lua	/^function wedit.Object:getName()$/;"	f
+wedit.Object:getParameters	.\scripts\wedit.lua	/^function wedit.Object:getParameters()$/;"	f
+wedit.Task.__tostring 	.\scripts\wedit.lua	/^wedit.Task.__tostring = function() return "weditTask" end$/;"	f
+wedit.Task.create	.\scripts\wedit.lua	/^function wedit.Task.create(stages, delay, synchronized, description)$/;"	f
+wedit.Task:complete	.\scripts\wedit.lua	/^function wedit.Task:complete()$/;"	f
+wedit.Task:nextStage	.\scripts\wedit.lua	/^function wedit.Task:nextStage(keepProgress)$/;"	f
+wedit.Task:start	.\scripts\wedit.lua	/^function wedit.Task:start()$/;"	f
+wedit.actions.WE_AllInOne	.\scripts\weditActions.lua	/^function wedit.actions.WE_AllInOne()$/;"	f
+wedit.actions.WE_Block	.\scripts\weditActions.lua	/^function wedit.actions.WE_Block()$/;"	f
+wedit.actions.WE_BlockPinner	.\scripts\weditActions.lua	/^function wedit.actions.WE_BlockPinner()$/;"	f
+wedit.actions.WE_ColorPicker	.\scripts\weditActions.lua	/^function wedit.actions.WE_ColorPicker()$/;"	f
+wedit.actions.WE_CompactInterface	.\scripts\weditActions.lua	/^function wedit.actions.WE_CompactInterface()$/;"	f
+wedit.actions.WE_Config	.\scripts\weditActions.lua	/^function wedit.actions.WE_Config()$/;"	f
+wedit.actions.WE_Dehydrator	.\scripts\weditActions.lua	/^function wedit.actions.WE_Dehydrator()$/;"	f
+wedit.actions.WE_Erase	.\scripts\weditActions.lua	/^function wedit.actions.WE_Erase()$/;"	f
+wedit.actions.WE_Fill	.\scripts\weditActions.lua	/^function wedit.actions.WE_Fill()$/;"	f
+wedit.actions.WE_Flip	.\scripts\weditActions.lua	/^function wedit.actions.WE_Flip()$/;"	f
+wedit.actions.WE_Hydrator	.\scripts\weditActions.lua	/^function wedit.actions.WE_Hydrator()$/;"	f
+wedit.actions.WE_ItemBox	.\scripts\weditActions.lua	/^function wedit.actions.WE_ItemBox()$/;"	f
+wedit.actions.WE_Layer	.\scripts\weditActions.lua	/^function wedit.actions.WE_Layer()$/;"	f
+wedit.actions.WE_Mod	.\scripts\weditActions.lua	/^function wedit.actions.WE_Mod()$/;"	f
+wedit.actions.WE_ModPinner	.\scripts\weditActions.lua	/^function wedit.actions.WE_ModPinner()$/;"	f
+wedit.actions.WE_ModRemover	.\scripts\weditActions.lua	/^function wedit.actions.WE_ModRemover()$/;"	f
+wedit.actions.WE_Modifier	.\scripts\weditActions.lua	/^function wedit.actions.WE_Modifier()$/;"	f
+wedit.actions.WE_Pencil	.\scripts\weditActions.lua	/^function wedit.actions.WE_Pencil()$/;"	f
+wedit.actions.WE_Replace	.\scripts\weditActions.lua	/^function wedit.actions.WE_Replace()$/;"	f
+wedit.actions.WE_Ruler	.\scripts\weditActions.lua	/^function wedit.actions.WE_Ruler()$/;"	f
+wedit.actions.WE_Schematic	.\scripts\weditActions.lua	/^function wedit.actions.WE_Schematic()$/;"	f
+wedit.actions.WE_SchematicMaker	.\scripts\weditActions.lua	/^function wedit.actions.WE_SchematicMaker()$/;"	f
+wedit.actions.WE_Select	.\scripts\weditActions.lua	/^function wedit.actions.WE_Select()$/;"	f
+wedit.actions.WE_Stamp	.\scripts\weditActions.lua	/^function wedit.actions.WE_Stamp()$/;"	f
+wedit.actions.WE_Undo	.\scripts\weditActions.lua	/^function wedit.actions.WE_Undo()$/;"	f
+wedit.breakBlocks	.\scripts\wedit.lua	/^function wedit.breakBlocks(bottomLeft, topRight, layer)$/;"	f
+wedit.bresenham	.\scripts\wedit.lua	/^function wedit.bresenham(startPos, endPos, callback)$/;"	f
+wedit.calculateIterations	.\scripts\wedit.lua	/^function wedit.calculateIterations(bottomLeft, size, layer)$/;"	f
+wedit.circle	.\scripts\wedit.lua	/^function wedit.circle(pos, radius, callback)$/;"	f
+wedit.clonePoint	.\scripts\wedit.lua	/^function wedit.clonePoint(point)$/;"	f
+wedit.copy	.\scripts\wedit.lua	/^function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)$/;"	f
+wedit.debugBlock	.\scripts\wedit.lua	/^function wedit.debugBlock(pos, color)$/;"	f
+wedit.debugRectangle	.\scripts\wedit.lua	/^function wedit.debugRectangle(bottomLeft, topRight, color)$/;"	f
+wedit.debugText	.\scripts\wedit.lua	/^function wedit.debugText(str, pos, color)$/;"	f
+wedit.drain	.\scripts\wedit.lua	/^function wedit.drain(bottomLeft, topRight)$/;"	f
+wedit.fillBlocks	.\scripts\wedit.lua	/^function wedit.fillBlocks(bottomLeft, topRight, layer, block)$/;"	f
+wedit.flip	.\scripts\wedit.lua	/^function wedit.flip(copy, direction)$/;"	f
+wedit.hydrate	.\scripts\wedit.lua	/^function wedit.hydrate(bottomLeft, topRight, liquidId)$/;"	f
+wedit.info	.\scripts\wedit.lua	/^function wedit.info(str, offset)$/;"	f
+wedit.line	.\scripts\wedit.lua	/^function wedit.line(startPos, endPos, layer, block)$/;"	f
+wedit.lockPosition	.\scripts\wedit.lua	/^function wedit.lockPosition(pos, layer)$/;"	f
+wedit.logENV	.\scripts\wedit.lua	/^function wedit.logENV()$/;"	f
+wedit.logError	.\scripts\wedit.lua	/^function wedit.logError(str, ...)$/;"	f
+wedit.logInfo	.\scripts\wedit.lua	/^function wedit.logInfo(str, ...)$/;"	f
+wedit.paste	.\scripts\wedit.lua	/^function wedit.paste(copy, position)$/;"	f
+wedit.pencil	.\scripts\wedit.lua	/^function wedit.pencil(pos, layer, block)$/;"	f
+wedit.placeMod	.\scripts\wedit.lua	/^function wedit.placeMod(pos, layer, block)$/;"	f
+wedit.rectangle	.\scripts\wedit.lua	/^function wedit.rectangle(pos, width, height, callback)$/;"	f
+wedit.removeMod	.\scripts\wedit.lua	/^function wedit.removeMod(pos, layer)$/;"	f
+wedit.replace	.\scripts\wedit.lua	/^function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)$/;"	f
+wedit.setLogMap	.\scripts\wedit.lua	/^function wedit.setLogMap(key, val)$/;"	f
+wedit.unlockPosition	.\scripts\wedit.lua	/^function wedit.unlockPosition(pos, layer)$/;"	f
+weditInterface.changeBlockSize	.\scripts\weditInterface.lua	/^function weditInterface.changeBlockSize()$/;"	f
+weditInterface.changeBrushShape	.\scripts\weditInterface.lua	/^function weditInterface.changeBrushShape(_, data)$/;"	f
+weditInterface.changeClearSchematics	.\scripts\weditInterface.lua	/^function weditInterface.changeClearSchematics()$/;"	f
+weditInterface.changeDoubleIterations	.\scripts\weditInterface.lua	/^function weditInterface.changeDoubleIterations()$/;"	f
+weditInterface.changeIterationDelay	.\scripts\weditInterface.lua	/^function weditInterface.changeIterationDelay()$/;"	f
+weditInterface.changeLineSpacing	.\scripts\weditInterface.lua	/^function weditInterface.changeLineSpacing()$/;"	f
+weditInterface.changeMatmodSize	.\scripts\weditInterface.lua	/^function weditInterface.changeMatmodSize()$/;"	f
+weditInterface.changeNoClipBind	.\scripts\weditInterface.lua	/^function weditInterface.changeNoClipBind()$/;"	f
+weditInterface.changeNoClipSpeed	.\scripts\weditInterface.lua	/^function weditInterface.changeNoClipSpeed()$/;"	f
+weditInterface.changePencilSize	.\scripts\weditInterface.lua	/^function weditInterface.changePencilSize()$/;"	f
+weditInterface.getConfigData	.\scripts\weditInterface.lua	/^function weditInterface.getConfigData(key)$/;"	f
+weditInterface.init	.\scripts\weditInterface.lua	/^function weditInterface.init()$/;"	f
+weditInterface.setConfigData	.\scripts\weditInterface.lua	/^function weditInterface.setConfigData(key, value)$/;"	f
+x, y) world.damageTiles	.\scripts\wedit.lua	/^    wedit.bresenham(startPos, endPos, function(x, y) world.damageTiles({{x,y}}, layer, {x,y}, "blockish", 9999, 0) end)$/;"	f
+x, y) world.placeMaterial	.\scripts\wedit.lua	/^    wedit.bresenham(startPos, endPos, function(x, y) world.placeMaterial({x, y}, layer, block, 0, true) end)$/;"	f

@@ -37,15 +37,14 @@ wedit = {
 }
 
 -- Set wedit.config to return the value found in wedit.user or in wedit.default.
-setmetatable(wedit.config, {__index = wedit.user})
-setmetatable(wedit.user, {
+setmetatable(wedit.config, {
   __index = function(_, k)
-    return wedit.default[k]
-  end
-})
-setmetatable(wedit.default, {
-  __index = function(_, k)
-    error("SIP: Default value for the parameter '" .. k .. "' not set.")
+    if wedit.user[k] ~= nil then
+      return wedit.user[k]
+    elseif wedit.default[k] ~= nil then
+      return wedit.default[k]
+    end
+    wedit.logError("The configuration key '%s' does not exist!", k)
   end
 })
 
@@ -271,11 +270,19 @@ function wedit.debugText(str, pos, color)
 end
 
 --[[
-  Logs the given string with a WEdit prefix.
+  Logs the given info string with a WEdit prefix.
   @param str - Text to log.
 ]]
-function wedit.logInfo(str)
-  sb.logInfo("WEdit: %s", str)
+function wedit.logInfo(str, ...)
+  sb.logInfo("WEdit: " .. str, ...)
+end
+
+--[[
+  Logs the given error string with a WEdit prefix.
+  @param str - Text to log.
+]]
+function wedit.logError(str, ...)
+  sb.logError("WEdit: " .. str, ...)
 end
 
 --[[
@@ -613,15 +620,6 @@ function wedit.Object:getItems(clearTreasure)
   end
 end
 
---[[
-  Fills all air blocks in the given layer between the two points.
-  Calls wedit.breakBlocks using the given arguments if the block is nil, false or "air".
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-  @param layer - "foreground" or "background".
-  @param block - String representation of material to use.
-  @return - Copy of the selection prior to the fill command.
-]]
 function wedit.fillBlocks(bottomLeft, topRight, layer, block)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -677,13 +675,6 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
   return copy
 end
 
---[[
-  Break all blocks in the given layer between the two points.
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-  @param layer - "foreground" or "background".
-  @return - Copy of the selection prior to the break command.
-]]
 function wedit.breakBlocks(bottomLeft, topRight, layer)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -719,12 +710,6 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
   return copy
 end
 
---[[
-  Draws a block, or break an existing block, at the location.
-  @param pos - World position in blocks.
-  @param layer - "foreground" or "background".
-  @param block - String representation of material to use.
-]]
 function wedit.pencil(pos, layer, block)
   local mat = world.material(pos, layer)
   if (mat and mat ~= block) or not block then
@@ -743,15 +728,6 @@ function wedit.pencil(pos, layer, block)
   wedit.setLogMap("Pencil", string.format("Drawn %s.", block))
 end
 
---[[
-  Copies and returns the given selection. Used in combination with wedit.paste.
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-  @param [copyOptions] - Table with options representing what should be copied. Default is all-true.
-    Supported options:
-    foreground, foregroundMods, background, backgroundMods, liquids, objects, containerLoot
-    Options not defined will be set to true if any match has been found in the selection.
-]]
 function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -776,9 +752,6 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
       ["containerLoot"] = true
     }
   end
-
-  -- TODO: Implement ignorable options. EG: Objects = true, but no objects were found.
-  ignorableOptions = {}
 
   local copy = {
     options = copyOptions,
@@ -889,12 +862,6 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   return copy
 end
 
---[[
-  Initializes and begins a paste with the given values. The position represents the bottom left corner of the paste.
-  @param copy - Copy table; see wedit.copy.
-  @param position - {X, Y}, representing the bottom left corner of the paste area.
-  @return - Copy of the selection prior to the paste command.
-]]
 function wedit.paste(copy, position)
   position = wedit.clonePoint(position)
 
@@ -1159,16 +1126,6 @@ function wedit.paste(copy, position)
   return backup
 end
 
---[[
-  Flips the given copy horizontally or vertically.
-  Affects blocks, objects and matmods.
-  Vertically flipping will cause issues with objects and matmods, since
-  most objects can not be placed on air and some matmods will still appear
-  on the top (or bottom) side of the flipped block.
-  @param copy - Copy to flip, made by wedit.copy().
-  @param direction - horizontal or vertical.
-  @return - Flipped copy. Note that the original Lua object is being modified.
-]]
 function wedit.flip(copy, direction)
   direction = direction:lower()
 
@@ -1218,15 +1175,6 @@ function wedit.flip(copy, direction)
   return copy
 end
 
---[[
-  Initializes and begins a replace operation.
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-  @param layer - "foreground" or "background".
-  @param toBlock - String representation of material to replace blocks with. Replaces with air when value is nil or false.
-  @param [fromBlock] - String representation of material to replace. Replaces all blocks when value is nil or false.
-  @returns - Copy of the selection prior to the replace command.
-]]
 function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -1315,22 +1263,10 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   return copy
 end
 
---[[
-  Modifies the block at the given position, using a (hopefully validated) material mod type.
-  @param pos - {X, Y}, representing the block position.
-  @param layer - "foreground" or "background".
-  @param block - String representation of material to replace blocks with. Replaces with air when value is nil or false.
-]]
 function wedit.placeMod(pos, layer, block)
   world.placeMod(pos, layer, block, nil, false)
 end
 
---[[
-  Removes the matmod at the given position and layer.
-  Uses wedit.breakMods to determine whether the block has to be broken and replaced or not.
-  @param pos - {X, Y}, representing the block position.
-  @param layer - "foreground" or "background"
-]]
 function wedit.removeMod(pos, layer)
   local mod = world.mod(pos, layer)
   local mat = world.material(pos, layer)
@@ -1350,11 +1286,6 @@ function wedit.removeMod(pos, layer)
   end
 end
 
---[[
-  Drains any liquid in the given selection.
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-]]
 function wedit.drain(bottomLeft, topRight)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
     for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
@@ -1363,12 +1294,6 @@ function wedit.drain(bottomLeft, topRight)
   end
 end
 
---[[
-  Fills the given selection with liquid.
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-  @param liquidId - ID of the liquid to use.
-]]
 function wedit.hydrate(bottomLeft, topRight, liquidId)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
     for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
@@ -1377,16 +1302,8 @@ function wedit.hydrate(bottomLeft, topRight, liquidId)
   end
 end
 
---[[
-  Runs callback function with parameters (currentX, currentY) for each block in a line between the given points using Bresenham's Line Algorithm.
-  Base code found at https://github.com/kikito/bresenham.lua is licensed under https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt
-  @param startPos - {X1, Y1}, representing the start of the line.
-  @param endPos - {X2, Y2}, representing the end of the line.
-  @param callback - Callback function, called for every block on the line with the X and Y value as separate arguments.
-]]
 function wedit.bresenham(startPos, endPos, callback)
   local x0, y0, x1, y1 = startPos[1], startPos[2], endPos[1], endPos[2]
-
   local sx,sy,dx,dy
 
   if x0 < x1 then
@@ -1425,13 +1342,6 @@ function wedit.bresenham(startPos, endPos, callback)
   end
 end
 
---[[
-  Call bresenham function with a callback function to place the given block.
-  @param startPos - {X1, Y1}, representing the start of the line.
-  @param endPos - {X2, Y2}, representing the end of the line.
-  @param layer - "foreground" or background".
-  @param block - String representation of material to use.
-]]
 function wedit.line(startPos, endPos, layer, block)
   if block ~= "air" and block ~= "none" then
     wedit.bresenham(startPos, endPos, function(x, y) world.placeMaterial({x, y}, layer, block, 0, true) end)
@@ -1440,13 +1350,6 @@ function wedit.line(startPos, endPos, layer, block)
   end
 end
 
---[[
-  Runs the callback function with the position of each block in a rectangle around the given position and dimensions.
-  @param pos - {X1, Y1}, representing the center of the rectangle.
-  @param width - Horizontal size of the rectangle.
-  @param [height=width] - Vertical size of the rectangle.
-  @param callback - Callback function, called for every block in the circle.
-]]
 function wedit.rectangle(pos, width, height, callback)
   height = height or width
   local blocks = {}
@@ -1463,12 +1366,6 @@ function wedit.rectangle(pos, width, height, callback)
   return blocks
 end
 
---[[
-  Runs the callback function with the position of each block in a circle around the given position and radius.
-  @param pos - {X1, Y1}, representing the center of the circle.
-  @param radius - Radius of the circle from the center, in blocks. This does not include the center block.
-  @param callback - Callback function, called for every block in the circle.
-]]
 function wedit.circle(pos, radius, callback)
   radius = radius and math.abs(radius) or 1
   local blocks = {}
@@ -1484,10 +1381,6 @@ function wedit.circle(pos, radius, callback)
   return blocks
 end
 
---[[
-  Function that logs environmental values and functions.
-  You can't have enough of these at your disposal.
-]]
 function wedit.logENV()
   for k,v in pairs(_ENV) do
     if type(v) == "table" then
