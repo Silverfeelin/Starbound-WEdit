@@ -238,7 +238,7 @@ end
   @param str - A string of text.
   @return A string with the recolors applied.
 ]]
-wedit.colorLevel = {yellow = 1, orange = 2, red = 3}
+wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
 function wedit.colorText(str)
   if not wedit.controller.colors then return str;
   else
