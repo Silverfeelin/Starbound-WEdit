@@ -116,6 +116,7 @@ wedit.bresenham	.\scripts\wedit.lua	/^function wedit.bresenham(startPos, endPos,
 wedit.calculateIterations	.\scripts\wedit.lua	/^function wedit.calculateIterations(bottomLeft, size, layer)$/;"	f
 wedit.circle	.\scripts\wedit.lua	/^function wedit.circle(pos, radius, callback)$/;"	f
 wedit.clonePoint	.\scripts\wedit.lua	/^function wedit.clonePoint(point)$/;"	f
+wedit.colorText	.\scripts\wedit.lua	/^function wedit.colorText(str)$/;"	f
 wedit.copy	.\scripts\wedit.lua	/^function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)$/;"	f
 wedit.debugBlock	.\scripts\wedit.lua	/^function wedit.debugBlock(pos, color)$/;"	f
 wedit.debugRectangle	.\scripts\wedit.lua	/^function wedit.debugRectangle(bottomLeft, topRight, color)$/;"	f

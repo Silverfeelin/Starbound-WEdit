@@ -4,14 +4,8 @@
     "fields": {
       "wedit": {
         "type": "table",
+        "description": "Core WEdit functions",
         "fields": {
-          "controller" : {
-            "type" : "table",
-            "fields" : {
-
-            }
-          },
-
           "breakBlocks": {
             "type": "function",
             "description": "Breaks all blocks in a rectangular selection.\n\nReturns a copy of the area before any blocks are modified.",
@@ -93,7 +87,7 @@
             "type": "function",
             "description": "Starts a block replace operation. The operation will take time to complete. If a `fromBlock` is given, only replaces blocks of this type.\n\nReturns a copy of the area before any blocks are modified.",
             "args": [{ "name": "bottomLeft" }, { "name": "topRight" }, { "name": "layer"}, { "name": "toBlock"}, { "name": "fromBlock", "displayName": "[fromBlock]"}]
-          },
+          }
         }
       }
     }
