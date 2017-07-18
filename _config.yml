@@ -1,0 +1,8 @@
+title: Starbound WEdit
+description: WEdit is a tech mod that allows you to edit the world around you on a larger scale through various functions and features not present in the game.
+google_analytics: 
+show_downloads: true
+theme: jekyll-theme-cayman
+
+gems:
+  - jekyll-mentions
