@@ -503,7 +503,7 @@ wedit.Block.__tostring = function() return "starboundBlock" end
   @param [backgroundMod] - Matmod found in the background layer.
   @param [liquid] - Liquid data found.
 ]]
-function wedit.Block.create(position, offset, foreground, foregroundMod, background, backgroundMod, liquid)
+function wedit.Block.create(position, offset)
   if not position then error("WEdit: Attempted to create a Block object for a block without a valid original position.") end
   if not offset then error(string.format("WEdit: Attempted to create a Block object for a block at (%s, %s) without a valid offset.", position[1], position[2])) end
 
@@ -515,16 +515,18 @@ function wedit.Block.create(position, offset, foreground, foregroundMod, backgro
   setmetatable(block, wedit.Block)
 
   block.foreground = {
-    material = foreground or block:getMaterial("foreground"),
-    mod = foregroundMod or block:getMod("foreground")
+    material = block:getMaterial("foreground"),
+    mod = block:getMod("foreground"),
   }
+  if block.foreground.material then block.foreground.materialColor = block:getMaterialColor("foreground") end
 
   block.background = {
-    material = background or block:getMaterial("background"),
-    mod = backgroundMod or block:getMod("background")
+    material = block:getMaterial("background"),
+    mod = block:getMod("background")
   }
+  if block.background.material then block.background.materialColor = block:getMaterialColor("background") end
 
-  block.liquid = liquid or block:getLiquid()
+  block.liquid = block:getLiquid()
 
   return block
 end
@@ -545,6 +547,11 @@ end
 ]]
 function wedit.Block:getMod(layer)
   return world.mod(self.position, layer)
+end
+
+function wedit.Block:getMaterialColor(layer)
+  local color = world.materialColor(self.position, layer)
+  return color ~= 0 and color
 end
 
 --[[
@@ -728,6 +735,10 @@ function wedit.pencil(pos, layer, block)
   wedit.setLogMap("Pencil", string.format("Drawn %s.", block))
 end
 
+function wedit.dye(pos, layer, colorIndex)
+  world.setMaterialColor(pos, layer, colorIndex or 0)
+end
+
 function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -749,7 +760,8 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
       ["backgroundMods"] = true,
       ["liquids"] = true,
       ["objects"] = true,
-      ["containerLoot"] = true
+      ["containerLoot"] = true,
+      ["materialColors"] = true -- Material color is always saved (see wedit.Block), but can be ignored when pasting.
     }
   end
 
@@ -813,6 +825,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
       if copy.options.background == nil and block.background.material then copy.options.background = true end
       if copy.options.backgroundMods == nil and block.background.mod then copy.options.backgroundMods = true end
       if copy.options.liquids == nil and block.liquid then copy.options.liquids = true end
+      if copy.options.materialColors == nil and block.foreground.materialColor or block.background.materialColor then copy.options.materialColors = true end
     end
   end
 
@@ -876,8 +889,7 @@ function wedit.paste(copy, position)
 
   local topRight = { position[1] + copy.size[1], position[2] + copy.size[2] }
 
-  ---
-  -- Stage one: If copy has a background, break original background
+  -- #region Stage 1: If copy has a background, break original background
   if copy.options.background then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
@@ -892,12 +904,11 @@ function wedit.paste(copy, position)
       end
     end)
   end
-  -- /Stage one
-  ---
+  -- #endregion
 
   local iterations = wedit.calculateIterations(position, copy.size)
 
-  -- Stage two: If copy has background OR foreground, place background and/or placeholders.
+  -- #region Stage 2: If copy has background OR foreground, place background and/or placeholders.
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(task)
       task.progress = task.progress + 1
@@ -939,11 +950,10 @@ function wedit.paste(copy, position)
       end
     end)
   end
-  -- /Stage two
-  ---
+  -- #endregion
 
   if copy.options.foreground then
-    -- Stage three: If copy has foreground, break it.
+    -- #region Stage 3: If copy has foreground, break it.
     table.insert(stages, function(task)
       task.progress = task.progress + 1
 
@@ -956,10 +966,9 @@ function wedit.paste(copy, position)
         task:nextStage()
       end
     end)
-    -- /Stage three
-    ---
+    -- #endregion
 
-    -- Stage four: If copy has foreground, place it.
+    -- #region Stage 4: If copy has foreground, place it.
     table.insert(stages, function(task)
 
       task.parameters.message = string.format("^shadow;Placing foreground blocks.")
@@ -979,11 +988,10 @@ function wedit.paste(copy, position)
 
       task:nextStage()
     end)
-    -- /Stage four
-    ---
+    -- #endregion
   end
 
-  -- Stage five: If copy has liquids, place them.
+  -- #region Stage 5: If copy has liquids, place them.
   if copy.options.liquids then
     table.insert(stages, function(task)
 
@@ -1003,10 +1011,9 @@ function wedit.paste(copy, position)
       task:nextStage()
     end)
   end
-  -- /Stage five
-  ---
+  -- #endregion
 
-  -- Stage six: If paste has foreground, and thus may need placeholders, remove the placeholders.
+  -- #region Stage 6: If paste has foreground, and thus may need placeholders, remove the placeholders.
   if copy.options.foreground then
     table.insert(stages, function(task)
       task.parameters.message = "^shadow;Removing placeholder blocks."
@@ -1019,18 +1026,16 @@ function wedit.paste(copy, position)
       task:nextStage()
     end)
   end
-  -- /Stage six
-  ---
+  -- #endregion
 
   if copy.options.objects and #copy.objects > 0 then
     local hasItems = false
 
-    -- Stage seven: If copy has objects, place them.
+    -- #region Stage 7: If copy has objects, place them.
     table.insert(stages, function(task)
       task.parameters.message = "^shadow;Placing objects."
       local centerOffset = copy.size[1] / 2
       for _,v in pairs(copy.objects) do
-        -- TODO: Object Direction
         local dir = v.parameters and v.parameters.direction == "left" and -1 or
           v.parameters and v.parameters.direction == "right" and 1 or
           v.offset[1] < centerOffset and 1 or -1
@@ -1049,10 +1054,9 @@ function wedit.paste(copy, position)
       end
       task:nextStage()
     end)
-    -- /Stage seven
-    ---
+    -- #endregion
 
-    -- Stage eight: If copy has containers, place items in them.
+    -- #region Stage 8: If copy has containers, place items in them.
     if copy.options.containerLoot then
       table.insert(stages, function(task)
         task.parameters.message = "^shadow;Placing items in containers."
@@ -1071,11 +1075,10 @@ function wedit.paste(copy, position)
         task:nextStage()
       end)
     end
-    -- /Stage eight
-    ---
+    -- #endregion
   end
 
-  -- Stage nine: If copy has matmods, place them
+  -- #region Stage 9: If copy has matmods, place them
   if copy.options.foregroundMods or copy.options.backgroundMods then
     table.insert(stages, function(task)
       task.parameters.message = "^shadow;Placing material mods."
@@ -1097,16 +1100,37 @@ function wedit.paste(copy, position)
       task:nextStage()
     end)
   end
-  -- /Stage nine
-  ---
+  -- #endregion
 
-  -- Stage ten: Done
+  -- #region Stage 10: If copy has material colors, paint.
+  if copy.options.materialColors then
+    table.insert(stages, function(task)
+      task.parameters.message = "^shadow;Dyeing tiles."
+
+      for i=0,copy.size[1]-1 do
+        for j=0,copy.size[2]-1 do
+          local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
+          local block = copy.blocks[i+1][j+1]
+
+          if block.foreground.materialColor then
+            wedit.dye(pos, "foreground", block.foreground.materialColor)
+          end
+          if block.background.materialColor then
+            wedit.dye(pos, "background", block.foreground.materialColor)
+          end
+        end
+      end
+      task:nextStage()
+    end)
+  end
+  -- #endregion
+
+  -- #region Stage 11: Done
   table.insert(stages, function(task)
     task.parameters.message = "^shadow;Done pasting!"
     task:complete()
   end)
-  -- /Stage ten
-  ---
+  -- #endregion
 
   -- Create paste task, and start it.
   -- Add a callback to display a message every tick, rather than every step.

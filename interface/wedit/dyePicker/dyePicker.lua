@@ -1,101 +1,49 @@
-local holding = false
-
-function canvasClickEvent(position, button, isButtonDown)
-  sb.logInfo(" Button %s", button)
-  if button == 0 then
-    holding = isButtonDown
-  elseif button == 2 and isButtonDown then
-    clearColor()
-  end
-end
-
-require "/interface/wedit/dyePicker/spectrum.lua"
+require "/interface/wedit/dyePicker/dyePickerUtil.lua"
 require "/scripts/vec2.lua"
 
-local canvas
-local position = {-1,-1}
+local wColors = "colors"
+local widgetColorIndices = { none = -1, white = 0, black = 1, red = 2, orange = 3, yellow = 4, green = 5, blue = 6, pink = 7 }
+
+local forceClosed = false
 
 function init()
-  canvas = widget.bindCanvas("eventCanvas")
-
-  local serializedPos = status.statusProperty("wedit.dyePicker.position")
-  if serializedPos then selectColor(serializedPos) end
+  -- Prevent multiples dye pickers.
+  -- If the value is somehow true while the interface is closed, a reload should fix this.
+  -- weditController.lua forces them back to false on init.
+  if status.statusProperty("wedit.dyePicker.open") then
+    forceClosed = true
+    pane.dismiss()
+  end
 
   status.setStatusProperty("wedit.dyePicker.open", true)
-end
-
-function update()
-  if holding then
-    local pos = canvas:mousePosition()
-    if not vec2.eq(position, pos) then
-      selectColor(pos)
-      position = pos
-    end
-  end
+  loadSerializedColor()
 end
 
 function uninit()
-  status.setStatusProperty("wedit.dyePicker.open", false)
+  if not forceClosed then
+    status.setStatusProperty("wedit.dyePicker.open", false)
+  end
 end
 
-function selectColor(pos)
-  status.setStatusProperty("wedit.dyePicker.position", pos)
-
-  -- Clamp position within canvas bounds
-  local clampedPos = {
-    clamp(pos[1], 0, 157),
-    clamp(pos[2], 0, 54)
-  }
-  -- Invert Y
-  local colorPos = {clampedPos[1] + 1, 54 - clampedPos[2] + 1}
-
-  if pos[1] < 1 then pos[1] = 1 end
-  if pos[2] < 1 then pos[2] = 1 end
-  if pos[1] > 141 then pos[1] = pos[1] - 16 end
-  if pos[1] > 141 then pos[1] = 141 end
-  if pos[2] > 38 then pos[2] = pos[2] - 16 end
-  if pos[2] > 38 then pos[2] = 38 end
-
-  -- Get color
-  local color = spectrum[colorPos[1]][colorPos[2]]
-  status.setStatusProperty("wedit.dyePicker.color", color)
-
-  -- Set image
-  local img = "/interface/wedit/dyePicker/indicator.png?replace;ffffff="..num2hex(color[1])..num2hex(color[2])..num2hex(color[3])
-  canvas:clear()
-  canvas:drawImage(img, pos)
-
-  position = pos
+function pickColor(_, data)
+  dyePickerUtil.setSerializedColor(data)
 end
 
-function clearColor()
-  canvas:clear()
-  status.setStatusProperty("wedit.dyePicker.position", nil)
-  status.setStatusProperty("wedit.dyePicker.color", nil)
+-- Gets the color from the selected widget.
+function getSelectedColor()
+  local index = widget.getSelectedOption(wColors)
+  local data = widget.getData(string.format("%s.%s", wColors, index))
+  return data
 end
 
--- http://snipplr.com/view/13086/number-to-hex/
-function num2hex(num)
-    local hexstr = "0123456789abcdef"
-    local s = ""
-    while num > 0 do
-        local mod = math.fmod(num, 16)
-        s = string.sub(hexstr, mod+1, mod+1) .. s
-        num = math.floor(num / 16)
+-- Loads the serialized color and updates the widget selection.
+function loadSerializedColor()
+  local selectedColor = dyePickerUtil.getSerializedColor()
+  if selectedColor then
+    local selectionIndex = widgetColorIndices[selectedColor]
+    if selectionIndex then
+      -- Note: this will also call pickColor.
+      widget.setSelectedOption(wColors, selectionIndex)
     end
-    if s == "" then s = "00" end
-    if string.len(s) == 1 then s = "0" .. s end
-    return s
-end
-
---[[
-  Clamps and returns a value between the minimum and maximum value.
-  @param i - Value to clamp.
-  @param low - Minimum bound (inclusive).
-  @param high - Maximum bound (inclusive).
-  @return - low when i<low, high when i>high, or i.
-]]
-function clamp(i, low, high)
-  if low > high then low, high = high, low end
-  return math.min(high, math.max(low, i))
+  end
 end

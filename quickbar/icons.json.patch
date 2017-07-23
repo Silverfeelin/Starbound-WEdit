@@ -1,0 +1,11 @@
+[
+  {
+    "op": "add",
+    "path": "/normal/-",
+    "value": {
+      "label": "WEdit Settings",
+      "pane": "/interface/wedit/settings.config",
+      "icon": "/interface/wedit/iconSmall.png"
+    }
+  }
+]

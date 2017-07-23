@@ -39,9 +39,11 @@ controller.noclipping = false
 -- Indices for selected materials, used by the Modifier and Hydrator.
 controller.modIndex = 1
 controller.liquidIndex = 1
--- Variables used to determine if LMB and/or RMB are held down this tick.
+-- Variables used to determine if LMB and/or RMB are held down.
 controller.primaryFire, controller.altFire = false, false
 controller.fireLocked = false
+-- Used to determine if Shift is held down.
+controller.shiftHeld = false
 -- Number used by WE_Select to determine the selection stage (0: Nothing, 1: Selecting).
 controller.selectStage = 0
 -- Table used to store the current raw selection coordinates.
@@ -146,6 +148,14 @@ function controller.fireLock()
 end
 
 --[[
+  Sets shiftFireLocked and fireLocked to true, indicating that certain actions should not activate until both fire buttons and shift are released.
+  fireLocked may be false when shiftFireLocked is true, if the user is only holding shift.
+]]
+function controller.shiftFireLock()
+  controller.fireLocked = true
+  controller.shiftFireLocked = true
+end
+--[[
   Checks if the starbound.config file contains updated parameters for WEdit,
   before loading them. Overwrites data in wedit.user, which is prioritized over
   wedit.default.
@@ -189,11 +199,15 @@ function controller.update(args)
   -- Check if LMB / RMB are held down this game tick.
   controller.primaryFire = args.moves["primaryFire"]
   controller.altFire = args.moves["altFire"]
-  controller.shiftHeld = not args.moves["running"]
+  controller.shiftHeld = not args.moves["run"]
 
   -- Removes the lock on your fire keys (LMB/RMB) if both have been released.
   if controller.fireLocked and not controller.primaryFire and not controller.altFire then
     controller.fireLocked = false
+  end
+
+  if controller.shiftFireLocked and not controller.shiftHeld and not controller.primaryFire and not controller.altFire then
+    controller.shiftFireLocked = false
   end
 
   -- Set noclip movement parameters, if noclipping is enabled.
