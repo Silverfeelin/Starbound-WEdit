@@ -12,7 +12,7 @@ WEdit is a tech mod that allows you to edit the world around you on a larger sca
 ## Features
 * Edit terrain in-game on a large(r than usual) scale.
 * Copy and paste structures, even between planets.
-* Configure settings in the matter manipulator upgrade panel.
+* Configure settings in a Quickbar interface.
 
 A full list of features with their usage can be found on the [Wiki](https://github.com/Silverfeelin/Starbound-WEdit/wiki).
 
