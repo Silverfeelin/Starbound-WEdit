@@ -1116,7 +1116,7 @@ function wedit.paste(copy, position)
             wedit.dye(pos, "foreground", block.foreground.materialColor)
           end
           if block.background.materialColor then
-            wedit.dye(pos, "background", block.foreground.materialColor)
+            wedit.dye(pos, "background", block.background.materialColor)
           end
         end
       end
