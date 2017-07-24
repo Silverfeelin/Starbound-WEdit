@@ -18,10 +18,7 @@ local brushShapes = {
   circle = 0
 }
 
-function weditInterface.init()
-  mui.setTitle("^shadow;WEdit", "^shadow;Configure settings.")
-  mui.setIcon("/interface/wedit/icon.png")
-
+function init()
   if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
 
   widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "g")

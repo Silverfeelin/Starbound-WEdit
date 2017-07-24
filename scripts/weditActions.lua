@@ -7,6 +7,8 @@
   Hit ALT + 0 in NP++ to fold all, and get an overview of the contents of this script.
 ]]
 
+require "/interface/wedit/dyePicker/dyePickerUtil.lua"
+
 wedit = wedit or {}
 wedit.actions = wedit.actions or {}
 
@@ -771,6 +773,38 @@ function wedit.actions.WE_ItemBox()
         item.parameters.description = item.parameters.description:gsub("%^yellow;", wedit.controller.colors[2])
       end
       world.spawnItem(item, mcontroller.position())
+    end
+  end
+end
+
+function wedit.actions.WE_Dye()
+  wedit.info("^shadow;^orange;WEdit: Dye Tool")
+  wedit.info("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})
+  wedit.info("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
+  wedit.info("^shadow;^yellow;Shift + Fire: Open Dye Picker.", {0,-3})
+
+  local layer = wedit.controller.primaryFire and "foreground" or
+    wedit.controller.altFire and "background" or nil
+
+  local colorIndex = dyePickerUtil.getColorIndex(dyePickerUtil.getSerializedColor()) or 0
+
+  if wedit.controller.shiftHeld then
+    wedit.controller.shiftFireLock()
+    return
+  end
+
+  local callback = function(pos)
+      wedit.debugBlock(pos)
+      if layer then
+        wedit.dye(pos, layer, colorIndex)
+      end
+  end
+
+  if not wedit.controller.shiftFireLocked then
+    if wedit.config.brushShape == "square" then
+      wedit.rectangle(tech.aimPosition(), wedit.config.pencilSize, nil, callback)
+    elseif wedit.config.brushShape == "circle" then
+      wedit.circle(tech.aimPosition(), wedit.config.pencilSize, callback)
     end
   end
 end
