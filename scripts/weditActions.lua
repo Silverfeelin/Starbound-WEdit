@@ -26,6 +26,12 @@ function wedit.actions.WE_CompactInterface()
   wedit.info("^shadow;^yellow;Primary Fire: Open Interface.", {0,-1})
   wedit.info("^shadow;^yellow;Requires the ^red;ItemInterfaces^yellow; mod!", {0,-2})
   wedit.info("^shadow;^yellow;Hold the ^red;WE_AllInOne^yellow; tool with the interface open.", {0,-3})
+
+  local c = wedit.controller
+  if not c.fireLocked and (c.primaryFire or c.altFire) then
+    world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/compact/compact.config")
+    c.fireLock()
+  end
 end
 
 --[[
@@ -800,18 +806,18 @@ function wedit.actions.WE_Dye()
   local colorIndex = dyePickerUtil.getColorIndex(dyePickerUtil.getSerializedColor()) or 0
 
   if wedit.controller.shiftHeld then
-    wedit.controller.shiftFireLock()
-    return
-  end
+    if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/dyePicker/dyePicker.config")
+      wedit.controller.shiftFireLock()
+    end
+  elseif not wedit.controller.shiftFireLocked then
+    local callback = function(pos)
+        wedit.debugBlock(pos)
+        if layer then
+          wedit.dye(pos, layer, colorIndex)
+        end
+    end
 
-  local callback = function(pos)
-      wedit.debugBlock(pos)
-      if layer then
-        wedit.dye(pos, layer, colorIndex)
-      end
-  end
-
-  if not wedit.controller.shiftFireLocked then
     if wedit.config.brushShape == "square" then
       wedit.rectangle(tech.aimPosition(), wedit.config.pencilSize, nil, callback)
     elseif wedit.config.brushShape == "circle" then
