@@ -2,17 +2,11 @@
   WEdit library (http://silvermods.com/WEdit/)
 
   The bresemham function falls under a different license; refer to it's documentation for licensing information.
-
-  Hit ALT + 0 in NP++ to fold all, and get an overview of the contents of this script.
 ]]
 
---[[
-  WEdit table, variables and functions accessed with 'wedit.' are stored here.
-
-  Configuration values should be accessed with 'wedit.config.key'.
-  Variables in wedit.user are prioritized over wedit.default.
-  Variables in wedit.user are primarily set by the WEdit configuration interface, it is not recommended to set them in this script.
-]]
+--- WEdit table, variables and functions accessed with 'wedit.' are stored here.
+-- Configuration values should be accessed with 'wedit.config.key'.
+-- Variables in wedit.user are prioritized over wedit.default.
 wedit = {
   default = {
     delay = 15,
@@ -36,7 +30,7 @@ wedit = {
   config = {}
 }
 
--- Set wedit.config to return the value found in wedit.user or in wedit.default.
+--- Set wedit.config to return the value found in wedit.user or in wedit.default.
 setmetatable(wedit.config, {
   __index = function(_, k)
     if wedit.user[k] ~= nil then
@@ -48,71 +42,9 @@ setmetatable(wedit.config, {
   end
 })
 
---[[
-  Available matmods. Has to be updated when game updates add or remove options.
-]]
-wedit.mods = {
-  [1] = "aegisalt",
-  [2] = "aliengrass",
-  [3] = "alpinegrass",
-  [4] = "aridgrass",
-  [5] = "ash",
-  [6] = "blackash",
-  [7] = "bone",
-  [8] = "ceilingslimegrass",
-  [9] = "ceilingsnow",
-  [10] = "charredgrass",
-  [11] = "coal",
-  [12] = "colourfulgrass",
-  [13] = "copper",
-  [14] = "corefragment",
-  [15] = "crystal",
-  [16] = "crystalgrass",
-  [17] = "diamond",
-  [18] = "durasteel",
-  [19] = "erchius",
-  [20] = "ferozium",
-  [21] = "fleshgrass",
-  [22] = "flowerygrass",
-  [23] = "gold",
-  [24] = "grass",
-  [25] = "heckgrass",
-  [26] = "hiveceilinggrass",
-  [27] = "hivegrass",
-  [28] = "iron",
-  [29] = "junglegrass",
-  [30] = "lead",
-  [31] = "metal",
-  [32] = "moonstone",
-  [33] = "moss",
-  [34] = "platinum",
-  [35] = "plutonium",
-  [36] = "prisilite",
-  [37] = "roots",
-  [38] = "sand",
-  [39] = "savannahgrass",
-  [40] = "silver",
-  [41] = "slimegrass",
-  [42] = "snow",
-  [43] = "snowygrass",
-  [44] = "solarium",
-  [45] = "sulphur",
-  [46] = "tar",
-  [47] = "tarceiling",
-  [48] = "tentaclegrass",
-  [49] = "thickgrass",
-  [50] = "tilled",
-  [51] = "tilleddry",
-  [52] = "titanium",
-  [53] = "toxicgrass",
-  [54] = "trianglium",
-  [55] = "tungsten",
-  [56] = "undergrowth",
-  [57] = "uranium",
-  [58] = "veingrowth",
-  [59] = "violium"
-}
-
+---  Mods that require breaking the tile to remove them.
+-- These mods can still be removed by overwriting them with a mod such as grass
+-- before damaging the tile.
 wedit.breakMods = {
   aegisalt = true,
   coal = true,
@@ -141,9 +73,8 @@ wedit.breakMods = {
   violium = true
 }
 
---[[
-  Available liquids. Has to be updated when game updates add or remove options.
-]]
+--- Available liquids.
+-- Has to be updated when game updates add or remove options.
 wedit.liquids = {
   [1] = { name = "water", id = 1 },
   [2] = { name = "lava", id = 2 },
@@ -158,25 +89,24 @@ wedit.liquids = {
   [11] = { name = "jellyliquid", id = 17 }
 }
 
+--- Access liquids by their liquid ID.
 wedit.liquidsByID = {}
 for i,v in ipairs(wedit.liquids) do
   wedit.liquidsByID[v.id] = v.name
 end
 
---[[
-  Storage for positions that should be ignored by certain tools, such as the pencil.
-  This is to prevent multiple tasks from being created for the same tile.
-  Regular usage: wedit.lockedPositions[x .. "-" .. y .. layer] = true to lock and = nil to unlock.
-]]
+--- Holds positions that are locked and shouldn't be modified.
+-- Storage for positions that should be ignored by certain tools, such as the pencil.
+-- This is to prevent multiple tasks from being created for the same tile.
+-- Regular usage: wedit.lockedPositions[x .. "-" .. y .. layer] = true to lock and = nil to unlock.
 wedit.lockedPositions = {}
 
---[[
-  Locks the block at the given position, which prevents the usage of the wedit.pencil
-  and wedit.removeMod on this block.
-  @param pos - {X, Y}, representing the position of the block to lock.
-  @param layer - "foreground" or "background".
-  @return - True if locking succeeded, false if it's already locked.
-]]
+--- Locks the block at the given position.
+-- This prevents the usage of the wedit.pencil and wedit.removeMod on this block.
+-- These tools take multiple frames to run, and this prevents multiple tasks for the same block.
+-- @param pos {X, Y}, representing the position of the block to lock.
+-- @param layer "foreground" or "background".
+-- @return True if locking succeeded, false if it's already locked.
 function wedit.lockPosition(pos, layer)
   layer = layer or "foreground"
   local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
@@ -188,13 +118,11 @@ function wedit.lockPosition(pos, layer)
   end
 end
 
---[[
-  Unlocks the block at the given position, which allows the usage of the wedit.pencil
-  and wedit.removeMod on this block if it was already locked.
-  @param pos - {X, Y}, representing the position of the block to lock.
-  @param layer - "foreground" or "background".
-  @return - True if unlocking succeeded, false if it's already unlocked.
-]]
+--- Unlocks the block at the given position.
+-- This allows the usage of the wedit.pencil and wedit.removeMod on this block.
+-- @param pos {X, Y}, representing the position of the block to lock.
+-- @param layer "foreground" or "background".
+-- @return True if unlocking succeeded, false if it's already unlocked.
 function wedit.unlockPosition(pos, layer)
   layer = layer or "foreground"
   local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
@@ -206,12 +134,10 @@ function wedit.unlockPosition(pos, layer)
   end
 end
 
---[[
-  Draws lines on the edges of the given rectangle.
-  @param bottomLeft - {X1, Y1}, representing the bottom left corner of the rectangle.
-  @param topRight - {X2, Y2}, representing the top right corner of the rectangle.
-  @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
-]]
+--- Draws debug lines on the edges of the given rectangle.
+-- @param bottomLeft {X1, Y1}, representing the bottom left corner of the rectangle.
+-- @param topRight {X2, Y2}, representing the top right corner of the rectangle.
+-- @param[opt="green"] color "color" or {r, g, b}, where r/g/b are values between 0 and 255.
 function wedit.debugRectangle(bottomLeft, topRight, color)
   color = type(color) == "table" and color or type(color) == "string" and color or "green"
 
@@ -221,11 +147,9 @@ function wedit.debugRectangle(bottomLeft, topRight, color)
   world.debugLine({bottomLeft[1], bottomLeft[2]}, {topRight[1], bottomLeft[2]}, color) -- bottom edge
 end
 
---[[
-  Calls wedit.debugRectangle for the block at the given position.
-  @param pos - Position of the block, can be a floating-point number.
-  @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
-]]
+--- Calls wedit.debugRectangle for the block at the given position.
+-- @param pos Position of the block, can be a floating-point number.
+-- @param[opt="green"] color "color" or {r, g, b}, where r/g/b are values between 0 and 255.
 function wedit.debugBlock(pos, color)
   local bl, tr = {math.floor(pos[1]), math.floor(pos[2])}, {math.ceil(pos[1]), math.ceil(pos[2])}
   if bl[1] == tr[1] then tr[1] = tr[1] + 1 end
@@ -233,88 +157,76 @@ function wedit.debugBlock(pos, color)
   wedit.debugRectangle(bl, tr, color)
 end
 
---[[
-  Recolors the info text to use the controller color scheme.
-  @param str - A string of text.
-  @return A string with the recolors applied.
-]]
 wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
+--- Recolors the info text to use a color scheme.
+-- @param str A string of text.
+-- @return String with the recolors applied.
+-- @see wedit.colors
 function wedit.colorText(str)
-  if not wedit.controller.colors then return str;
+  if not wedit.colors then return str;
   else
     return str:gsub("%^(.-);",function(code)
       return wedit.controller.colors[wedit.colorLevel[code]]
     end)
   end
 end
---[[
-  Draws debug text below the user's character, or with an offset relative to it.
-  @param str - Text to draw.
-  @param [offset={0,0}] - {x,y} Offset relative to the feet of the player's character.
-]]
+
+---  Draws debug text below the user's character, or with an offset relative to it.
+-- @param str Text to draw.
+-- @param[opt={0,0}] offset {x,y} Offset relative to the feet of the player's character.
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
   if wedit.config.lineSpacing and wedit.config.lineSpacing ~= 1 then offset[2] = offset[2] * wedit.config.lineSpacing end
   wedit.debugText(wedit.colorText(str), {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
---[[
-  Draws debug text at the given world position.
-  @param str - Text to draw.
-  @param pos - Position in blocks.
-  @param [color="green"] - "color" or {r, g, b}, where r/g/b are values between 0 and 255.
-]]
+--- Draws debug text at the given world position.
+-- @param str Text to draw.
+-- @param pos Position in blocks.
+-- @param[opt="green"] color "color" or {r, g, b}, where r/g/b are values between 0 and 255.
 function wedit.debugText(str, pos, color)
   color = type(color) == "table" and color or type(color) == "string" and color or "green"
   world.debugText(str, pos, color)
 end
 
---[[
-  Logs the given info string with a WEdit prefix.
-  @param str - Text to log.
-]]
+--- Logs the formattable string with a WEdit prefix.
+-- @param str Text to log.
+-- @param ... Format arguments.
 function wedit.logInfo(str, ...)
   sb.logInfo("WEdit: " .. str, ...)
 end
 
---[[
-  Logs the given error string with a WEdit prefix.
-  @param str - Text to log.
-]]
+--- Logs the formattable error string with a WEdit prefix.
+-- @param str Text to log.
+-- @param ... Format arguments.
 function wedit.logError(str, ...)
   sb.logError("WEdit: " .. str, ...)
 end
 
---[[
-  Adds an entry to the debug log map, with a WEdit prefix.
-  @param key - Log map key. 'WEdit' is added in front of this key.
-  @param val - Log map value.
-]]
+---  Adds an entry to the debug log map, with a WEdit prefix.
+-- @param key Log map key. 'WEdit ' is added in front of this key.
+-- @param val Log map value.
 function wedit.setLogMap(key, val)
   sb.setLogMap(string.format("^cyan;WEdit %s", key), val)
 end
 
---[[
-  Returns a copy of the given point.
-  Generally used to prevent having a bunch of references to the same points,
-  meaning asynchronous tasks will have undesired effects when changing your selection mid-task.
-  @param point - Point to clone.
-  @return - Cloned point.
-]]
+--- Returns a copy of the given {x,y} point.
+-- Generally used to prevent having a bunch of references to the same points,
+-- meaning tasks will have undesired effects when changing your selection mid-task.
+-- @param point Point to clone.
+-- @return Cloned point.
 function wedit.clonePoint(point)
   return {point[1], point[2]}
 end
 
---[[
-  Quick attempt to lessen the amount of iterations needed to complete tasks such as filling an area.
-  For each block, see if there's a foreground material. If there is, see how far it's away from the furthest edge.
-  If this number is smaller than than the current amount of iterations, less iterations are needed.
-  Problem: Since every block is compared to the furthest edge and not other blocks, this generally misses a lot of skippable iterations.
-  @param bottomLeft - {X, Y}, representing the bottom left corner of the rectangle.
-  @param size - {X, Y}, representing the dimensions of the rectangle.
-  @param layer - "foreground" or "background", representing the layer to calculate iterations needed to fill for.
-    Note: The algorithm will check the OPPOSITE layer, as it assumes the given layer will be emptied before filling.
-]]
+--- Quick attempt to lessen the amount of iterations needed to complete tasks such as filling an area.
+-- For each block, see if there's a foreground material. If there is, see how far it's away from the furthest edge.
+-- If this number is smaller than than the current amount of iterations, less iterations are needed.
+-- Problem: Since every block is compared to the furthest edge and not other blocks, this generally misses a lot of skippable iterations.
+-- @param bottomLeft - {X, Y}, representing the bottom left corner of the rectangle.
+-- @param size - {X, Y}, representing the dimensions of the rectangle.
+-- @param layer - "foreground" or "background", representing the layer to calculate iterations needed to fill for.
+--  Note: The algorithm will check the OPPOSITE layer for blocks, as it assumes the given layer will be emptied before filling.
 function wedit.calculateIterations(bottomLeft, size, layer)
   local oppositeLayer = layer == "foreground" and "background" or "foreground"
   local maxIterations = size[1] > size[2] and size[1] or size[2]
@@ -342,18 +254,14 @@ function wedit.calculateIterations(bottomLeft, size, layer)
   return airFound and iterations or 1
 end
 
---[[
-  List of all active or queued tasks.
-  Tasks queueing is done with wedit.Task:start(), do not manually add entries.
-]]
+--- List of all active or queued tasks.
+-- Task are added by wedit.Task:start(), do not manually add entries.
 wedit.tasks = {}
 
---[[
-  Inject task handling into the update function.
-]]
+--- Inject task handling into the update function.
 local oldUpdate = update
-update = function(args)
-  oldUpdate(args)
+update = function(...)
+  oldUpdate(...)
 
   wedit.setLogMap("", string.format("(%s) Tasks.", #wedit.tasks))
 
@@ -379,31 +287,27 @@ update = function(args)
   end
 end
 
---[[
-  Task Class.
-  Used to run actions in multiple steps over time.
-]]
+--- Task Class.
+-- Used to run actions in multiple steps over time.
 wedit.Task = {}
 wedit.Task.__index = wedit.Task
 wedit.Task.__tostring = function() return "weditTask" end
 
---[[
-  Creates and returns a wedit Task object.
-  @param stages - Table of functions, each function defining code for one stage of the task.
-    Stages are repeated until changed or the task is completed.
-    Each stage function is passed the task object as it's first argument, used to easily access the task properties.
-    task.stage: Stage index, can be set to switch between stages.
-    task:nextStage():  Increases task.stage by 1. Does not abort remaining code when called in a stage function.
-    task.progress: Can be used to manually keep track of progress. Starts at 0.
-    task.progressLimit: Can be used to manually keep track of progress. Starts at 1.
-    task.parameters: Empty table that can be used to save and read parameters, without having to worry about reserved names.
-    task.complete(): Sets task.completed to true. Does not abort remaining code when called in a stage function.
-    task.callback: Function called every tick, regardless of delay and stage.
-  @param [delay=wedit.config.delay] - Delay, in game ticks, between each step.
-  @param [synchronized=wedit.config.synchronized] - Value indicating whether this task should run synchronized (true) or asynchronized (false).
-  @param [description=wedit.config.description] - Description used to log task details.
-  @return - Task object.
-]]
+--- Creates and returns a wedit Task object.
+-- @param stages - Table of functions, each function defining code for one stage of the task.
+--  Stages are repeated until changed or the task is completed.
+--  Each stage function is passed the task object as it's first argument, used to easily access the task properties.
+--  task.stage: Stage index, can be set to switch between stages.
+--  task:nextStage():  Increases task.stage by 1. Does not abort remaining code when called in a stage function.
+--  task.progress: Can be used to manually keep track of progress. Starts at 0.
+--  task.progressLimit: Can be used to manually keep track of progress. Starts at 1.
+--  task.parameters: Empty table that can be used to save and read parameters, without having to worry about reserved names.
+--  task.complete(): Sets task.completed to true. Does not abort remaining code when called in a stage function.
+--  task.callback: Function called every tick, regardless of delay and stage.
+-- @param[opt=wedit.config.delay] delay Delay, in game ticks, between each step.
+-- @param[opt=wedit.config.synchronized] synchronized Value indicating whether this task should run synchronized (true) or asynchronous (false).
+-- @param[opt=wedit.config.description] description Description used to log task details.
+-- @return Task object.
 function wedit.Task.create(stages, delay, synchronized, description)
   local task = {}
 
@@ -449,9 +353,8 @@ function wedit.Task.create(stages, delay, synchronized, description)
   return task
 end
 
---[[
-  Queues the initialized task for execution.
-]]
+--- Queues the initialized task for execution.
+-- If the task is asynchronous, starts it.
 function wedit.Task:start()
   if self.description ~= "" then
     local msg = self.synchronized and "Synchronized task (%s) queued. It will automatically start." or "Asynchronous task (%s) started."
@@ -460,10 +363,8 @@ function wedit.Task:start()
   table.insert(wedit.tasks, self)
 end
 
---[[
-  Increases the stage index of the task by one.
-  @param [keepProgress=0] - Value indicating whether task.progress should be kept, or reset.
-]]
+--- Increases the stage index of the task by one.
+-- @param[opt=false] keepProgress Value indicating whether task.progress should be kept, or reset.
 function wedit.Task:nextStage(keepProgress)
   self.stage = self.stage + 1
   if (self.stage > #self.stages) then self:complete() return end
@@ -474,9 +375,7 @@ function wedit.Task:nextStage(keepProgress)
   end
 end
 
---[[
-  Sets the status of the task to complete.
-]]
+--- Sets the status of the task to complete.
 function wedit.Task:complete()
   if self.description ~= "" then
     wedit.logInfo(string.format("Task (%s) completed.", self.description))
@@ -484,25 +383,17 @@ function wedit.Task:complete()
   self.completed = true
 end
 
---[[
-  Starbound Block Class.
-  Identifiable with tostring(obj).
-]]
+--- Starbound Block Class.
+-- Identifiable with tostring(obj).
 wedit.Block = {}
 wedit.Block.__index = wedit.Block
 wedit.Block.__tostring = function() return "starboundBlock" end
 
---[[
-  Creates and returns a block object.
-  Each optional parameter is automatically fetched when left blank.
-  @param position - Original position of the block.
-  @param offset - Offset from the bottom left corner of the copied area.
-  @param [foreground] - Material found in the foreground layer.
-  @param [foregroundMod] - Matmod found in the foreground layer.
-  @param [background] - Material found in the background layer.
-  @param [backgroundMod] - Matmod found in the background layer.
-  @param [liquid] - Liquid data found.
-]]
+--- Creates and returns a block object.
+-- The block values (i.e. material) are copied when the object is created.
+-- Further changes to the block in the world don't modify the instantiated Block.
+-- @param position - Original position of the block.
+-- @param offset - Offset from the bottom left corner of the copied area.
 function wedit.Block.create(position, offset)
   if not position then error("WEdit: Attempted to create a Block object for a block without a valid original position.") end
   if not offset then error(string.format("WEdit: Attempted to create a Block object for a block at (%s, %s) without a valid offset.", position[1], position[2])) end
@@ -531,20 +422,16 @@ function wedit.Block.create(position, offset)
   return block
 end
 
---[[
-  Returns the material name of this block, if any.
-  @param layer - "foreground" or "background".
-  @return - Material name in the given layer.
-]]
+--- Returns the material name of this block, if any.
+-- @param layer "foreground" or "background".
+-- @return Material name in the given layer.
 function wedit.Block:getMaterial(layer)
   return world.material(self.position, layer)
 end
 
---[[
-  Returns the matmod name of this block, if any.
-  @param layer - "foreground" or "background".
-  @return - Matmod name in the given layer.
-]]
+--- Returns the matmod name of this block, if any.
+-- @param layer "foreground" or "background".
+-- @return Matmod name in the given layer.
 function wedit.Block:getMod(layer)
   return world.mod(self.position, layer)
 end
@@ -570,13 +457,13 @@ wedit.Object = {}
 wedit.Object.__index = wedit.Object
 wedit.Object.__tostring = function() return "starboundObject" end
 
---[[
-  Creates and returns a Starbound object.. object.
-  @param id - Entity id of the source object.
-  @param offset - Offset from the bottom left corner of the copied area.
-  @return - Starbound Object data. Contains id, offset, name, parameters, [items].
-]]
-function wedit.Object.create(id, offset, name, parameters)
+--- Creates and returns a Starbound object.. object.
+-- The object values (i.e. parameters) are copied when the object is created.
+-- Further changes to the object in the world won't change this Object.
+-- @param id Entity id of the source object.
+-- @param offset Offset from the bottom left corner of the copied area.
+-- @return Starbound Object data. Contains id, offset, name, parameters, [items].
+function wedit.Object.create(id, offset, name)
   if not id then error("WEdit: Attempted to create a Starbound Object object without a valid entity id") end
   if not offset then error(string.format("WEdit: Attempted to create a Starbound Object for (%s) without a valid offset", id)) end
 
@@ -594,27 +481,21 @@ function wedit.Object.create(id, offset, name, parameters)
   return object
 end
 
---[[
-  Returns the identifier of the object.
-  @return - Object name.
-]]
+--- Returns the identifier of the object.
+-- @return Object name.
 function wedit.Object:getName()
   return world.entityName(self.id)
 end
 
---[[
-  Returns the full parameters of the object.
-  @return - Object parameters.
-]]
+--- Returns the full parameters of the object.
+-- @return Object parameters.
 function wedit.Object:getParameters()
   return world.getObjectParameter(self.id, "", nil)
 end
 
---[[
-  Returns the items of the container object, or nil if the object isn't a container.
-  @param clearTreasure - If true, sets the treasurePools parameter to nil, to avoid random loot after breaking the object.
-  @return - Contained items, or nil.
-]]
+--- Returns the items of the container object, or nil if the object isn't a container.
+-- @param clearTreasure If true, sets the treasurePools parameter to nil, to avoid random loot after breaking the object.
+-- @return Contained items, or nil.
 function wedit.Object:getItems(clearTreasure)
   if clearTreasure then
     self.parameters.treasurePools = nil
@@ -627,6 +508,13 @@ function wedit.Object:getItems(clearTreasure)
   end
 end
 
+--- Starts a task that fills an area with blocks.
+-- Existing blocks are not replaced.
+-- @param bottomLeft Bottom left corner of the area.
+-- @param topRight Top right corner of the area.
+-- @param layer foreground or background.
+-- @param block to fill the area with. Only
+-- @return Copy of the area before the task starts.
 function wedit.fillBlocks(bottomLeft, topRight, layer, block)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -717,6 +605,10 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
   return copy
 end
 
+--- Draws a block. If there is already a block, replace it.
+-- @param pos World position to place the block at.
+-- @param layer foreground or background
+-- @param block Material name.
 function wedit.pencil(pos, layer, block)
   local mat = world.material(pos, layer)
   if (mat and mat ~= block) or not block then
@@ -735,10 +627,30 @@ function wedit.pencil(pos, layer, block)
   wedit.setLogMap("Pencil", string.format("Drawn %s.", block))
 end
 
+--- Paints a block.
+-- @param pos World position of the block to paint.
+-- @param layer foreground or background
+-- @param[opt=0] colorIndex Index of the paint color. 0 to remove the color.
+-- Counting up from 0: none, red, blue, green, yellow, orange, pink, black, white.
 function wedit.dye(pos, layer, colorIndex)
   world.setMaterialColor(pos, layer, colorIndex or 0)
 end
 
+--- Copies a selection.
+-- @param bottomLeft Bottom left corner of the selection to copy.
+-- @param topRight Top right corner of the selection to copy.
+-- @param copyOptions Table containing options to copy. Missing keys will be
+-- automatically determined. When pasting a copy, these options are also used.
+--   foreground - Copies materials in the foreground layer.
+--   background - ..
+--   foregroundMods - Copies matmods in the foreground layer.
+--   backgroundMods - ..
+--   liquids - Copies liquids (block based, not density based).
+--   objects - Copies objects with all parameters.
+--   containerLoot - Copies items in copied containers.
+--   materialColors - Copies painted material colors.
+-- @param[opt=false] logMaterials If true, logs the materials found in the copy.
+-- @see wedit.paste
 function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -875,6 +787,9 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
   return copy
 end
 
+--- Starts a task that pastes a selection.
+-- @copy Copy to paste. The copy options are used for the paste.
+-- @param position Bottom left corner of the paste.
 function wedit.paste(copy, position)
   position = wedit.clonePoint(position)
 
@@ -1150,6 +1065,11 @@ function wedit.paste(copy, position)
   return backup
 end
 
+--- Flips a copy horizontally or vertically.
+-- Does not work well on objects when flipping vertically.
+-- @param copy Copy to flip. Materials, mods, liquids and objects are flipped.
+-- @param direction horizontal or vertical.
+-- @return Copy. Note: Same as first parameter. The object is directly modified.
 function wedit.flip(copy, direction)
   direction = direction:lower()
 
@@ -1199,6 +1119,11 @@ function wedit.flip(copy, direction)
   return copy
 end
 
+--- Replaces blocks in a selection.
+-- @param bottomLeft Bottom left corner of the selection.
+-- @param topRight Top right corner of the selection.
+-- @param toBlock New block to place.
+-- @param[opt=nil] fromBlock Block to replace. If nil, replaces all blocks.
 function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -1287,10 +1212,19 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   return copy
 end
 
-function wedit.placeMod(pos, layer, block)
-  world.placeMod(pos, layer, block, nil, false)
+--- Applies a mod to the block.
+-- Can overwrite existing mods.
+-- @param pos World position of the block.
+-- @param layer foreground or background.
+-- @param mod Matmod to place.
+function wedit.placeMod(pos, layer, mod)
+  world.placeMod(pos, layer, mod, nil, false)
 end
 
+--- Removes a mod from a block.
+-- If the block requires breaking to remove the mod, the mod is overwritten first.
+-- @param pos World position of the mod.
+-- @param layer foreground or background.
 function wedit.removeMod(pos, layer)
   local mod = world.mod(pos, layer)
   local mat = world.material(pos, layer)
@@ -1310,6 +1244,9 @@ function wedit.removeMod(pos, layer)
   end
 end
 
+--- Drain any liquid in a selection.
+-- @param bottomLeft Bottom left corner of the selection.
+-- @param topRight Top right corner of the selection.
 function wedit.drain(bottomLeft, topRight)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
     for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
@@ -1318,6 +1255,11 @@ function wedit.drain(bottomLeft, topRight)
   end
 end
 
+--- Fills a selection with a liquid.
+-- @param bottomLeft Bottom left corner of the selection.
+-- @param topRight Top right corner of the selection.
+-- @param liquidId ID of the liquid.
+-- @see wedit.liquids
 function wedit.hydrate(bottomLeft, topRight, liquidId)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
     for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
@@ -1326,6 +1268,12 @@ function wedit.hydrate(bottomLeft, topRight, liquidId)
   end
 end
 
+--- For each block in a line between two points, calls the callback function.
+-- This uses the bresenham algorithm implementation by kikito.
+-- Licensed under the MIT license: https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt.
+-- @param startPos First position of the line.
+-- @param endPos Second position of the line.
+-- @param callback Function called for each block with parameters (x, y).
 function wedit.bresenham(startPos, endPos, callback)
   local x0, y0, x1, y1 = startPos[1], startPos[2], endPos[1], endPos[2]
   local sx,sy,dx,dy
@@ -1366,6 +1314,12 @@ function wedit.bresenham(startPos, endPos, callback)
   end
 end
 
+--- Places a block at every position on a line between two points.
+-- @param startPos First position of the line.
+-- @param endPos Second position of the line.
+-- @param layer foreground or background
+-- @param block Material name. If "air" or "none", breaks blocks instead.
+-- @see wedit.bresenham
 function wedit.line(startPos, endPos, layer, block)
   if block ~= "air" and block ~= "none" then
     wedit.bresenham(startPos, endPos, function(x, y) world.placeMaterial({x, y}, layer, block, 0, true) end)
@@ -1374,6 +1328,11 @@ function wedit.line(startPos, endPos, layer, block)
   end
 end
 
+--- For each block in a rectangle around a center position, calls the callback function.
+-- @param pos World center of the rectangle.
+-- @param width Rectangle width.
+-- @param height Rectangle height.
+-- @param callback function called for each block with parameter {x, y}.
 function wedit.rectangle(pos, width, height, callback)
   height = height or width
   local blocks = {}
@@ -1390,6 +1349,10 @@ function wedit.rectangle(pos, width, height, callback)
   return blocks
 end
 
+-- For each block in a circle around a position and radius, calls the callback function.
+-- @param pos World center of the circle.
+-- @param[opt=1] radius Circle radius in blocks.
+-- @param callback Function called for each block with parameter {x, y}.
 function wedit.circle(pos, radius, callback)
   radius = radius and math.abs(radius) or 1
   local blocks = {}
@@ -1403,16 +1366,4 @@ function wedit.circle(pos, radius, callback)
     end
   end
   return blocks
-end
-
-function wedit.logENV()
-  for k,v in pairs(_ENV) do
-    if type(v) == "table" then
-      for k2,v2 in pairs(v) do
-        sb.logInfo("%s.%s", k, k2)
-      end
-    else
-      sb.logInfo("%s", k)
-    end
-  end
 end

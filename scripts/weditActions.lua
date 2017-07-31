@@ -12,9 +12,7 @@ require "/interface/wedit/dyePicker/dyePickerUtil.lua"
 wedit = wedit or {}
 wedit.actions = wedit.actions or {}
 
---[[
-  Function that appears to lack functionality, yet mysteriously accomplishes just about everything.
-]]
+--- Function that appears to lack functionality, yet mysteriously accomplishes just about everything.
 function wedit.actions.WE_AllInOne()
   if not status.statusProperty("wedit.compact.open") then
     wedit.info("^shadow;^orange;WEdit: All in One")
@@ -180,14 +178,24 @@ function wedit.actions.WE_ColorPicker()
   wedit.info("^shadow;^yellow;Select a block for certain tools.", {0,-1})
   wedit.info("^shadow;^yellow;Primary Fire: foreground.", {0,-2})
   wedit.info("^shadow;^yellow;Alt Fire: background.", {0,-3})
-  wedit.info("^shadow;^yellow;Current Block: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-4})
+  wedit.info("^shadow;^yellow;Shift + Fire: Open material picker.", {0,-4})
+  wedit.info("^shadow;^yellow;Current Block: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-5})
 
-  if wedit.controller.primaryFire then
-    wedit.controller.fireLock()
-    wedit.controller.updateColor("foreground")
-  elseif wedit.controller.altFire then
-    wedit.controller.fireLock()
-    wedit.controller.updateColor("background")
+  if wedit.controller.shiftHeld then
+    if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
+      require "/interface/wedit/materialPicker/materialPickerUtil.lua"
+      materialPickerUtil.initializeConfig()
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", materialPickerUtil.config)
+      wedit.controller.shiftFireLock()
+    end
+  elseif not wedit.controller.shiftFireLocked then
+    if wedit.controller.primaryFire then
+        wedit.controller.fireLock()
+        wedit.controller.updateColor("foreground")
+    elseif wedit.controller.altFire then
+      wedit.controller.fireLock()
+      wedit.controller.updateColor("background")
+    end
   end
 end
 
@@ -534,18 +542,21 @@ end
 ]]
 function wedit.actions.WE_Modifier()
   wedit.info("^shadow;^orange;WEdit: Modifier")
-  wedit.info("^shadow;^yellow;Primary Fire: Modify hovered block.", {0,-1})
-  wedit.info("^shadow;^yellow;Alt Fire: Select next Mod.", {0,-2})
-  wedit.info("^shadow;^yellow;Current Mod: ^red;" .. wedit.controller.getSelectedMod() .. "^yellow;.", {0,-3})
-  wedit.info("^shadow;^yellow;Current Layer: ^red;" .. wedit.controller.layer .. "^yellow;.", {0,-4})
+  wedit.info("^shadow;^yellow;Primary Fire: Modify foreground.", {0,-1})
+  wedit.info("^shadow;^yellow;Alt Fire: Modify background.", {0,-2})
+  wedit.info("^shadow;^yellow;Shift + Fire: Select mod.", {0,-3})
+  wedit.info("^shadow;^yellow;Current Mod: ^red;" .. wedit.controller.getSelectedMod() .. "^yellow;.", {0,-4})
 
-  if not wedit.controller.fireLocked then
+  if wedit.controller.shiftHeld then
+    if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/matmodPicker/matmodPicker.config")
+      wedit.controller.shiftFireLock()
+    end
+  elseif not wedit.controller.shiftFireLocked then
     if wedit.controller.primaryFire then
-      wedit.placeMod(tech.aimPosition(), wedit.controller.layer, wedit.controller.getSelectedMod())
+      wedit.placeMod(tech.aimPosition(), "foreground", wedit.controller.getSelectedMod())
     elseif wedit.controller.altFire then
-      wedit.controller.fireLock()
-      wedit.controller.modIndex = wedit.controller.modIndex + 1
-      if wedit.controller.modIndex > #wedit.mods then wedit.controller.modIndex = 1 end
+      wedit.placeMod(tech.aimPosition(), "background", wedit.controller.getSelectedMod())
     end
   end
 end

@@ -31,9 +31,9 @@ function dyePickerUtil.getSerializedColor()
   return status.statusProperty(serializationKey)
 end
 
---- Serializes the color name.
+--- Serializes the color naame.
 -- @param color Case insensitive name of the color.
-function dyePickerUtil.setSerializedColor(color)
+function dyePickerUtil.serializeColor(color)
   local cType = type(color)
   if cType ~= "string" and cType ~= "nil" then error("setSerializeColor expected a string or nil.") end
   status.setStatusProperty(serializationKey, color and color:lower())

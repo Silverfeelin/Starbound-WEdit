@@ -21,12 +21,12 @@ end
 
 function uninit()
   if not forceClosed then
-    status.setStatusProperty("wedit.dyePicker.open", false)
+    status.setStatusProperty("wedit.dyePicker.open", nil)
   end
 end
 
 function pickColor(_, data)
-  dyePickerUtil.setSerializedColor(data)
+  dyePickerUtil.serializeColor(data)
 end
 
 -- Gets the color from the selected widget.

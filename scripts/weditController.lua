@@ -31,8 +31,10 @@ end
 if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
 
 -- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
-status.setStatusProperty("wedit.compact.open", false)
-status.setStatusProperty("wedit.dyePicker.open", false)
+status.setStatusProperty("wedit.compact.open", nil)
+status.setStatusProperty("wedit.dyePicker.open", nil)
+status.setStatusProperty("wedit.matmodPicker.open", nil)
+status.setStatusProperty("wedit.materialPicker.open", nil)
 
 -- Default noclip status (on tech selection or character load)
 controller.noclipping = false
@@ -65,18 +67,17 @@ controller.selectedBlock = "dirt"
 controller.backup = {}
 -- Table used to display information in certain colors. { title & operations, description, variables }
 controller.colors = { "^orange;", "^yellow;", "^red;"}
+wedit.colors = controller.colors
 
-----------------------------------------
---          Useful functions          --
--- Primary for use within this script --
-----------------------------------------
+-- #region Useful functions
+-- Primarily for use within this script
 
 --[[
   Returns the currently selected matmod.
   @return - Selected matmod.
 ]]
 function controller.getSelectedMod()
-  return wedit.mods[controller.modIndex]
+  return status.statusProperty("wedit.matmodPicker.mod") or grass
 end
 
 --[[
@@ -93,12 +94,10 @@ function controller.selectedBlockToString()
   end
 end
 
---[[
-  Sets the selected block to the one under the cursor, on the given layer.
-  @param [layer] - Layer to select block from. Defaults to
-  controller.layer.
-  @return - Tile or false.
-]]
+--- Sets the selected block to the one under the cursor.
+-- controller.selectedBlock is set to the returned value.
+-- @param[opt=controller.layer] layer Layer to select block from.
+-- @return Material name or false (air).
 function controller.updateColor(layer)
   if type(layer) ~= "string" then layer = controller.layer end
 
@@ -112,17 +111,14 @@ function controller.updateColor(layer)
   return tile or false
 end
 
---[[
-  Returns a value indicating whether there's currently a valid selection.
-  Does this by confirming both the bottom left and top right point are set.
-]]
+--- Returns a value indicating whether there's currently a valid selection.
+-- Done by confirming both the bottom left and top right point are set.
+-- @return True if a valid selection is made, false otherwise.
 function controller.validSelection()
   return next(controller.selection[1]) and next(controller.selection[2]) and true or false
 end
 
---[[
-  Draws rectangle(s) indicating the current selection and paste area, if a valid selection is made.
-]]
+--- Draws rectangle(s) indicating the current selection and paste area.
 function controller.showSelection()
   -- Draw selections if they have been made.
   if controller.validSelection() then
@@ -140,27 +136,23 @@ function controller.showSelection()
   end
 end
 
---[[
-  Sets fireLocked to true, indicating that certain actions should not activate until both fire buttons are released.
-]]
+--- Disables certain actions until lmb and rmb are released.
+-- Sets fireLocked to true. This indicates that certain actions should not activate until both fire buttons are released.
 function controller.fireLock()
   controller.fireLocked = true
 end
 
---[[
-  Sets shiftFireLocked and fireLocked to true, indicating that certain actions should not activate until both fire buttons and shift are released.
-  fireLocked may be false when shiftFireLocked is true, if the user is only holding shift.
-]]
+--- Disables certain actions until shift, lmb and rmb are released.
+-- Sets shiftFireLocked and fireLocked to true. This indicates that certain actions should not activate until both fire buttons and shift are released.
+-- fireLocked may be false when shiftFireLocked is true, if the user is only holding shift.
 function controller.shiftFireLock()
   controller.fireLocked = true
   controller.shiftFireLocked = true
 end
---[[
-  Checks if the starbound.config file contains updated parameters for WEdit,
-  before loading them. Overwrites data in wedit.user, which is prioritized over
-  wedit.default.
-  @see wedit.config, wedit.user, wedit.default
-]]
+
+--- Updates the wedit.user configuration
+-- Clears schematics if requested.
+-- @see wedit.user
 function controller.updateUserConfig()
     -- Load config data
   local cfg = controller.getConfigData()
@@ -178,23 +170,21 @@ function controller.updateUserConfig()
   end
 end
 
---[[
-  Returns a corrected asset path to the given image.
-  @param path - Nil or path leading up to the image. Path should end with a /.
-  @param image - Absolute asset path or just the file name (including the extension).
-  @return - Absolute asset path to the image.
-]]
+--- Returns a corrected asset path to the given image.
+-- @param path Nil or path leading up to the image. Path should end with a /.
+-- @param image Absolute asset path or just the file name (including the extension).
+-- @return Absolute asset path to the image.
 function controller.fixImagePath(path, image)
-  return not path and image or image:find("^/") and image or (path .. image):gsub("//", "/")
+  return not path and image or
+    image:find("^/") and image or
+    (path .. image):gsub("//", "/")
 end
 
-----------------------
--- Script Callbacks --
-----------------------
+-- #endregion
 
---[[
-  Update function, called in the main update callback.
-]]
+-- #region Script Callbacks
+
+--- Update function, called in the main update callback.
 function controller.update(args)
   -- Check if LMB / RMB are held down this game tick.
   controller.primaryFire = args.moves["primaryFire"]
@@ -250,9 +240,7 @@ function controller.update(args)
   end
 end
 
---[[
-  Uninit function, called in the main uninit callback.
-]]
+--- Uninit function, called in the main uninit callback.
 function controller.uninit()
   tech.setParentState()
 end
@@ -271,9 +259,9 @@ uninit = function()
   controller.uninit()
 end
 
-------------------
--- Noclip Binds --
-------------------
+-- #endregion
+
+-- #region NoClip Binds
 
 -- Set up noclip using Keybinds.
 Bind.create(wedit.config.noclipBind, function()
@@ -306,20 +294,16 @@ for _,v in ipairs(controller.noclipBinds) do
   v:unbind()
 end
 
------------------
--- WEdit Tools --
------------------
+-- #region WEdit Tools
 
---[[
-  Returns parameters for a trianglium ore used for WEdit tools.
-  Vanilla parameters such as blueprints and radio messages are removed.
-  @param shortDescription - Visual item name, used to identify WEdit functions.
-  @param description - Item description displayed in the item tooltip.
-  @param category - Item header, displayed below the item shortDescription.
-  @param inventoryIcon - Path to an icon. Supports directives.
-  @param rarity - Item rarity. Defaults to common.
-  @return - Altered item parameters (for a triangliumore).
-]]
+--- Returns parameters for a trianglium ore used for WEdit tools.
+-- Vanilla parameters such as blueprints and radio messages are removed.
+-- @param shortDescription Visual item name, used to identify WEdit functions.
+-- @param description Item description displayed in the item tooltip.
+-- @param category Item header, displayed below the item shortDescription.
+-- @param inventoryIcon Path to an icon. Supports directives.
+-- @param rarity Item rarity. Defaults to common.
+-- @return Altered item parameters (for a triangliumore).
 function controller.spawnOreParameters(shortDescription, description, category, inventoryIcon, rarity)
  rarity = rarity or "common"
   return {
@@ -335,14 +319,21 @@ function controller.spawnOreParameters(shortDescription, description, category, 
   }
 end
 
-----------
--- Done --
-----------
+-- #endregion
+
+-- #region Message Handlers
 
 -- Load config once while still initializing.
 controller.updateUserConfig()
 message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfig))
+-- Allow material picker to change wedit.selectedBlock.
+message.setHandler("wedit.updateColor", localHandler(function(data)
+  controller.selectedBlock = data
+end))
 
+-- #endregion
+
+-- Done.
 -- Script loaded.
 loadTime = os.clock() - startTime
 sb.logInfo("WEdit Controller: Initialized WEdit in %s seconds", loadTime)

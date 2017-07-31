@@ -1,0 +1,82 @@
+[
+  {
+    "name": "ancientplatform",
+    "buttonImage": "ancientplatform.png"
+  },
+  {
+    "name": "apexshipplatform",
+    "buttonImage": "apexshipplatform.png"
+  },
+  {
+    "name": "bambooplatform",
+    "buttonImage": "bambooplatform.png"
+  },
+  {
+    "name": "copperplatform",
+    "buttonImage": "copperplatform.png"
+  },
+  {
+    "name": "goldenplatform",
+    "buttonImage": "goldenplatform.png"
+  },
+  {
+    "name": "lunarbaseplatform",
+    "buttonImage": "lunarbaseplatform.png"
+  },
+  {
+    "name": "modernplatform",
+    "buttonImage": "modernplatform.png"
+  },
+  {
+    "name": "outpostplatform",
+    "buttonImage": "outpostplatform.png"
+  },
+  {
+    "name": "plantplatform",
+    "buttonImage": "plantplatform.png"
+  },
+  {
+    "name": "pressurisedplatform",
+    "buttonImage": "pressurisedplatform.png"
+  },
+  {
+    "name": "protectorateplatform",
+    "buttonImage": "protectorateplatform.png"
+  },
+  {
+    "name": "ruinsplatform",
+    "buttonImage": "ruinsplatform.png"
+  },
+  {
+    "name": "silverplatform",
+    "buttonImage": "silverplatform.png"
+  },
+  {
+    "name": "stoneplatform",
+    "buttonImage": "stoneplatform.png"
+  },
+  {
+    "name": "tribalplatform",
+    "buttonImage": "tribalplatform.png"
+  },
+  {
+    "name": "tungstenplatform",
+    "buttonImage": "tungstenplatform.png"
+  },
+  {
+    "name": "woodenplatform",
+    "buttonImage": "woodenplatform.png"
+  },
+  {
+    "name": "woodplatform",
+    "buttonImage": "woodplatform.png"
+  },
+  {
+    "name": "woodplatform2",
+    "buttonImage": "woodplatform2.png"
+  },
+  {
+    "name": "wreckplatform",
+    "buttonImage": "wreckplatform.png"
+  }
+]

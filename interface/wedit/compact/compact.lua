@@ -16,7 +16,7 @@ end
 
 function uninit()
   if not forceClosed then
-    status.setStatusProperty("wedit.compact.open", false)
+    status.setStatusProperty("wedit.compact.open", nil)
   end
 end
 
