@@ -77,7 +77,7 @@ wedit.colors = controller.colors
   @return - Selected matmod.
 ]]
 function controller.getSelectedMod()
-  return status.statusProperty("wedit.matmodPicker.mod") or grass
+  return status.statusProperty("wedit.matmodPicker.mod") or "grass"
 end
 
 --[[

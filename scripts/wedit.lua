@@ -409,13 +409,19 @@ function wedit.Block.create(position, offset)
     material = block:getMaterial("foreground"),
     mod = block:getMod("foreground"),
   }
-  if block.foreground.material then block.foreground.materialColor = block:getMaterialColor("foreground") end
+  if block.foreground.material then
+    block.foreground.materialColor = block:getMaterialColor("foreground")
+    block.foreground.materialHueshift = block:getMaterialHueshift("foreground")
+  end
 
   block.background = {
     material = block:getMaterial("background"),
     mod = block:getMod("background")
   }
-  if block.background.material then block.background.materialColor = block:getMaterialColor("background") end
+  if block.background.material then
+    block.background.materialColor = block:getMaterialColor("background")
+    block.background.materialHueshift = block:getMaterialHueshift("background")
+  end
 
   block.liquid = block:getLiquid()
 
@@ -439,6 +445,14 @@ end
 function wedit.Block:getMaterialColor(layer)
   local color = world.materialColor(self.position, layer)
   return color ~= 0 and color
+end
+
+--- Returns the hueshift of this block.
+-- If the material doesn't exist, this will still return 0.
+-- @param layer "foreground" or "background".
+-- @return Material hueshift.
+function wedit.Block:getMaterialHueshift(layer)
+  return world.materialHueShift(self.position, layer)
 end
 
 --[[
@@ -609,22 +623,60 @@ end
 -- @param pos World position to place the block at.
 -- @param layer foreground or background
 -- @param block Material name.
-function wedit.pencil(pos, layer, block)
+-- @param[opt=wedit.neighborHueshift] hueshift Hueshift for the block. Determined by nearest blocks if omitted.
+function wedit.pencil(pos, layer, block, hueshift)
+  if not hueshift then hueshift = wedit.neighborHueshift(pos, layer, block) or 0 end
+
   local mat = world.material(pos, layer)
   if (mat and mat ~= block) or not block then
     world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
     if block and wedit.lockPosition(pos, layer) then
       wedit.Task.create({function(task)
-        world.placeMaterial(pos, layer, block, 0, true)
+        world.placeMaterial(pos, layer, block, hueshift, true)
         wedit.unlockPosition(pos, layer)
         task:complete()
       end}, nil, false):start()
     end
   else
-    world.placeMaterial(pos, layer, block, 0, true)
+    world.placeMaterial(pos, layer, block, hueshift, true)
   end
 
   wedit.setLogMap("Pencil", string.format("Drawn %s.", block))
+end
+
+--- Gets the hueshift of a neighbouring same block.
+-- Checks adjacent blocks above, to the left, right, below, behind or in front of the given block.
+-- If the block matches the given block (or block at the position and layer), return the hueshift of the block.
+-- This can be used by tools such as the pencil, to fill in terrain that uses the natural world block colors.
+-- @param pos Block position.
+-- @param layer "foreground" or "background".
+-- @param[opt] Material name. If omitted, uses the block at pos in layer.
+-- @return Hueshift of same neighboring block, or 0.
+function wedit.neighborHueshift(pos, layer, block)
+  if type(block) == "nil" then block = world.material(pos, layer) end
+  if not block then return 0 end -- air
+
+  local positions = {
+    {pos[1], pos[2] - 1},
+    {pos[1] - 1, pos[2]},
+    {pos[1] + 1, pos[2]},
+    {pos[1], pos[2] + 1}
+  }
+
+  -- Adjacent
+  for _,position in ipairs(positions) do
+    if world.material(position, layer) == block then
+      return world.materialHueShift(position, layer)
+    end
+  end
+
+  -- Opposite layer
+  local oLayer = layer == "foreground" and "background" or "foreground"
+  if world.material(pos, oLayer) == block then
+    return world.materialHueShift(pos, oLayer)
+  end
+
+  return 0
 end
 
 --- Paints a block.
@@ -849,7 +901,7 @@ function wedit.paste(copy, position)
           local block = copy.blocks[i+1][j+1]
           if block and copy.options.background and block.background.material then
             -- Place the background block.
-            world.placeMaterial(pos, "background", block.background.material, 0, true)
+            world.placeMaterial(pos, "background", block.background.material, block.background.materialHueshift, true)
           else
             if copy.options.foreground then
               -- Add a placeholder that reminds us later to remove the dirt placed here temporarily.
@@ -857,7 +909,7 @@ function wedit.paste(copy, position)
               if not world.material(pos, "background") then
                 paste.placeholders[i+1][j+1] = true
 
-                world.placeMaterial(pos, "background", "dirt", 0, true)
+                world.placeMaterial(pos, "background", "hazard", 0, true)
               end
             end
           end
@@ -896,7 +948,7 @@ function wedit.paste(copy, position)
           local block = copy.blocks[i+1][j+1]
           if block and block.foreground.material then
             -- Place the background block.
-            world.placeMaterial(pos, "foreground", block.foreground.material, 0, true)
+            world.placeMaterial(pos, "foreground", block.foreground.material, block.foreground.materialHueshift, true)
           end
         end
       end
