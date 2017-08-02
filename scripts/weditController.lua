@@ -68,9 +68,19 @@ controller.backup = {}
 -- Table used to display information in certain colors. { title & operations, description, variables }
 controller.colors = { "^orange;", "^yellow;", "^red;"}
 wedit.colors = controller.colors
+-- Shows usage text below the character. 0 = nothing, 1 = variables , 2 = usage & variables.
+controller.showInfo = true
+status.setStatusProperty("wedit.showingInfo", true)
 
 -- #region Useful functions
 -- Primarily for use within this script
+
+--- Masks wedit.info, and only works if controller.showInfo is true.
+function controller.info(...)
+  if controller.showInfo then
+    wedit.info(...)
+  end
+end
 
 --[[
   Returns the currently selected matmod.
@@ -329,6 +339,10 @@ message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfi
 -- Allow material picker to change wedit.selectedBlock.
 message.setHandler("wedit.updateColor", localHandler(function(data)
   controller.selectedBlock = data
+end))
+message.setHandler("wedit.showInfo", localHandler(function(bool)
+  controller.showInfo = bool
+  status.setStatusProperty("wedit.showingInfo", bool)
 end))
 
 -- #endregion
