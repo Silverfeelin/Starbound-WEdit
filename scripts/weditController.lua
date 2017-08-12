@@ -34,9 +34,8 @@ status.setStatusProperty("wedit.materialPicker.open", nil)
 
 -- Default noclip status (on tech selection or character load)
 controller.noclipping = false
--- Indices for selected materials, used by the Modifier and Hydrator.
-controller.modIndex = 1
-controller.liquidIndex = 1
+-- Selected liquid ID. Expected to have name and liquidId at all times.
+controller.liquid = { name = "water", liquidId = 1 }
 -- Variables used to determine if LMB and/or RMB are held down.
 controller.primaryFire, controller.altFire = false, false
 controller.fireLocked = false
@@ -340,6 +339,9 @@ message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfi
 -- Allow material picker to change wedit.selectedBlock.
 message.setHandler("wedit.updateColor", localHandler(function(data)
   controller.selectedBlock = data
+end))
+message.setHandler("wedit.updateLiquid", localHandler(function(data)
+  controller.liquid = data
 end))
 message.setHandler("wedit.showInfo", localHandler(function(bool)
   controller.showInfo = bool

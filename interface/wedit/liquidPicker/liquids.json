@@ -1,0 +1,57 @@
+[
+  {
+    "name": "water",
+    "liquidId": 1,
+    "buttonImage": "water.png"
+  },
+  {
+    "name": "healingliquid",
+    "liquidId": 6,
+    "buttonImage": "healingliquid.png"
+  },
+  {
+    "name": "swampwater",
+    "liquidId": 12,
+    "buttonImage": "swampwater.png"
+  },
+  {
+    "name": "poison",
+    "liquidId": 3,
+    "buttonImage": "poison.png"
+  },
+  {
+    "name": "milk",
+    "liquidId": 7,
+    "buttonImage": "milk.png"
+  },
+  {
+    "name": "lava",
+    "liquidId": 2,
+    "buttonImage": "lava.png"
+  },
+  {
+    "name": "corelava",
+    "liquidId": 8,
+    "buttonImage": "corelava.png"
+  },
+  {
+    "name": "tarliquid",
+    "liquidId": 5,
+    "buttonImage": "tarliquid.png"
+  },
+  {
+    "name": "fuel",
+    "liquidId": 11,
+    "buttonImage": "fuel.png"
+  },
+  {
+    "name": "slimeliquid",
+    "liquidId": 13,
+    "buttonImage": "slimeliquid.png"
+  },
+  {
+    "name": "jellyliquid",
+    "liquidId": 17,
+    "buttonImage": "jellyliquid.png"
+  }
+]

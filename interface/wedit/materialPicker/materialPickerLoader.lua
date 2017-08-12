@@ -1,33 +1,33 @@
-materialPickerUtil  = {}
+materialPickerLoader  = {}
 
 local x, y, i
 local used = {}
-materialPickerUtil.initialized = false
+materialPickerLoader.initialized = false
 
-function materialPickerUtil.initializeConfig()
-  if materialPickerUtil.initialized then return end
-  materialPickerUtil.initialized = true
+function materialPickerLoader.initializeConfig()
+  if materialPickerLoader.initialized then return end
+  materialPickerLoader.initialized = true
 
-  materialPickerUtil.config = root.assetJson("/interface/wedit/materialPicker/materialPicker.config")
+  materialPickerLoader.config = root.assetJson("/interface/wedit/materialPicker/materialPicker.config")
 
   local materials = root.assetJson("/interface/wedit/materialPicker/materials.json")
   local platforms = root.assetJson("/interface/wedit/materialPicker/platforms.json")
 
   x, y, i = 0, -19, 0
 
-  materialPickerUtil.addAir()
+  materialPickerLoader.addAir()
 
   for _,v in ipairs(materials) do
-    materialPickerUtil.addMaterial(v)
+    materialPickerLoader.addMaterial(v)
   end
 
   for _,v in ipairs(platforms) do
-    materialPickerUtil.addMaterial(v)
+    materialPickerLoader.addMaterial(v)
   end
 
 end
 
-function materialPickerUtil.addMaterial(material)
+function materialPickerLoader.addMaterial(material)
   if used[material.name] then return end
   used[material.name] = true
 
@@ -41,13 +41,13 @@ function materialPickerUtil.addMaterial(material)
 		callback = "pickMaterial"
 	}
 
-  materialPickerUtil.config.gui.materialScroll.children[material.name] = button
-  materialPickerUtil.config.gui.materialScroll.children.a2.position[2] = y
+  materialPickerLoader.config.gui.materialScroll.children[material.name] = button
+  materialPickerLoader.config.gui.materialScroll.children.a2.position[2] = y
 
-  materialPickerUtil.nextPosition()
+  materialPickerLoader.nextPosition()
 end
 
-function materialPickerUtil.addAir()
+function materialPickerLoader.addAir()
   local button = {
 		type = "button",
 		base = "/interface/wedit/materialPicker/materials/air.png",
@@ -58,13 +58,13 @@ function materialPickerUtil.addAir()
 		callback = "pickMaterial"
 	}
 
-  materialPickerUtil.config.gui.materialScroll.children["air"] = button
-  materialPickerUtil.config.gui.materialScroll.children.a2.position[2] = y
+  materialPickerLoader.config.gui.materialScroll.children["air"] = button
+  materialPickerLoader.config.gui.materialScroll.children.a2.position[2] = y
 
-  materialPickerUtil.nextPosition()
+  materialPickerLoader.nextPosition()
 end
 
-function materialPickerUtil.nextPosition()
+function materialPickerLoader.nextPosition()
   i = i + 1
   if i > 9 then
     y = y - 22

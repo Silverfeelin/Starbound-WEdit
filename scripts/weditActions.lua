@@ -175,9 +175,9 @@ function wedit.actions.WE_ColorPicker()
 
   if wedit.controller.shiftHeld then
     if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
-      require "/interface/wedit/materialPicker/materialPickerUtil.lua"
-      materialPickerUtil.initializeConfig()
-      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", materialPickerUtil.config)
+      require "/interface/wedit/materialPicker/materialPickerLoader.lua"
+      materialPickerLoader.initializeConfig()
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", materialPickerLoader.config)
       wedit.controller.shiftFireLock()
     end
   elseif not wedit.controller.shiftFireLocked then
@@ -688,22 +688,20 @@ end
 function wedit.actions.WE_Hydrator()
   wedit.controller.info("^shadow;^orange;WEdit: Hydrator")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Fill selection.", {0,-1})
-  wedit.controller.info("^shadow;^yellow;Alt Fire: Select next Liquid.", {0,-2})
-  wedit.controller.info("^shadow;^yellow;Current Liquid: ^red;" .. wedit.liquids[wedit.controller.liquidIndex].name .. "^yellow;.", {0,-3})
+  wedit.controller.info("^shadow;^yellow;Alt Fire: Select liquid.", {0,-2})
+  wedit.controller.info("^shadow;^yellow;Current Liquid: ^red;" .. wedit.controller.liquid.name .. "^yellow;.", {0,-3})
 
- -- Execute
-  if not wedit.controller.fireLocked and wedit.controller.primaryFire and wedit.controller.validSelection() then
-    wedit.controller.fireLock()
-    wedit.hydrate(wedit.controller.selection[1], wedit.controller.selection[2], wedit.liquids[wedit.controller.liquidIndex].id)
+  if not wedit.controller.fireLocked then
+    if wedit.controller.primaryFire and wedit.controller.validSelection() then
+      wedit.hydrate(wedit.controller.selection[1], wedit.controller.selection[2], wedit.controller.liquid.liquidId)
+      wedit.controller.fireLock()
+    elseif wedit.controller.altFire then
+      require "/interface/wedit/liquidPicker/liquidPickerLoader.lua"
+      liquidPickerLoader.initializeConfig()
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", liquidPickerLoader.config)
+      wedit.controller.fireLock()
+    end
   end
-
-  if not wedit.controller.fireLocked and wedit.controller.altFire then
-    wedit.controller.fireLock()
-
-    wedit.controller.liquidIndex = wedit.controller.liquidIndex + 1
-    if wedit.controller.liquidIndex > #wedit.liquids then wedit.controller.liquidIndex = 1 end
-  end
-  -- Scroll available liquids
 end
 
 --- Function to obtain all WEdit Tools.
