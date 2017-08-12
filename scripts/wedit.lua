@@ -1,8 +1,6 @@
---[[
-  WEdit library (http://silvermods.com/WEdit/)
-
-  The bresemham function falls under a different license; refer to it's documentation for licensing information.
-]]
+--- WEdit library (http://silvermods.com/WEdit/)
+--
+-- The bresemham function falls under a different license; refer to it's documentation for licensing information.
 
 --- WEdit table, variables and functions accessed with 'wedit.' are stored here.
 -- Configuration values should be accessed with 'wedit.config.key'.
@@ -455,18 +453,14 @@ function wedit.Block:getMaterialHueshift(layer)
   return world.materialHueShift(self.position, layer)
 end
 
---[[
-  Returns the liquid datas of this block, if any.
-  @return - Nil or liquid data: {liquidID, liquidAmnt}.
-]]
+--- Returns the liquid datas of this block, if any.
+-- @return Nil or liquid data: {liquidID, liquidAmnt}.
 function wedit.Block:getLiquid()
   return world.liquidAt(self.position)
 end
 
---[[
-  Starbound Object Class. Contains data of a placeable object.
-  Identifiable with tostring(obj).
-]]
+--- Starbound Object Class. Contains data of a placeable object.
+-- Identifiable with tostring(obj).
 wedit.Object = {}
 wedit.Object.__index = wedit.Object
 wedit.Object.__tostring = function() return "starboundObject" end
@@ -1212,7 +1206,7 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
           for j=0, size[2]-1 do
             local pos = {bottomLeft[1] + 0.5 + i, bottomLeft[2] + 0.5 + j}
             if not world.material(pos, oppositeLayer) then
-              world.placeMaterial(pos, oppositeLayer, "dirt", 0, true)
+              world.placeMaterial(pos, oppositeLayer, "hazard", 0, true)
               placeholders[i+1][j+1] = true
             end
           end

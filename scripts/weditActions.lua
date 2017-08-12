@@ -1,11 +1,7 @@
---[[
-  WEdit Actions (https://github.com/Silverfeelin/Starbound-WEdit)
-
-  Script used by weditController.lua. Keeps all WEdit actions centralized in one place.
-  This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or weditController.lua.
-
-  Hit ALT + 0 in NP++ to fold all, and get an overview of the contents of this script.
-]]
+--- WEdit Actions (https://github.com/Silverfeelin/Starbound-WEdit)
+--
+-- Script used by weditController.lua. Keeps all WEdit actions centralized in one place.
+-- This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or weditController.lua.
 
 require "/interface/wedit/dyePicker/dyePickerUtil.lua"
 
@@ -13,6 +9,7 @@ wedit = wedit or {}
 wedit.actions = wedit.actions or {}
 
 --- Function that appears to lack functionality, yet mysteriously accomplishes just about everything.
+-- @see wedit.controller.update
 function wedit.actions.WE_AllInOne()
   if not status.statusProperty("wedit.compact.open") then
     wedit.controller.info("^shadow;^orange;WEdit: All in One")
@@ -24,7 +21,7 @@ end
 function wedit.actions.WE_CompactInterface()
   wedit.controller.info("^shadow;^orange;WEdit: Compact Interface")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Open Interface.", {0,-1})
-  wedit.controller.info("^shadow;^yellow;Requires the ^red;ItemInterfaces^yellow; mod!", {0,-2})
+  wedit.controller.info("^shadow;^yellow;Requires the ^red;Remote Interfaces^yellow; mod!", {0,-2})
   wedit.controller.info("^shadow;^yellow;Hold the ^red;WE_AllInOne^yellow; tool with the interface open.", {0,-3})
 
   local c = wedit.controller
@@ -34,9 +31,7 @@ function wedit.actions.WE_CompactInterface()
   end
 end
 
---[[
-  Sets or updates the selection area.
-]]
+--- Sets or updates the selection area.
 function wedit.actions.WE_Select()
   wedit.controller.info("^shadow;^orange;WEdit: Selection Tool")
 
@@ -91,9 +86,7 @@ function wedit.actions.WE_Select()
   end
 end
 
---[[
-  Function to set wedit.controller.layer.
-]]
+--- Function to set wedit.controller.layer.
 function wedit.actions.WE_Layer()
   wedit.controller.info("^shadow;^orange;WEdit: Layer Tool")
   wedit.controller.info("^shadow;^yellow;Primary Fire: foreground.", {0,-1})
@@ -109,10 +102,7 @@ function wedit.actions.WE_Layer()
   end
 end
 
---[[
-  Function to erase all blocks in the current selection.
-  Only targets wedit.controller.layer
-]]
+--- Function to erase all blocks in the current selection.
 function wedit.actions.WE_Erase()
   wedit.controller.info("^shadow;^orange;WEdit: Eraser")
   wedit.controller.info("^shadow;^yellow;Erase all blocks in the current selection.", {0,-1})
@@ -137,10 +127,8 @@ function wedit.actions.WE_Erase()
   end
 end
 
---[[
-  Function to undo the previous Fill or Erase action.
-  LMB Undoes the last remembered action. RMB removes the last remembered action, allowing for multiple undo steps.
-]]
+--- Function to undo the previous Fill or Erase action.
+-- LMB Undoes the last remembered action. RMB removes the last remembered action, allowing for multiple undo steps.
 function wedit.actions.WE_Undo()
   local backupSize = #wedit.controller.backup
   wedit.controller.info("^shadow;^orange;WEdit: Undo Tool (EXPERIMENTAL)")
@@ -176,9 +164,7 @@ function wedit.actions.WE_Undo()
   end
 end
 
---[[
-  Function to select a block to be used by tools such as the Pencil or the Paint Bucket.
-]]
+--- Function to select a block to be used by tools such as the Pencil or the Paint Bucket.
 function wedit.actions.WE_ColorPicker()
   wedit.controller.info("^shadow;^orange;WEdit: Color Picker")
   wedit.controller.info("^shadow;^yellow;Select a block for certain tools.", {0,-1})
@@ -205,10 +191,7 @@ function wedit.actions.WE_ColorPicker()
   end
 end
 
---[[
-  Function to fill the crurent selection with the selected block.
-  Only targets wedit.controller.layer
-]]
+--- Function to fill the crurent selection with the selected block.
 function wedit.actions.WE_Fill()
   wedit.controller.info("^shadow;^orange;WEdit: Paint Bucket")
   wedit.controller.info("^shadow;^yellow;Fills air in the current selection with the selected block.", {0,-1})
@@ -233,11 +216,8 @@ function wedit.actions.WE_Fill()
   end
 end
 
---[[
-  Function to draw the selected block under the cursor. Existing blocks will be replaced.
-  Uses the configured brush type and pencil brush size.
-  Only targets wedit.controller.layer
-]]
+--- Function to draw the selected block under the cursor. Existing blocks will be replaced.
+-- Uses the configured brush type and pencil brush size.
 function wedit.actions.WE_Pencil()
   wedit.controller.info("^shadow;^orange;WEdit: Pencil")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Draw on foreground.", {0,-1})
@@ -268,9 +248,7 @@ function wedit.actions.WE_Pencil()
   end
 end
 
---[[
-  Function to spawn a tool similar to the Pencil, dedicated to a single selected block.
-]]
+--- Function to spawn a tool similar to the Pencil, dedicated to a single selected block.
 function wedit.actions.WE_BlockPinner()
   wedit.controller.info("^shadow;^orange;WEdit: Block Pinner")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
@@ -326,11 +304,9 @@ function wedit.actions.WE_BlockPinner()
   end
 end
 
---[[
-  Function to draw the block of the item under the cursor like the Pencil tool.
-  Uses the configured brush type and block brush size.
-  Existing blocks will be replaced.
-]]
+--- Function to draw the block of the item under the cursor like the Pencil tool.
+-- Uses the configured brush type and block brush size.
+-- Existing blocks will be replaced.
 function wedit.actions.WE_Block()
   wedit.controller.info("^shadow;^orange;WEdit: Material Placer")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Place in foreground.", {0,-1})
@@ -367,10 +343,7 @@ function wedit.actions.WE_Block()
   end
 end
 
---[[
-  Function to copy and paste a selection elsewhere.
-  The pasting is done through wedit.controller.paste, this function just sets the pasting stage to 1 after checking values for validity.
-]]
+--- Function to copy and paste a selection elsewhere.
 function wedit.actions.WE_Stamp()
   wedit.controller.info("^shadow;^orange;WEdit: Stamp Tool")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Copy selection.", {0,-1})
@@ -395,11 +368,9 @@ function wedit.actions.WE_Stamp()
   end
 end
 
---[[
-  Function to flip the current copy horizontally or vertically.
-  Vertical flips may cause issues with objects, matmods and liquids.
-  Does not work with Schematics.
-]]
+--- Function to flip the current copy horizontally or vertically.
+-- Vertical flips may cause issues with objects, matmods and liquids.
+-- Does not work with Schematics.
 function wedit.actions.WE_Flip()
   wedit.controller.info("^shadow;^orange;WEdit: Flip Tool")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Flip copy horizontally.", {0,-1})
@@ -430,10 +401,7 @@ function wedit.actions.WE_Flip()
   end
 end
 
---[[
-  Function to create a schematic item for the given selection, which
-  allows you to paste the selection later.
-]]
+--- Function to create a schematic item for the given selection, which allows you to paste the selection later.
 function wedit.actions.WE_SchematicMaker()
   wedit.controller.info("^shadow;^orange;WEdit: Schematic Maker")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Create Schematic.", {0,-1})
@@ -458,12 +426,8 @@ function wedit.actions.WE_SchematicMaker()
   end
 end
 
---[[
-  Function to paste the schematic tied to this schematic item.
-  The link is made through a schematicID, since storing the copy
-  in the actual item causes massive lag.
-  Deleting schematics is possible (to save memory).
-]]
+--- Function to paste the schematic tied to this schematic item.
+-- The link is made through a schematicID, since storing the copy in the actual item causes massive lag.
 function wedit.actions.WE_Schematic()
   wedit.controller.info("^shadow;^orange;WEdit: Schematic")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Paste Schematic.", {0,-1})
@@ -506,60 +470,32 @@ function wedit.actions.WE_Schematic()
   end
 end
 
---[[
-  Function to select certain parameters for the tech.
-]]
-function wedit.actions.WE_Config()
-  wedit.controller.info("^shadow;^orange;WEdit: Config Tool")
-  wedit.controller.info("^shadow;^yellow;Primary Fire: Select item.", {0,-1})
-  wedit.controller.info("^shadow;^yellow;Alt Fire: Show or move menu.", {0,-2})
-
-  -- Draw
-  if wedit.controller.configLocation and wedit.controller.configLocation[1] then
-    wedit.debugText("^shadow;^orange;WEdit Config:", {wedit.controller.configLocation[1], wedit.controller.configLocation[2] - 1})
-  end
-
-  -- Actions
-  if wedit.controller.altFire then
-    wedit.controller.configLocation = tech.aimPosition()
-  elseif not wedit.controller.fireLocked and wedit.controller.primaryFire and wedit.controller.configLocation and wedit.controller.configLocation[1] then
-
-  end
-end
-
---[[
-  Function to replace blocks within the selection with another one.
-  Two actions; one to replace all existing blocks and one to replace the block type aimed at.
-]]
+--- Function to replace blocks within the selection with another one.
+-- Two actions; one to replace all existing blocks and one to replace the block type aimed at.
 function wedit.actions.WE_Replace()
+  local fgTile, bgTile = world.material(tech.aimPosition(), "foreground"), world.material(tech.aimPosition(), "background")
+
   wedit.controller.info("^shadow;^orange;WEdit: Replace Tool")
-  wedit.controller.info("^shadow;^yellow;Primary Fire: Replace hovered block.", {0,-1})
-  wedit.controller.info("^shadow;^yellow;Alt Fire: Replace all blocks.", {0,-2})
-  wedit.controller.info("^shadow;^yellow;Replace With: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-3})
-  wedit.controller.info("^shadow;^yellow;Current Layer: ^red;" .. wedit.controller.layer .. "^yellow;.", {0,-4})
-  local tile = world.material(tech.aimPosition(), wedit.controller.layer)
-  if tile then
-    wedit.controller.info("^shadow;^yellow;Replace Block: ^red;" .. tile, {0,-5})
-  end
+  wedit.controller.info("^shadow;^yellow;Primary Fire: Replace in foreground.", {0,-1})
+  wedit.controller.info("^shadow;^yellow;Alt Fire: Replace in background.", {0,-2})
+  wedit.controller.info("^shadow;^yellow;Shift + Fire: Replace ALL blocks in layer.", {0,-3})
+  wedit.controller.info("^shadow;^yellow;Replace Block: ^red;" .. wedit.controller.blockToString(fgTile) .. "^yellow; / ^red;" .. wedit.controller.blockToString(bgTile), {0,-4})
+  wedit.controller.info("^shadow;^yellow;Replace With: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-5})
 
-  if not wedit.controller.fireLocked and wedit.controller.validSelection() then
-    if wedit.controller.primaryFire and tile then
-      wedit.controller.fireLock()
+  if not wedit.controller.shiftFireLocked and wedit.controller.validSelection() then
+    local layer = wedit.controller.primaryFire and "foreground" or wedit.controller.altFire and "background" or nil
+    local tile = layer == "foreground" and fgTile or layer == "background" and bgTile or nil
+    if not tile and not wedit.controller.shiftHeld then return end -- To replace air, use fill tool.
 
-      local backup = wedit.replace(wedit.controller.selection[1], wedit.controller.selection[2], wedit.controller.layer, wedit.controller.selectedBlock, tile)
-      if backup then table.insert(wedit.controller.backup, backup) end
-    elseif wedit.controller.altFire then
-      wedit.controller.fireLock()
-
-      local backup = wedit.replace(wedit.controller.selection[1], wedit.controller.selection[2], wedit.controller.layer, wedit.controller.selectedBlock)
+    if layer then
+      wedit.controller.shiftFireLock()
+      local backup = wedit.replace(wedit.controller.selection[1], wedit.controller.selection[2], layer, wedit.controller.selectedBlock, not wedit.controller.shiftHeld and tile)
       if backup then table.insert(wedit.controller.backup, backup) end
     end
   end
 end
 
---[[
-  Function to add modifications to terrain (matmods).
-]]
+--- Function to add modifications to terrain (matmods).
 function wedit.actions.WE_Modifier()
   wedit.controller.info("^shadow;^orange;WEdit: Modifier")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Modify foreground.", {0,-1})
@@ -581,9 +517,7 @@ function wedit.actions.WE_Modifier()
   end
 end
 
---[[
-  Function to remove modifications from terrain (matmods).
-]]
+--- Function to remove modifications from terrain (matmods).
 function wedit.actions.WE_ModRemover()
   wedit.controller.info("^shadow;^orange;WEdit: MatMod Remover")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Remove from foreground.", {0,-1})
@@ -598,9 +532,7 @@ function wedit.actions.WE_ModRemover()
   end
 end
 
---[[
-  Function to spawn a tool similar to the Modifier, dedicated to a single selected material mod.
-]]
+--- Function to spawn a tool similar to the Modifier, dedicated to a single selected material mod.
 function wedit.actions.WE_ModPinner()
   wedit.controller.info("^shadow;^orange;WEdit: MatMod Pinner")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
@@ -635,10 +567,8 @@ function wedit.actions.WE_ModPinner()
   end
 end
 
---[[
-  Function to add the material modification of the item under the cursor like the Modifier tool.
-  Uses the configured brush type and matmod brush size.
-]]
+--- Function to add the material modification of the item under the cursor like the Modifier tool.
+-- Uses the configured brush type and matmod brush size.
 function wedit.actions.WE_Mod()
   wedit.controller.info("^shadow;^orange;WEdit: Modifier")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Modify foreground.", {0,-1})
@@ -675,9 +605,7 @@ function wedit.actions.WE_Mod()
   end
 end
 
---[[
-  Function to draw a line of blocks between two selected points
-]]
+--- Function to draw a line of blocks between two selected points
 function wedit.actions.WE_Ruler()
   wedit.controller.info("^shadow;^orange;WEdit: Ruler")
   -- Line x - 1 reserved.
@@ -745,9 +673,7 @@ function wedit.actions.WE_Ruler()
   end
 end
 
---[[
-  Function to remove all liquid(s) in the selection.
-]]
+--- Function to remove all liquid(s) in the selection.
 function wedit.actions.WE_Dehydrator()
   wedit.controller.info("^shadow;^orange;WEdit: Dehydrator")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Dehydrate selection.", {0,-1})
@@ -758,9 +684,7 @@ function wedit.actions.WE_Dehydrator()
   end
 end
 
---[[
-  Function to fill the selection with a liquid.
-]]
+--- Function to fill the selection with a liquid.
 function wedit.actions.WE_Hydrator()
   wedit.controller.info("^shadow;^orange;WEdit: Hydrator")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Fill selection.", {0,-1})
@@ -782,10 +706,8 @@ function wedit.actions.WE_Hydrator()
   -- Scroll available liquids
 end
 
---[[
-  Function to obtain all WEdit Tools.
-  Uses wedit.controller.colors to color the names and descriptions of the tools.
-]]
+--- Function to obtain all WEdit Tools.
+-- Uses wedit.controller.colors to color the names and descriptions of the tools.
 function wedit.actions.WE_ItemBox()
   wedit.controller.info("^shadow;^orange;WEdit: Item Box")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Spawn Tools.", {0,-1})
@@ -808,6 +730,7 @@ function wedit.actions.WE_ItemBox()
   end
 end
 
+--- Function used to dye materials.
 function wedit.actions.WE_Dye()
   wedit.controller.info("^shadow;^orange;WEdit: Dye Tool")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})

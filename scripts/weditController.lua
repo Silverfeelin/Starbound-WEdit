@@ -1,11 +1,7 @@
---[[
-  WEdit (https://github.com/Silverfeelin/Starbound-WEdit)
-
-  To load this script, it has to be required -inside- the init function of a base tech script (EG. distortionsphere.lua).
-  To use this script, the chosen base tech has to be active on your character. Further usage instructions can be found on the official page linked above.
-
-  Hit ALT + 0 in NP++ to fold all, and get an overview of the contents of this script.
-]]
+--- WEdit (https://github.com/Silverfeelin/Starbound-WEdit)
+--
+-- To load this script, it has to be required -inside- the init function of a base tech script (EG. distortionsphere.lua).
+-- To use this script, the chosen base tech has to be active on your character. Further usage instructions can be found on the official page linked above.
 
 local startTime = os.clock()
 
@@ -82,25 +78,30 @@ function controller.info(...)
   end
 end
 
---[[
-  Returns the currently selected matmod.
-  @return - Selected matmod.
-]]
+--- Returns the currently selected matmod.
+-- Defaults to grass.
+-- @return Selected matmod.
 function controller.getSelectedMod()
   return status.statusProperty("wedit.matmodPicker.mod") or "grass"
 end
 
---[[
-  Returns the currently selected block for displaying purposes (false = air, nil = none)
-  @return - Block name, where non-strings are converted for displaying.
-]]
+-- Returns the currently selected block for displaying purposes.
+-- false = "air", nil = "none"
+-- @return Block name.
 function controller.selectedBlockToString()
-  if controller.selectedBlock == nil then
+  return controller.blockToString(controller.selectedBlock)
+end
+
+--- Returns a string representation of a block.
+-- false = "air", nil = "none".
+-- @return Block name.
+function controller.blockToString(block)
+  if block == nil then
     return "none"
-  elseif controller.selectedBlock == false then
+  elseif block == false then
     return "air"
   else
-    return controller.selectedBlock
+    return block
   end
 end
 
