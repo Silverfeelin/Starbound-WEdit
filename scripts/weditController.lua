@@ -81,7 +81,7 @@ end
 -- Defaults to grass.
 -- @return Selected matmod.
 function controller.getSelectedMod()
-  return status.statusProperty("wedit.matmodPicker.mod") or "grass"
+  return controller.mod or "grass"
 end
 
 -- Returns the currently selected block for displaying purposes.
@@ -336,12 +336,15 @@ end
 -- Load config once while still initializing.
 controller.updateUserConfig()
 message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfig))
--- Allow material picker to change wedit.selectedBlock.
+-- Allow picker interfaces to change values.
 message.setHandler("wedit.updateColor", localHandler(function(data)
   controller.selectedBlock = data
 end))
 message.setHandler("wedit.updateLiquid", localHandler(function(data)
   controller.liquid = data
+end))
+message.setHandler("wedit.updateMatmod", localHandler(function(data)
+  controller.mod = data
 end))
 message.setHandler("wedit.showInfo", localHandler(function(bool)
   controller.showInfo = bool

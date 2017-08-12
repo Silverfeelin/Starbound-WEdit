@@ -505,7 +505,9 @@ function wedit.actions.WE_Modifier()
 
   if wedit.controller.shiftHeld then
     if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
-      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/matmodPicker/matmodPicker.config")
+      require "/interface/wedit/matmodPicker/matmodPickerLoader.lua"
+      matmodPickerLoader.initializeConfig()
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", matmodPickerLoader.config)
       wedit.controller.shiftFireLock()
     end
   elseif not wedit.controller.shiftFireLocked then
