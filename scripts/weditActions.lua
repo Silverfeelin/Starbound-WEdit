@@ -86,22 +86,6 @@ function wedit.actions.WE_Select()
   end
 end
 
---- Function to set wedit.controller.layer.
-function wedit.actions.WE_Layer()
-  wedit.controller.info("^shadow;^orange;WEdit: Layer Tool")
-  wedit.controller.info("^shadow;^yellow;Primary Fire: foreground.", {0,-1})
-  wedit.controller.info("^shadow;^yellow;Alt Fire: background", {0,-2})
-  wedit.controller.info("^shadow;^yellow;Current Layer: ^red;" .. wedit.controller.layer .. "^yellow;.", {0,-3})
-
-  if not wedit.controller.fireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
-    -- Prioritizes LMB over RMB.
-    wedit.controller.layer = (wedit.controller.primaryFire and "foreground") or (wedit.controller.altFire and "background") or wedit.controller.layer
-
-    -- Prevents repeats until mouse buttons no longer held.
-    wedit.controller.fireLock()
-  end
-end
-
 --- Function to erase all blocks in the current selection.
 function wedit.actions.WE_Erase()
   wedit.controller.info("^shadow;^orange;WEdit: Eraser")
@@ -607,52 +591,65 @@ function wedit.actions.WE_Mod()
   end
 end
 
+wedit.ruler = {}
 --- Function to draw a line of blocks between two selected points
 function wedit.actions.WE_Ruler()
   wedit.controller.info("^shadow;^orange;WEdit: Ruler")
-  -- Line x - 1 reserved.
-  wedit.controller.info("^shadow;^yellow;Alt Fire: Fill selection.", {0,-2})
-  wedit.controller.info("^shadow;^yellow;Current Block: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-3})
-  wedit.controller.info("^shadow;^yellow;Current Layer: ^red;" .. wedit.controller.layer .. "^yellow;.", {0,-4})
+  wedit.controller.info("^shadow;^yellow;Primary Fire: Fill foreground.", {0,-1})
+  wedit.controller.info("^shadow;^yellow;Alt Fire: Fill background.", {0,-2})
+  wedit.controller.info("^shadow;^yellow;Shift + Primary Fire: Create line.", {0,-3})
+  wedit.controller.info("^shadow;^yellow;Shift + Alt Fire: Clear line.", {0,-4})
+  wedit.controller.info("^shadow;^yellow;Current Block: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-5})
 
-  local line = wedit.controller.line
+  local line = wedit.controller.lineSelection
 
-  -- Make selection (similar to WE_Select, but doesn't convert the two points to the bottom left and top right corner).
-  if wedit.controller.lineStage == 0 then
-    -- Select stage 0: Not selecting.
-    wedit.controller.info("^shadow;^yellow;Primary Fire: Create selection.", {0,-1})
+  -- Draw line
+  if not wedit.ruler.selecting and wedit.controller.shiftHeld and wedit.controller.primaryFire and not wedit.controller.shiftFireLocked then
+    wedit.controller.shiftFireLock()
 
-    if wedit.controller.primaryFire then
-      -- Start selection; set first point.
-      wedit.controller.lineStage = 1
-      line[2] = {}
-      line[1] = tech.aimPosition()
-    end
+    -- Set first point
+    line[1] = tech.aimPosition()
+    line[2] = {}
 
-  elseif wedit.controller.lineStage == 1 then
-  wedit.controller.info("^shadow;^yellow;Drag mouse and let go to finish the selection.", {0,-1})
-    -- Select stage 1: Selection started.
-    if wedit.controller.primaryFire then
+    -- Start selecting second point
+    wedit.ruler.selecting = true
+    wedit.ruler.bindA = Bind.create("primaryFire", function()
       -- Dragging selection; update second point.
       line[2] = tech.aimPosition()
 
       -- Round each value down.
       line[1][1] = math.floor(line[1][1])
       line[2][1] = math.floor(line[2][1])
-
       line[1][2] = math.floor(line[1][2])
       line[2][2] = math.floor(line[2][2])
-    else
-      -- Selection ended; reset stage to allow next selection.
-      wedit.controller.lineStage = 0
-    end
-  else
-    -- Select stage is not valid; reset it.
-    wedit.controller.lineStage = 0
+    end, true)
+    wedit.ruler.bindB = Bind.create("primaryFire=false", function()
+      wedit.ruler.bindA:unbind()
+      wedit.ruler.bindA = nil
+      wedit.ruler.bindB:unbind()
+      wedit.ruler.bindB = nil
+      wedit.ruler.selecting = false
+    end)
   end
 
-  -- Drawing and allowing RMB only works with a valid selection
-  if line[1] and line[1][1] and line[2] and line[2][1] then
+  -- Fill / Clear line
+  if not wedit.controller.shiftFireLocked and not wedit.ruler.selecting then
+    if wedit.controller.shiftHeld and wedit.controller.altFire then
+      -- Clear line
+      wedit.controller.shiftFireLock()
+      wedit.controller.lineSelection = {{},{}}
+    elseif not wedit.controller.shiftHeld then
+      -- Fill line
+      local layer = wedit.controller.primaryFire and "foreground" or wedit.controller.altFire and "background" or nil
+      if layer and wedit.controller.validLine() then
+        wedit.controller.shiftFireLock()
+        wedit.line(line[1], line[2], wedit.controller.primaryFire and "foreground" or "background", wedit.controller.selectedBlockToString())
+      end
+    end
+  end
+
+  -- Draw information
+  if wedit.controller.validLine() then
     -- Draw boxes around every block in the current selection.
     wedit.bresenham(line[1], line[2],
     function(x, y)
@@ -665,13 +662,7 @@ function wedit.actions.WE_Ruler()
     -- Calculate line length for display
     local w, h = math.abs(line[1][1] - line[2][1]) + 1, math.abs(line[1][2] - line[2][2]) + 1
     local length = w > h and w or h
-    wedit.controller.info("^shadow;^yellow;Current Length: ^red;" .. length .. " ^yellow;blocks ^red;(" .. w .. "x" .. h .. ")^yellow;.", {0,-5})
-
-    -- RMB : Fill selection.
-    if not wedit.controller.fireLocked and wedit.controller.altFire then
-      wedit.controller.fireLock()
-      wedit.line(line[1], line[2], wedit.controller.layer, wedit.controller.selectedBlockToString())
-    end
+    wedit.controller.info("^shadow;^yellow;Current Length: ^red;" .. length .. " ^yellow;blocks ^red;(" .. w .. "x" .. h .. ")^yellow;.", {0,-6})
   end
 end
 

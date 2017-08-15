@@ -53,9 +53,7 @@ controller.selection = {{},{}}
 controller.lineStage = 0
 -- Table used to store the current line selection coordinates.
 -- [1] Starting point, [2] Ending point.
-controller.line = {{},{}}
--- String used to determine what layer tools such as the Eraser, Color Picker, Paint Bucket and Pencil affect.
-controller.layer = "foreground"
+controller.lineSelection = {{},{}}
 -- String used to hold the block used by tools such as the Pencil and Paint Bucket
 controller.selectedBlock = "dirt"
 -- Table used to store copies of areas prior to commands such as fill.
@@ -106,11 +104,9 @@ end
 
 --- Sets the selected block to the one under the cursor.
 -- controller.selectedBlock is set to the returned value.
--- @param[opt=controller.layer] layer Layer to select block from.
+-- @param layer Layer to select block from.
 -- @return Material name or false (air).
 function controller.updateColor(layer)
-  if type(layer) ~= "string" then layer = controller.layer end
-
   local tile = world.material(tech.aimPosition(), layer)
   if tile then
     controller.selectedBlock = tile
@@ -126,6 +122,12 @@ end
 -- @return True if a valid selection is made, false otherwise.
 function controller.validSelection()
   return next(controller.selection[1]) and next(controller.selection[2]) and true or false
+end
+
+function controller.validLine()
+  local line = controller.lineSelection
+  if not line then return false end
+  return not not (line[1] and line[1][1] and line[2] and line[2][1])
 end
 
 --- Draws rectangle(s) indicating the current selection and paste area.
