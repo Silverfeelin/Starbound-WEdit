@@ -157,6 +157,8 @@ function wedit.actions.WE_ColorPicker()
   wedit.controller.info("^shadow;^yellow;Shift + Fire: Open material picker.", {0,-4})
   wedit.controller.info("^shadow;^yellow;Current Block: ^red;" .. wedit.controller.selectedBlockToString() .. "^yellow;.", {0,-5})
 
+  wedit.debugBlock(tech.aimPosition())
+
   if wedit.controller.shiftHeld then
     if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
       require "/interface/wedit/materialPicker/materialPickerLoader.lua"
@@ -238,6 +240,9 @@ function wedit.actions.WE_BlockPinner()
   wedit.controller.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
   wedit.controller.info("^shadow;^yellow;Alt Fire: Pin background.", {0,-2})
   local aimPos = tech.aimPosition()
+
+  wedit.debugBlock(aimPos)
+
   local fg, bg = world.material(aimPos, "foreground"), world.material(aimPos, "background")
   local fgh, bgh = world.materialHueShift(aimPos, "foreground") or 0, world.materialHueShift(aimPos, "background") or 0
   if fg then
@@ -487,6 +492,8 @@ function wedit.actions.WE_Modifier()
   wedit.controller.info("^shadow;^yellow;Shift + Fire: Select mod.", {0,-3})
   wedit.controller.info("^shadow;^yellow;Current Mod: ^red;" .. wedit.controller.getSelectedMod() .. "^yellow;.", {0,-4})
 
+  wedit.debugBlock(tech.aimPosition())
+  
   if wedit.controller.shiftHeld then
     if not wedit.controller.shiftFireLocked and (wedit.controller.primaryFire or wedit.controller.altFire) then
       require "/interface/wedit/matmodPicker/matmodPickerLoader.lua"
@@ -509,6 +516,8 @@ function wedit.actions.WE_ModRemover()
   wedit.controller.info("^shadow;^yellow;Primary Fire: Remove from foreground.", {0,-1})
   wedit.controller.info("^shadow;^yellow;Alt Fire: Remove from background.", {0,-2})
 
+  wedit.debugBlock(tech.aimPosition())
+
   if not wedit.controller.fireLocked then
     if wedit.controller.primaryFire then
       wedit.removeMod(tech.aimPosition(), "foreground")
@@ -523,6 +532,9 @@ function wedit.actions.WE_ModPinner()
   wedit.controller.info("^shadow;^orange;WEdit: MatMod Pinner")
   wedit.controller.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
   wedit.controller.info("^shadow;^yellow;Alt Fire: Pin background.", {0,-2})
+
+  wedit.debugBlock(tech.aimPosition())
+
   local fg, bg = world.mod(tech.aimPosition(), "foreground"), world.mod(tech.aimPosition(), "background")
   if fg then
     wedit.controller.info("^shadow;^yellow;Foreground Mod: ^red;" .. fg .. "^yellow;.", {0,-3})
