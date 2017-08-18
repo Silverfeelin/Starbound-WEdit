@@ -21,8 +21,6 @@ local brushShapes = {
 }
 
 function init()
-  if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
-
   widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "g")
   widget.setText(widgets.noclipSpeed, weditInterface.getConfigData("noclipSpeed") or 0.75)
   widget.setText(widgets.delay, weditInterface.getConfigData("delay") or 15)

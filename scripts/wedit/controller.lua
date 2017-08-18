@@ -22,8 +22,8 @@ require "/scripts/wedit/actions.lua"
 --- Sets a value under the "wedit" status property.
 -- @param key wedit table key.
 -- @param value Property value.
--- @see controller.getConfigData
-function controller.setConfigData(key, value)
+-- @see controller.getUserConfig
+function controller.setUserConfig(key, value)
   local cfg = status.statusProperty("wedit") or {}
   cfg[key] = value
   status.setStatusProperty("wedit", cfg)
@@ -31,14 +31,11 @@ end
 
 --- Gets a value under the "wedit" status property.
 -- @param key wedit table key.
--- @see controller.setConfigData
-function controller.getConfigData(key)
+-- @see controller.setUserConfig
+function controller.getUserConfig(key)
   local cfg = status.statusProperty("wedit") or {}
   return key == nil and cfg or cfg[key]
 end
-
--- Failsafe: If the WEdit property wasn't set, set it.
-if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
 
 -- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
 status.setStatusProperty("wedit.compact.open", nil)
@@ -184,7 +181,7 @@ end
 -- @see wedit.user
 function controller.updateUserConfig()
     -- Load config data
-  local cfg = controller.getConfigData()
+  local cfg = controller.getUserConfig()
   for k in pairs(wedit.user) do
     wedit.user[k] = nil
   end
@@ -194,7 +191,7 @@ function controller.updateUserConfig()
 
   if wedit.getUserConfigData("clearSchematics") then
     storage.weditSchematics = {}
-    controller.setConfigData("clearSchematics", false)
+    controller.setUserConfig("clearSchematics", false)
     wedit.user.clearSchematics = false
   end
 end
