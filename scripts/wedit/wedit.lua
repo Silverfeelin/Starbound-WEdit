@@ -1,159 +1,46 @@
---- WEdit library (http://silvermods.com/WEdit/)
+--- WEdit library (https://github.com/Silverfeelin/Starbound-WEdit)
+-- The brain of WEdit. This script won't function on it's own, but exposes the functions to a controller.
 --
 -- The bresemham function falls under a different license; refer to it's documentation for licensing information.
 
---- WEdit table, variables and functions accessed with 'wedit.' are stored here.
--- Configuration values should be accessed with 'wedit.config.key'.
--- Variables in wedit.user are prioritized over wedit.default.
-wedit = {
-  default = {
-    delay = 15,
-    -- Tasks with a blank description aren't logged.
-    description = "",
-    -- Note: synchronization is not optimized; setting this value to true will cause critical issues.
-    synchronized = false,
-    doubleIterations = false,
-    clearSchematics = false,
-    iterationDelay = 15,
-    lineSpacing = 1,
-    pencilSize = 1,
-    blockSize = 1,
-    matmodSize = 1,
-    brushShape = "square",
-    noclipBind = "g",
-    noclipSpeed = 0.75,
-    updateConfig = false
-  },
-  user = {},
-  config = {}
-}
+require "/scripts/set.lua"
+require "/scripts/wedit/positionLocker.lua"
+require "/scripts/wedit/debugRenderer.lua"
+require "/scripts/wedit/logger.lua"
+require "/scripts/wedit/taskManager.lua"
 
---- Set wedit.config to return the value found in wedit.user or in wedit.default.
-setmetatable(wedit.config, {
-  __index = function(_, k)
-    if wedit.user[k] ~= nil then
-      return wedit.user[k]
-    elseif wedit.default[k] ~= nil then
-      return wedit.default[k]
-    end
-    wedit.logError("The configuration key '%s' does not exist!", k)
+--- WEdit table, variables and functions accessed with 'wedit.' are stored here.
+-- Configuration values should be accessed with 'wedit.getUserConfigData(key'.
+-- Variables in wedit.user are prioritized over wedit.default.
+wedit = wedit or {}
+
+local cfg = root.assetJson("/scripts/wedit/wedit.config")
+function wedit.getConfigData(key)
+  return cfg[key]
+end
+
+-- Load config
+wedit.default = wedit.getConfigData("defaultConfig")
+wedit.user = wedit.user or {}
+
+function wedit.getUserConfigData(key)
+  local v = wedit.user[key]
+  if v == nil then v = wedit.default[key] end
+  if v == nil then
+    wedit.logger:logError("The configuration key '%s' does not exist!", k)
   end
-})
+  return v
+end
 
 ---  Mods that require breaking the tile to remove them.
 -- These mods can still be removed by overwriting them with a mod such as grass
 -- before damaging the tile.
-wedit.breakMods = {
-  aegisalt = true,
-  coal = true,
-  copper = true,
-  corefragment = true,
-  crystal = true,
-  diamond = true,
-  durasteel = true,
-  erchius = true,
-  ferozium = true,
-  gold = true,
-  iron = true,
-  lead = true,
-  metal = true,
-  moonstone = true,
-  platinum = true,
-  plutonium = true,
-  prisilite = true,
-  silver = true,
-  solarium = true,
-  sulphur = true,
-  titanium = true,
-  trianglium = true,
-  tungsten = true,
-  uranium = true,
-  violium = true
-}
+wedit.breakMods = set.new(wedit.getConfigData("breakMods"))
 
---- Available liquids.
--- Has to be updated when game updates add or remove options.
-wedit.liquids = {
-  [1] = { name = "water", id = 1 },
-  [2] = { name = "lava", id = 2 },
-  [3] = { name = "poison", id = 3 },
-  [4] = { name = "tarliquid", id = 5 },
-  [5] = { name = "healingliquid", id = 6 },
-  [6] = { name = "milk", id = 7 },
-  [7] = { name = "corelava", id = 8 },
-  [8] = { name = "fuel", id = 11 },
-  [9] = { name = "swampwater", id = 12 },
-  [10] = { name = "slimeliquid", id = 13 },
-  [11] = { name = "jellyliquid", id = 17 }
-}
-
---- Access liquids by their liquid ID.
-wedit.liquidsByID = {}
-for i,v in ipairs(wedit.liquids) do
-  wedit.liquidsByID[v.id] = v.name
-end
-
---- Holds positions that are locked and shouldn't be modified.
--- Storage for positions that should be ignored by certain tools, such as the pencil.
--- This is to prevent multiple tasks from being created for the same tile.
--- Regular usage: wedit.lockedPositions[x .. "-" .. y .. layer] = true to lock and = nil to unlock.
-wedit.lockedPositions = {}
-
---- Locks the block at the given position.
--- This prevents the usage of the wedit.pencil and wedit.removeMod on this block.
--- These tools take multiple frames to run, and this prevents multiple tasks for the same block.
--- @param pos {X, Y}, representing the position of the block to lock.
--- @param layer "foreground" or "background".
--- @return True if locking succeeded, false if it's already locked.
-function wedit.lockPosition(pos, layer)
-  layer = layer or "foreground"
-  local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
-  if wedit.lockedPositions[p] then
-    return false
-  else
-    wedit.lockedPositions[p] = true
-    return true
-  end
-end
-
---- Unlocks the block at the given position.
--- This allows the usage of the wedit.pencil and wedit.removeMod on this block.
--- @param pos {X, Y}, representing the position of the block to lock.
--- @param layer "foreground" or "background".
--- @return True if unlocking succeeded, false if it's already unlocked.
-function wedit.unlockPosition(pos, layer)
-  layer = layer or "foreground"
-  local p = math.floor(pos[1]) .. "-" .. math.floor(pos[2]) .. layer
-  if wedit.lockedPositions[p] then
-    wedit.lockedPositions[p] = nil
-    return true
-  else
-    return false
-  end
-end
-
---- Draws debug lines on the edges of the given rectangle.
--- @param bottomLeft {X1, Y1}, representing the bottom left corner of the rectangle.
--- @param topRight {X2, Y2}, representing the top right corner of the rectangle.
--- @param[opt="green"] color "color" or {r, g, b}, where r/g/b are values between 0 and 255.
-function wedit.debugRectangle(bottomLeft, topRight, color)
-  color = type(color) == "table" and color or type(color) == "string" and color or "green"
-
-  world.debugLine({bottomLeft[1], topRight[2]}, {topRight[1], topRight[2]}, color) -- top edge
-  world.debugLine(bottomLeft, {bottomLeft[1], topRight[2]}, color) -- left edge
-  world.debugLine({topRight[1], bottomLeft[2]}, {topRight[1], topRight[2]}, color) -- right edge
-  world.debugLine({bottomLeft[1], bottomLeft[2]}, {topRight[1], bottomLeft[2]}, color) -- bottom edge
-end
-
---- Calls wedit.debugRectangle for the block at the given position.
--- @param pos Position of the block, can be a floating-point number.
--- @param[opt="green"] color "color" or {r, g, b}, where r/g/b are values between 0 and 255.
-function wedit.debugBlock(pos, color)
-  local bl, tr = {math.floor(pos[1]), math.floor(pos[2])}, {math.ceil(pos[1]), math.ceil(pos[2])}
-  if bl[1] == tr[1] then tr[1] = tr[1] + 1 end
-  if bl[2] == tr[2] then tr[2] = tr[2] + 1 end
-  wedit.debugRectangle(bl, tr, color)
-end
+wedit.positionLocker = PositionLocker.new()
+wedit.debugRenderer = DebugRenderer.new()
+wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
+wedit.taskManager = TaskManager.new()
 
 wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
 --- Recolors the info text to use a color scheme.
@@ -174,38 +61,8 @@ end
 -- @param[opt={0,0}] offset {x,y} Offset relative to the feet of the player's character.
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
-  if wedit.config.lineSpacing and wedit.config.lineSpacing ~= 1 then offset[2] = offset[2] * wedit.config.lineSpacing end
-  wedit.debugText(wedit.colorText(str), {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
-end
-
---- Draws debug text at the given world position.
--- @param str Text to draw.
--- @param pos Position in blocks.
--- @param[opt="green"] color "color" or {r, g, b}, where r/g/b are values between 0 and 255.
-function wedit.debugText(str, pos, color)
-  color = type(color) == "table" and color or type(color) == "string" and color or "green"
-  world.debugText(str, pos, color)
-end
-
---- Logs the formattable string with a WEdit prefix.
--- @param str Text to log.
--- @param ... Format arguments.
-function wedit.logInfo(str, ...)
-  sb.logInfo("WEdit: " .. str, ...)
-end
-
---- Logs the formattable error string with a WEdit prefix.
--- @param str Text to log.
--- @param ... Format arguments.
-function wedit.logError(str, ...)
-  sb.logError("WEdit: " .. str, ...)
-end
-
----  Adds an entry to the debug log map, with a WEdit prefix.
--- @param key Log map key. 'WEdit ' is added in front of this key.
--- @param val Log map value.
-function wedit.setLogMap(key, val)
-  sb.setLogMap(string.format("^cyan;WEdit %s", key), val)
+  if wedit.getUserConfigData("lineSpacing") and wedit.getUserConfigData("lineSpacing") ~= 1 then offset[2] = offset[2] * wedit.getUserConfigData("lineSpacing") end
+  wedit.debugRenderer:drawText(wedit.colorText(str), {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
 --- Returns a copy of the given {x,y} point.
@@ -248,137 +105,17 @@ function wedit.calculateIterations(bottomLeft, size, layer)
     end
   end
 
-  if iterations and wedit.config.doubleIterations then iterations = iterations * 2 end
+  if iterations and wedit.getUserConfigData("doubleIterations") then iterations = iterations * 2 end
   return airFound and iterations or 1
 end
-
---- List of all active or queued tasks.
--- Task are added by wedit.Task:start(), do not manually add entries.
-wedit.tasks = {}
 
 --- Inject task handling into the update function.
 local oldUpdate = update
 update = function(...)
   oldUpdate(...)
 
-  wedit.setLogMap("", string.format("(%s) Tasks.", #wedit.tasks))
-
-  local first = true
-  for k,task in pairs(wedit.tasks) do
-    if coroutine.status(task.coroutine) == "dead" then
-      wedit.tasks[k] = nil
-    else
-      -- Allow first synchronized and all asynchronous tasks.
-      if not task.synchronized or first then
-        local a, b = coroutine.resume(task.coroutine)
-        if b then error(b) end
-
-        if task.callback then
-          task.callback()
-        end
-
-        if task.synchronized then
-          first = false
-        end
-      end
-    end
-  end
-end
-
---- Task Class.
--- Used to run actions in multiple steps over time.
-wedit.Task = {}
-wedit.Task.__index = wedit.Task
-wedit.Task.__tostring = function() return "weditTask" end
-
---- Creates and returns a wedit Task object.
--- @param stages - Table of functions, each function defining code for one stage of the task.
---  Stages are repeated until changed or the task is completed.
---  Each stage function is passed the task object as it's first argument, used to easily access the task properties.
---  task.stage: Stage index, can be set to switch between stages.
---  task:nextStage():  Increases task.stage by 1. Does not abort remaining code when called in a stage function.
---  task.progress: Can be used to manually keep track of progress. Starts at 0.
---  task.progressLimit: Can be used to manually keep track of progress. Starts at 1.
---  task.parameters: Empty table that can be used to save and read parameters, without having to worry about reserved names.
---  task.complete(): Sets task.completed to true. Does not abort remaining code when called in a stage function.
---  task.callback: Function called every tick, regardless of delay and stage.
--- @param[opt=wedit.config.delay] delay Delay, in game ticks, between each step.
--- @param[opt=wedit.config.synchronized] synchronized Value indicating whether this task should run synchronized (true) or asynchronous (false).
--- @param[opt=wedit.config.description] description Description used to log task details.
--- @return Task object.
-function wedit.Task.create(stages, delay, synchronized, description)
-  local task = {}
-
-  task.stages = type(stages) == "table" and stages or {stages}
-
-  task.delay = delay or wedit.config.delay
-  if wedit.config.doubleIterations then task.delay = math.ceil(task.delay / 2) end
-
-  if type(synchronized) == "boolean" then
-    task.synchronized = synchronized
-  else
-    task.synchronized = wedit.config.synchronized
-  end
-  task.description = description or wedit.config.description
-  task.stage = 1
-  task.tick = 0
-  task.progress = 0
-  task.progressLimit = 1
-  task.completed = false
-  task.parameters = {}
-
-  task.coroutine = coroutine.create(function()
-    while not task.completed do
-      task.tick = task.tick + 1
-      if task.tick > task.delay then
-        task.tick = 0
-
-        task.stages[task.stage](task)
-      end
-      coroutine.yield()
-    end
-
-    -- Soft reset task to allow repetition.
-    task.completed = false
-    task.stage = 1
-    task.progress = 0
-    task.progressLimit = 1
-    task.parameters = {}
-  end)
-
-  setmetatable(task, wedit.Task)
-
-  return task
-end
-
---- Queues the initialized task for execution.
--- If the task is asynchronous, starts it.
-function wedit.Task:start()
-  if self.description ~= "" then
-    local msg = self.synchronized and "Synchronized task (%s) queued. It will automatically start." or "Asynchronous task (%s) started."
-    wedit.logInfo(string.format(msg, self.description))
-  end
-  table.insert(wedit.tasks, self)
-end
-
---- Increases the stage index of the task by one.
--- @param[opt=false] keepProgress Value indicating whether task.progress should be kept, or reset.
-function wedit.Task:nextStage(keepProgress)
-  self.stage = self.stage + 1
-  if (self.stage > #self.stages) then self:complete() return end
-
-  if not keepProgress then self.progress = 0 end
-  if self.description ~= "" then
-    wedit.logInfo(string.format("Task (%s) stage increased to %s.", self.description, self.stage))
-  end
-end
-
---- Sets the status of the task to complete.
-function wedit.Task:complete()
-  if self.description ~= "" then
-    wedit.logInfo(string.format("Task (%s) completed.", self.description))
-  end
-  self.completed = true
+  wedit.taskManager:update()
+  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.taskManager:count()))
 end
 
 --- Starbound Block Class.
@@ -549,7 +286,7 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
 
   local iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer)
 
-  local task = wedit.Task.create({
+  local task = Task.new({
     function(task)
       if task.progress < iterations then
         task.progress = task.progress + 1
@@ -564,16 +301,16 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
         task:complete()
       end
     end
-  }, nil, false)
+  }, wedit.getUserConfigData("delay"))
 
   task.callback = function()
-    wedit.debugRectangle(bottomLeft, topRight, "orange")
+    wedit.debugRenderer:drawRectangle(bottomLeft, topRight, "orange")
     world.debugText(string.format("^shadow;WEdit Fill (%s-%s) %s/%s", layer, block, task.progress, iterations), {bottomLeft[1], topRight[2] - 1}, "orange")
   end
 
-  task:start()
+  wedit.taskManager:start(task)
 
-  wedit.setLogMap("Fill", string.format("Task started with %s!", block))
+  wedit.logger:setLogMap("Fill", string.format("Task started with %s!", block))
 
   return copy
 end
@@ -608,7 +345,7 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
     end
   end
 
-  wedit.setLogMap("Break", "Task executed!")
+  wedit.logger:setLogMap("Break", "Task executed!")
 
   return copy
 end
@@ -624,18 +361,18 @@ function wedit.pencil(pos, layer, block, hueshift)
   local mat = world.material(pos, layer)
   if (mat and mat ~= block) or not block then
     world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-    if block and wedit.lockPosition(pos, layer) then
-      wedit.Task.create({function(task)
+    if block and wedit.positionLocker:lock(layer, pos) then
+      wedit.taskManager:start(Task.new({function(task)
         world.placeMaterial(pos, layer, block, hueshift, true)
-        wedit.unlockPosition(pos, layer)
+        wedit.positionLocker:unlock(layer, pos)
         task:complete()
-      end}, nil, false):start()
+      end}), wedit.getUserConfigData("delay"))
     end
   else
     world.placeMaterial(pos, layer, block, hueshift, true)
   end
 
-  wedit.setLogMap("Pencil", string.format("Drawn %s.", block))
+  wedit.logger:setLogMap("Pencil", string.format("Drawn %s.", block))
 end
 
 --- Gets the hueshift of a neighbouring same block.
@@ -773,7 +510,7 @@ function wedit.copy(bottomLeft, topRight, copyOptions, logMaterials)
         increaseCount(matmodCount, block.foreground.mod)
         increaseCount(matmodCount, block.background.mod)
         if block.liquid then
-          local liqName = wedit.liquidsByID[block.liquid[1]] or "unknown"
+          local liqName = wedit.liquidName(block.liquid[1]) or "unknown"
           increaseCount(liquidCount, liqName)
         end
       end
@@ -853,12 +590,12 @@ function wedit.paste(copy, position)
   -- #region Stage 1: If copy has a background, break original background
   if copy.options.background then
     table.insert(stages, function(task)
-      task.progress = task.progress + 1
+      task.stageProgress = task.stageProgress + 1
 
-      local it = wedit.config.doubleIterations and 6 or 3
-      task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.progress - 1, it)
+      local it = wedit.getUserConfigData("doubleIterations") and 6 or 3
+      task.parameters.message = string.format("^shadow;Breaking background blocks (%s/%s).", task.stageProgress - 1, it)
 
-      if task.progress <= it then
+      if task.stageProgress <= it then
         wedit.breakBlocks(position, topRight, "background")
       else
         task:nextStage()
@@ -872,18 +609,18 @@ function wedit.paste(copy, position)
   -- #region Stage 2: If copy has background OR foreground, place background and/or placeholders.
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(task)
-      task.progress = task.progress + 1
+      task.stageProgress = task.stageProgress + 1
 
       -- TODO: Fixed some issue here where pasting would cut off, but this hotfix resulted in messy code that has to be cleaned up.
       -- I should really figure out an alternative to calculateIterations.
       local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
-      if lessIterations + task.progress - 1 < iterations then
-        iterations = lessIterations + task.progress - 2
+      if lessIterations + task.stageProgress - 1 < iterations then
+        iterations = lessIterations + task.stageProgress - 2
       end
 
-      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.progress - 1, iterations)
+      task.parameters.message = string.format("^shadow;Placing background and placeholder blocks (%s/%s).", task.stageProgress - 1, iterations)
 
-      if task.progress > iterations then
+      if task.stageProgress > iterations then
         task:nextStage()
         return
       end
@@ -916,12 +653,12 @@ function wedit.paste(copy, position)
   if copy.options.foreground then
     -- #region Stage 3: If copy has foreground, break it.
     table.insert(stages, function(task)
-      task.progress = task.progress + 1
+      task.stageProgress = task.stageProgress + 1
 
-      local it = wedit.config.doubleIterations and 6 or 3
-      task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.progress - 1, it)
+      local it = wedit.getUserConfigData("doubleIterations") and 6 or 3
+      task.parameters.message = string.format("^shadow;Breaking foreground blocks (%s/%s).", task.stageProgress - 1, it)
 
-      if task.progress <= it then
+      if task.stageProgress <= it then
         wedit.breakBlocks(position, topRight, "foreground")
       else
         task:nextStage()
@@ -1095,18 +832,19 @@ function wedit.paste(copy, position)
 
   -- Create paste task, and start it.
   -- Add a callback to display a message every tick, rather than every step.
-  local task = wedit.Task.create(stages, nil, nil, "Paste")
+  local task = Task.new(stages, wedit.getUserConfigData("delay"))
+
   task.parameters.message = ""
   task.callback = function()
-    wedit.debugRectangle(position, topRight, "orange")
+    wedit.debugRenderer:drawRectangle(position, topRight, "orange")
     if task.parameters.message then
-      wedit.debugText(task.parameters.message, {position[1], topRight[2]-1}, "orange")
+      wedit.debugRenderer:drawText(task.parameters.message, {position[1], topRight[2]-1}, "orange")
     end
   end
 
-  task:start()
+  wedit.taskManager:start(task)
 
-  wedit.setLogMap("Paste", string.format("Beginning new paste at (%s,%s)", position[1], position[2]))
+  wedit.logger:setLogMap("Paste", string.format("Beginning new paste at (%s,%s)", position[1], position[2]))
 
   return backup
 end
@@ -1159,7 +897,7 @@ function wedit.flip(copy, direction)
 
     copy.flipY = not copy.flipY
   else
-    wedit.logInfo("Could not flip copy in direction '" .. direction .. "'.")
+    wedit.logger:logInfo("Could not flip copy in direction '" .. direction .. "'.")
   end
 
   return copy
@@ -1197,7 +935,7 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   local placeholders = {}
   local replacing = {}
 
-  wedit.Task.create({
+  wedit.taskManager:start(Task.new({
     function(task)
       -- Placeholders
       if toBlock then
@@ -1251,9 +989,9 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
       end
       task:complete()
     end
-  }):start()
+  }, wedit.getUserConfigData("delay")))
 
-  wedit.setLogMap("Replace", "Command started!")
+  wedit.logger:setLogMap("Replace", "Command started!")
 
   return copy
 end
@@ -1278,15 +1016,15 @@ function wedit.removeMod(pos, layer)
 
   if not wedit.breakMods[mod] then
     world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
-  elseif wedit.lockPosition(pos, layer) then
-    wedit.Task.create({function(task)
+  elseif wedit.positionLocker:lock(layer, pos) then
+    wedit.taskManager:start(Task.new({function(task)
       world.placeMod(pos, layer, "grass", nil, false)
       task:nextStage()
     end, function(task)
       world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
-      wedit.unlockPosition(pos, layer)
+      wedit.positionLocker:unlock(layer, pos)
       task:complete()
-    end}):start()
+    end}, wedit.getUserConfigData("delay")))
   end
 end
 
@@ -1305,7 +1043,6 @@ end
 -- @param bottomLeft Bottom left corner of the selection.
 -- @param topRight Top right corner of the selection.
 -- @param liquidId ID of the liquid.
--- @see wedit.liquids
 function wedit.hydrate(bottomLeft, topRight, liquidId)
   for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
     for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
@@ -1412,4 +1149,16 @@ function wedit.circle(pos, radius, callback)
     end
   end
   return blocks
+end
+
+wedit.liquidNames = {}
+function wedit.liquidName(liquidId)
+  if not wedit.liquidNames[liquidId] then
+    local cfg = root.liquidConfig(liquidId)
+    if cfg then
+      wedit.liquidNames[liquidId] = cfg.config.name
+    end
+  end
+
+  return wedit.liquidNames[liquidId]
 end

@@ -1,9 +1,11 @@
+--- https://github.com/Silverfeelin/Starbound-WEdit
+
 weditInterface = {}
 
 local widgets = {
   noclipBind = "weditScroll.noClipBind",
   noclipSpeed = "weditScroll.noClipSpeed",
-  iterationDelay = "weditScroll.iterationDelay",
+  delay = "weditScroll.delay",
   doubleIterations = "weditScroll.doubleIterations",
   clearSchematics = "weditScroll.clearSchematics",
   lineSpacing = "weditScroll.lineSpacing",
@@ -23,7 +25,7 @@ function init()
 
   widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "g")
   widget.setText(widgets.noclipSpeed, weditInterface.getConfigData("noclipSpeed") or 0.75)
-  widget.setText(widgets.iterationDelay, weditInterface.getConfigData("iterationDelay") or 15)
+  widget.setText(widgets.delay, weditInterface.getConfigData("delay") or 15)
   widget.setChecked(widgets.doubleIterations, weditInterface.getConfigData("doubleIterations") or false)
   widget.setChecked(widgets.clearSchematics, false)
   widget.setText(widgets.lineSpacing, weditInterface.getConfigData("lineSpacing") or 1)
@@ -55,9 +57,9 @@ function weditInterface.changeNoClipSpeed()
   weditInterface.setConfigData("noclipSpeed", speed)
 end
 
-function weditInterface.changeIterationDelay()
-  local delay = tonumber(widget.getText(widgets.iterationDelay)) or 15
-  weditInterface.setConfigData("iterationDelay", math.ceil(delay))
+function weditInterface.changeDelay()
+  local delay = tonumber(widget.getText(widgets.delay)) or 15
+  weditInterface.setConfigData("delay", math.ceil(delay))
 end
 
 function weditInterface.changeDoubleIterations()

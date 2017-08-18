@@ -1,7 +1,7 @@
 function init()
   -- Prevent multiple pickers.
   -- If the value is somehow true while the interface is closed, a reload should fix this.
-  -- weditController.lua forces them back to false on init.
+  -- controller.lua forces them back to false on init.
   if status.statusProperty("wedit.liquidPicker.open") then
     forceClosed = true
     pane.dismiss()

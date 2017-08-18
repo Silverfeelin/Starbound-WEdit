@@ -1,29 +1,43 @@
---- WEdit (https://github.com/Silverfeelin/Starbound-WEdit)
+--- WEdit controller (https://github.com/Silverfeelin/Starbound-WEdit)
+-- Handles input and executes actions
 --
 -- To load this script, it has to be required -inside- the init function of a base tech script (EG. distortionsphere.lua).
 -- To use this script, the chosen base tech has to be active on your character. Further usage instructions can be found on the official page linked above.
 
 local startTime = os.clock()
 
-require "/scripts/wedit.lua"
-require "/scripts/weditActions.lua"
+wedit = {}
+wedit.controller = {}
+wedit.actions = {}
+local controller = wedit.controller
+
+-- Load dependencies
 require "/scripts/keybinds.lua"
 require "/scripts/messageutil.lua"
+-- Load core library
+require "/scripts/wedit/wedit.lua"
+-- Load tool actions
+require "/scripts/wedit/actions.lua"
 
-local controller = { }
-wedit.controller = controller
-
+--- Sets a value under the "wedit" status property.
+-- @param key wedit table key.
+-- @param value Property value.
+-- @see controller.getConfigData
 function controller.setConfigData(key, value)
   local cfg = status.statusProperty("wedit") or {}
   cfg[key] = value
   status.setStatusProperty("wedit", cfg)
 end
+
+--- Gets a value under the "wedit" status property.
+-- @param key wedit table key.
+-- @see controller.setConfigData
 function controller.getConfigData(key)
   local cfg = status.statusProperty("wedit") or {}
   return key == nil and cfg or cfg[key]
 end
 
--- Failsafe: If the WEdit configuration table wasn't set, set it.
+-- Failsafe: If the WEdit property wasn't set, set it.
 if not status.statusProperty("wedit") then status.setStatusProperty("wedit", {}) end
 
 -- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
@@ -66,9 +80,12 @@ controller.showInfo = true
 status.setStatusProperty("wedit.showingInfo", true)
 
 -- #region Useful functions
+
 -- Primarily for use within this script
 
 --- Masks wedit.info, and only works if controller.showInfo is true.
+-- @param ... wedit.info arguments
+-- @see wedit.info
 function controller.info(...)
   if controller.showInfo then
     wedit.info(...)
@@ -134,16 +151,16 @@ end
 function controller.showSelection()
   -- Draw selections if they have been made.
   if controller.validSelection() then
-    wedit.debugRectangle(controller.selection[1], controller.selection[2])
-    wedit.debugText(string.format("^shadow;WEdit Selection (%sx%s)", controller.selection[2][1] - controller.selection[1][1], controller.selection[2][2] - controller.selection[1][2]), {controller.selection[1][1], controller.selection[2][2]}, "green")
+    wedit.debugRenderer:drawRectangle(controller.selection[1], controller.selection[2])
+    wedit.debugRenderer:drawText(string.format("^shadow;WEdit Selection (%sx%s)", controller.selection[2][1] - controller.selection[1][1], controller.selection[2][2] - controller.selection[1][2]), {controller.selection[1][1], controller.selection[2][2]}, "green")
 
     if storage.weditCopy and storage.weditCopy.size then
       local copy = storage.weditCopy
       local top = controller.selection[1][2] + copy.size[2]
-      wedit.debugRectangle(controller.selection[1], {controller.selection[1][1] + copy.size[1], top}, "cyan")
+      wedit.debugRenderer:drawRectangle(controller.selection[1], {controller.selection[1][1] + copy.size[1], top}, "cyan")
 
       if top == controller.selection[2][2] then top = controller.selection[2][2] + 1 end
-      wedit.debugText("^shadow;WEdit Paste Selection", {controller.selection[1][1], top}, "cyan")
+      wedit.debugRenderer:drawText("^shadow;WEdit Paste Selection", {controller.selection[1][1], top}, "cyan")
     end
   end
 end
@@ -175,7 +192,7 @@ function controller.updateUserConfig()
     wedit.user[k] = v
   end
 
-  if wedit.config.clearSchematics then
+  if wedit.getUserConfigData("clearSchematics") then
     storage.weditSchematics = {}
     controller.setConfigData("clearSchematics", false)
     wedit.user.clearSchematics = false
@@ -226,9 +243,9 @@ function controller.update(args)
       airFriction = 99999,
       airForce = 99999
     })
-    wedit.setLogMap("Noclip", string.format("Press '%s' to stop flying.", wedit.config.noclipBind))
+    wedit.logger:setLogMap("Noclip", string.format("Press '%s' to stop flying.", wedit.getUserConfigData("noclipBind")))
   else
-    wedit.setLogMap("Noclip", string.format("Press '%s' to fly.", wedit.config.noclipBind))
+    wedit.logger:setLogMap("Noclip", string.format("Press '%s' to fly.", wedit.getUserConfigData("noclipBind")))
   end
 
   -- As all WEdit items are two handed, we only have to check the primary item.
@@ -276,7 +293,7 @@ end
 -- #region NoClip Binds
 
 -- Set up noclip using Keybinds.
-Bind.create(wedit.config.noclipBind, function()
+Bind.create(wedit.getUserConfigData("noclipBind"), function()
   controller.noclipping = not controller.noclipping
   if controller.noclipping then
     tech.setParentState("fly")
@@ -297,10 +314,10 @@ local adjustPosition = function(offset)
   mcontroller.setVelocity({0,0})
 end
 controller.noclipBinds = {}
-table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.config.noclipSpeed}) end, true))
-table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.config.noclipSpeed}) end, true))
-table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.config.noclipSpeed,0}) end, true))
-table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.config.noclipSpeed,0}) end, true))
+table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.getUserConfigData("noclipSpeed")}) end, true))
+table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.getUserConfigData("noclipSpeed")}) end, true))
+table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.getUserConfigData("noclipSpeed"),0}) end, true))
+table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.getUserConfigData("noclipSpeed"),0}) end, true))
 table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false))
 for _,v in ipairs(controller.noclipBinds) do
   v:unbind()

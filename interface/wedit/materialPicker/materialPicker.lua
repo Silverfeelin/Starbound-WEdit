@@ -1,7 +1,7 @@
 function init()
   -- Prevent multiples material pickers.
   -- If the value is somehow true while the interface is closed, a reload should fix this.
-  -- weditController.lua forces them back to false on init.
+  -- controller.lua forces them back to false on init.
   if status.statusProperty("wedit.materialPicker.open") then
     forceClosed = true
     pane.dismiss()
