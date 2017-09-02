@@ -104,7 +104,6 @@ function Task.new(stages, delay)
   task.delay = delay or task.defaultDelay
 
   task.stage = 1
-  task.tick = 0
   task.stageProgress = 0
   task.progress = 0
   task.completed = false
@@ -112,12 +111,8 @@ function Task.new(stages, delay)
 
   task.coroutine = coroutine.create(function()
     while not task.completed do
-      task.tick = task.tick + 1
-      if task.tick >= task.delay then
-        task.tick = 0
-        task.stages[task.stage](task)
-      end
-      coroutine.yield()
+      util.wait(task.delay / 60)
+      task.stages[task.stage](task)
     end
 
     -- Reset task so it can be repeated.
