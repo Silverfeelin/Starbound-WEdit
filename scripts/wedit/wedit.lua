@@ -12,7 +12,9 @@ require "/scripts/wedit/taskManager.lua"
 --- WEdit table, variables and functions accessed with 'wedit.' are stored here.
 -- Configuration values should be accessed with 'wedit.getUserConfigData(key'.
 -- Variables in wedit.user are prioritized over wedit.default.
-wedit = wedit or {}
+if not wedit then
+  wedit = {}
+end
 
 local cfg = root.assetJson("/scripts/wedit/wedit.config")
 function wedit.getConfigData(key)
