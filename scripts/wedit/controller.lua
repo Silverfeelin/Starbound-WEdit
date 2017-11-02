@@ -287,6 +287,40 @@ end
 
 -- #endregion
 
+-- #region WEdit Tools
+
+--- Returns parameters for a trianglium ore used for WEdit tools.
+-- Vanilla parameters such as blueprints and radio messages are removed.
+-- @param shortDescription Visual item name, used to identify WEdit functions.
+-- @param description Item description displayed in the item tooltip.
+-- @param category Item header, displayed below the item shortDescription.
+-- @param inventoryIcon Path to an icon. Supports directives.
+-- @param rarity Item rarity. Defaults to common.
+-- @return Altered item parameters (for a triangliumore).
+function controller.spawnOreParameters(shortDescription, description, category, inventoryIcon, rarity)
+ rarity = rarity or "common"
+  return {
+    itemTags = jarray(),
+    radioMessagesOnPickup = jarray(),
+    learnBlueprintsOnPickup = jarray(),
+    twoHanded = true,
+    shortdescription = shortDescription,
+    category = category,
+    description = description,
+    inventoryIcon = inventoryIcon,
+    rarity = rarity
+  }
+end
+
+-- #endregion
+
+-- #region Load config
+
+-- Load config once while still initializing.
+controller.updateUserConfig()
+
+-- #endregion
+
 -- #region NoClip Binds
 
 -- Set up noclip using Keybinds.
@@ -320,37 +354,10 @@ for _,v in ipairs(controller.noclipBinds) do
   v:unbind()
 end
 
--- #region WEdit Tools
-
---- Returns parameters for a trianglium ore used for WEdit tools.
--- Vanilla parameters such as blueprints and radio messages are removed.
--- @param shortDescription Visual item name, used to identify WEdit functions.
--- @param description Item description displayed in the item tooltip.
--- @param category Item header, displayed below the item shortDescription.
--- @param inventoryIcon Path to an icon. Supports directives.
--- @param rarity Item rarity. Defaults to common.
--- @return Altered item parameters (for a triangliumore).
-function controller.spawnOreParameters(shortDescription, description, category, inventoryIcon, rarity)
- rarity = rarity or "common"
-  return {
-    itemTags = jarray(),
-    radioMessagesOnPickup = jarray(),
-    learnBlueprintsOnPickup = jarray(),
-    twoHanded = true,
-    shortdescription = shortDescription,
-    category = category,
-    description = description,
-    inventoryIcon = inventoryIcon,
-    rarity = rarity
-  }
-end
-
 -- #endregion
 
 -- #region Message Handlers
 
--- Load config once while still initializing.
-controller.updateUserConfig()
 message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfig))
 -- Allow picker interfaces to change values.
 message.setHandler("wedit.updateColor", localHandler(function(data)

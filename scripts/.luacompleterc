@@ -51,7 +51,7 @@
           "line": {
             "type": "function",
             "description": "Place a block at every position on a line between two points. Uses `wedit.bresenham`.",
-            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}, { "name": "callback"}]
+            "args": [{ "name": "startPos", "type": "vec2" }, { "name": "endPos", "type": "vec2" }, { "name": "layer", "type": "string"}, { "name": "callback", "type": "function"}]
           },
           "logENV": {
             "type": "function",
