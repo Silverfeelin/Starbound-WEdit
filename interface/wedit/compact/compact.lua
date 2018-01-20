@@ -16,6 +16,14 @@ function init()
   status.setStatusProperty("wedit.compact.open", true)
 end
 
+function update(dt)
+  sb.logInfo("COMPACT UPDATE")
+  if status.statusProperty("wedit.compact.close", false) then
+    status.setStatusProperty("wedit.compact.close", nil)
+    pane.dismiss()
+  end
+end
+
 function uninit()
   if not forceClosed then
     status.setStatusProperty("wedit.compact.open", nil)

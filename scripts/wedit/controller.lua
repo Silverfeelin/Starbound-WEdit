@@ -270,6 +270,11 @@ end
 --- Uninit function, called in the main uninit callback.
 function controller.uninit()
   tech.setParentState()
+
+  -- Mark interfaces for closing.
+  if status.statusProperty("wedit.compact.open", false) then
+    status.setStatusProperty("wedit.compact.close", true)
+  end
 end
 
 -- Alter update callback.

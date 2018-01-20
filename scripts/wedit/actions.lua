@@ -13,21 +13,13 @@ local controller = wedit.controller
 function wedit.actions.WE_AllInOne()
   if not status.statusProperty("wedit.compact.open") then
     controller.info("^shadow;^orange;WEdit: All in One")
-    controller.info("^shadow;^yellow;Please open the compact interface first!", {0,-1})
-    controller.info("^shadow;^yellow;Switch to ^red;WE_CompactInterface^yellow;.", {0,-2})
-  end
-end
+    controller.info("^shadow;^yellow;Primary Fire: Open Compact Interface.", {0,-1})
 
-function wedit.actions.WE_CompactInterface()
-  controller.info("^shadow;^orange;WEdit: Compact Interface")
-  controller.info("^shadow;^yellow;Primary Fire: Open Interface.", {0,-1})
-  controller.info("^shadow;^yellow;Requires the ^red;Remote Interfaces^yellow; mod!", {0,-2})
-  controller.info("^shadow;^yellow;Hold the ^red;WE_AllInOne^yellow; tool with the interface open.", {0,-3})
-
-  local c = controller
-  if not c.fireLocked and (c.primaryFire or c.altFire) then
-    world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/compact/compact.config")
-    c.fireLock()
+    local c = controller
+    if not c.fireLocked and (c.primaryFire or c.altFire) then
+      c.fireLock()
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/compact/compact.config")
+    end
   end
 end
 
@@ -53,7 +45,7 @@ function wedit.actions.WE_Select()
     -- Select stage 0: Not selecting.
     controller.info("^shadow;^yellow;Primary Fire: Select area.", {0,-1})
 
-    if controller.primaryFire then
+    if controller.primaryFire and not controller.fireLocked then
       -- Start selection; set first point.
       controller.selectStage = 1
       controller.rawSelection[1] = tech.aimPosition()
