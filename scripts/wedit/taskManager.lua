@@ -162,5 +162,5 @@ local testTask = Task.new({
   end
 }, 2)
 
-taskManager.start(testTask)
+taskManager:start(testTask)
 --]]

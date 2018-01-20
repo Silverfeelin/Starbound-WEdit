@@ -37,7 +37,8 @@ function controller.getUserConfig(key)
   return key == nil and cfg or cfg[key]
 end
 
--- Failsafe: If the interface was somehow marked open on init, this ensure it's marked closed.
+-- Failsafe: If the interface was somehow marked open on init, this ensures it's marked closed. Otherwise it could become impossible to open it again.
+-- The interfaces stay open when warping, but it's a better solution to make users open them again than to have the mod break after a game crash.
 status.setStatusProperty("wedit.compact.open", nil)
 status.setStatusProperty("wedit.dyePicker.open", nil)
 status.setStatusProperty("wedit.matmodPicker.open", nil)
