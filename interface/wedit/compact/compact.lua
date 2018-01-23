@@ -17,7 +17,6 @@ function init()
 end
 
 function update(dt)
-  sb.logInfo("COMPACT UPDATE")
   if status.statusProperty("wedit.compact.close", false) then
     status.setStatusProperty("wedit.compact.close", nil)
     pane.dismiss()
