@@ -1,7 +1,12 @@
 --- WEdit library (https://github.com/Silverfeelin/Starbound-WEdit)
 -- The brain of WEdit. This script won't function on it's own, but exposes the functions to a controller.
+-- WEdit must be initialized with wedit.init() and updated every tick with wedit.update(args).
 --
--- The bresemham function falls under a different license; refer to it's documentation for licensing information.
+-- LICENSE
+-- This file falls under an MIT License, which is part of this project.
+-- An online copy can be viewed via the following link:
+-- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+-- The bresemham function (wedit.bresenham) falls under a different license; refer to its documentation for licensing information.
 
 require "/scripts/set.lua"
 require "/scripts/wedit/positionLocker.lua"
@@ -16,14 +21,38 @@ if not wedit then
   wedit = {}
 end
 
-local cfg = root.assetJson("/scripts/wedit/wedit.config")
+local cfg = {}
+
+function wedit.init()
+  -- Load config
+  cfg = root.assetJson("/scripts/wedit/wedit.config")
+
+  wedit.default = wedit.getConfigData("defaultConfig")
+  wedit.user = wedit.user or {}
+
+  ---  Mods that require breaking the tile to remove them.
+  -- These mods can still be removed by overwriting them with a mod such as grass
+  -- before damaging the tile.
+  wedit.breakMods = set.new(wedit.getConfigData("breakMods"))
+
+  wedit.positionLocker = PositionLocker.new()
+  wedit.debugRenderer = DebugRenderer.new()
+  wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
+  wedit.taskManager = TaskManager.new()
+
+  wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
+
+  wedit.liquidNames = {}
+end
+
+function wedit.update(...)
+  wedit.taskManager:update()
+  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.taskManager:count()))
+end
+
 function wedit.getConfigData(key)
   return cfg[key]
 end
-
--- Load config
-wedit.default = wedit.getConfigData("defaultConfig")
-wedit.user = wedit.user or {}
 
 function wedit.getUserConfigData(key)
   local v = wedit.user[key]
@@ -34,17 +63,6 @@ function wedit.getUserConfigData(key)
   return v
 end
 
----  Mods that require breaking the tile to remove them.
--- These mods can still be removed by overwriting them with a mod such as grass
--- before damaging the tile.
-wedit.breakMods = set.new(wedit.getConfigData("breakMods"))
-
-wedit.positionLocker = PositionLocker.new()
-wedit.debugRenderer = DebugRenderer.new()
-wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
-wedit.taskManager = TaskManager.new()
-
-wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
 --- Recolors the info text to use a color scheme.
 -- @param str A string of text.
 -- @return String with the recolors applied.
@@ -109,15 +127,6 @@ function wedit.calculateIterations(bottomLeft, size, layer)
 
   if iterations and wedit.getUserConfigData("doubleIterations") then iterations = iterations * 2 end
   return airFound and iterations or 1
-end
-
---- Inject task handling into the update function.
-local oldUpdate = update
-update = function(...)
-  oldUpdate(...)
-
-  wedit.taskManager:update()
-  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.taskManager:count()))
 end
 
 --- Starbound Block Class.
@@ -1153,7 +1162,6 @@ function wedit.circle(pos, radius, callback)
   return blocks
 end
 
-wedit.liquidNames = {}
 function wedit.liquidName(liquidId)
   if not wedit.liquidNames[liquidId] then
     local cfg = root.liquidConfig(liquidId)

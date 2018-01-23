@@ -1,6 +1,12 @@
 --- Position lockers can be used to restrict actions at certain positions.
 -- This is especially useful for preventing multiple asynchronous tasks at the same location.
 -- The feature could be expanded on by supporting rectangles, since a lot of WEdit actions make use of rectangular selections.
+--
+-- LICENSE
+-- This file falls under an MIT License, which is part of this project.
+-- An online copy can be viewed via the following link:
+-- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+
 PositionLocker = {}
 PositionLocker.__index = PositionLocker
 

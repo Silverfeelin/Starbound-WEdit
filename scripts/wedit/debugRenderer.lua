@@ -1,10 +1,15 @@
-require "/scripts/vec2.lua"
-
 --- Debug renderers can be used to render lines, points and text on the world.
 -- Each rendered element lasts one frame.
+--
+-- LICENSE
+-- This file falls under an MIT License, which is part of this project.
+-- An online copy can be viewed via the following link:
+-- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+
+require "/scripts/vec2.lua"
+
 DebugRenderer = {}
 DebugRenderer.__index = DebugRenderer
-
 DebugRenderer.defaultColor = "green"
 
 --- Instantiates a new debug renderer.

@@ -1,4 +1,11 @@
 --- Task managers can be used to run asynchronous tasks.
+-- The task manager should be updated every tick.
+--
+-- LICENSE
+-- This file falls under an MIT License, which is part of this project.
+-- An online copy can be viewed via the following link:
+-- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+
 TaskManager = {}
 TaskManager.__index = TaskManager
 
@@ -11,6 +18,8 @@ function TaskManager.new()
   return instance
 end
 
+--- Updates the task manager.
+-- This will continue all running tasks.
 function TaskManager:update()
   local toRemove = {}
 

@@ -1,3 +1,13 @@
+--- Tech Loader interface
+-- The tech loader notifies the player they haven't equipped the dash tech yet.
+-- The interface should only be opened if the character does not have dash
+-- equipped and the status property "weditTechLoaderIgnored" is not set.
+--
+-- LICENSE
+-- This file falls under an MIT License, which is part of this project.
+-- An online copy can be viewed via the following link:
+-- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+
 require "/scripts/vec2.lua"
 
 local scrolled = false
