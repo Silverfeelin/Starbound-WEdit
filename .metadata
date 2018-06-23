@@ -1,14 +1,13 @@
 {
-  "name" : "WEdit",
-  "friendlyName" : "WEdit - World Edit Tech",
-  "priority" : 999,
-  "version" : "1.3.3",
   "author" : "Silverfeelin",
-  "description" : "Allows you to edit the world around you on a larger scale.
-
-For usage instructions, see: ^#61b3de;https://github.com/Silverfeelin/Starbound-WEdit^reset;",
-  "requires" : [],
+  "description" : "Allows you to edit the world around you on a larger scale.\n\nFor usage instructions, see: ^#61b3de;https://github.com/Silverfeelin/Starbound-WEdit^reset;",
+  "friendlyName" : "WEdit - World Edit Tech",
   "includes" : ["StardustLib", "QuickbarMini"],
   "link" : "steam://url/CommunityFilePage/734859295",
-  "steamContentId" : "734859295"
+  "name" : "WEdit",
+  "priority" : 999,
+  "requires" : [],
+  "steamContentId" : "734859295",
+  "tags" : "Crafting and Building|Cheats and God Items|User Interface|In-Game Tools",
+  "version" : "1.3.3"
 }
