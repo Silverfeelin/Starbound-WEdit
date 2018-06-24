@@ -35,7 +35,7 @@ function TaskManager:update()
       if b then error(b) end
 
       if task.callback then
-        task.callback()
+        task.callback(task)
       end
     end
 
