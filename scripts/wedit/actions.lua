@@ -330,22 +330,32 @@ function wedit.actions.WE_Stamp()
   controller.info("^shadow;^yellow;Primary Fire: Copy selection.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Paste selection.", {0,-2})
   controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
+  controller.info("^shadow;^yellow;Shift + Primary Fire: Forget copy.", {0,-3})
+  controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-4})
 
   if controller.validSelection() then
     controller.showSelection()
   end
 
-  if not controller.fireLocked and controller.primaryFire and controller.validSelection() then
-    -- Store copy
-    storage.weditCopy = wedit.copy(controller.selection[1], controller.selection[2], nil, true)
-    controller.fireLock()
-  elseif not controller.fireLocked and controller.altFire and controller.validSelection() then
-    -- Start paste
-    local position = {controller.selection[1][1], controller.selection[1][2]}
-    local backup = wedit.paste(storage.weditCopy, position)
-    if backup then table.insert(controller.backup, backup) end
-
-    controller.fireLock()
+  if not controller.shiftFireLocked then
+    if not controller.shiftHeld then
+      if controller.primaryFire then
+        -- Store copy
+        storage.weditCopy = wedit.copy(controller.selection[1], controller.selection[2], nil, true)
+        controller.shiftFireLock()
+      elseif controller.altFire then
+        if storage.weditCopy then
+          -- Start paste
+          local position = {controller.selection[1][1], controller.selection[1][2]}
+          local backup = wedit.paste(storage.weditCopy, position)
+          if backup then table.insert(controller.backup, backup) end
+        end
+        controller.shiftFireLock()
+      end
+    elseif controller.primaryFire then
+      storage.weditCopy = nil
+      controller.shiftFireLock()
+    end
   end
 end
 
