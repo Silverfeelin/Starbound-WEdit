@@ -9,6 +9,7 @@
 -- The bresemham function (wedit.bresenham) falls under a different license; refer to its documentation for licensing information.
 
 require "/scripts/set.lua"
+require "/scripts/vec2.lua"
 require "/scripts/wedit/positionLocker.lua"
 require "/scripts/wedit/debugRenderer.lua"
 require "/scripts/wedit/logger.lua"
@@ -302,12 +303,9 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
       if task.progress < iterations then
         task.progress = task.progress + 1
 
-        for i=0,width-1 do
-          for j=0,height-1 do
-            local pos = {bottomLeft[1] + 0.5 + i, bottomLeft[2] + 0.5 + j}
-            world.placeMaterial(pos, layer, block, 0, true)
-          end
-        end
+        wedit.forEach(bottomLeft, topRight, function(pos)
+          world.placeMaterial(pos, layer, block, 0, true)
+        end)
       else
         task:complete()
       end
@@ -349,12 +347,9 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
 
   local copy = wedit.copy(bottomLeft, topRight, copyOptions)
 
-  for i=0,width-1 do
-    for j=0,height-1 do
-      local pos = {bottomLeft[1] + 0.5 + i, bottomLeft[2] + 0.5 + j}
-      world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-    end
-  end
+  wedit.forEach(bottomLeft, topRight, function(pos)
+    world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
+  end)
 
   wedit.logger:setLogMap("Break", "Task executed!")
 
@@ -585,6 +580,8 @@ end
 -- @copy Copy to paste. The copy options are used for the paste.
 -- @param position Bottom left corner of the paste.
 function wedit.paste(copy, position)
+  if not copy then return end
+
   position = wedit.clonePoint(position)
 
   local paste = {
@@ -1043,11 +1040,9 @@ end
 -- @param bottomLeft Bottom left corner of the selection.
 -- @param topRight Top right corner of the selection.
 function wedit.drain(bottomLeft, topRight)
-  for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
-    for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
-      world.destroyLiquid({bottomLeft[1] + i, bottomLeft[2] + j})
-    end
-  end
+  wedit.forEach(bottomLeft, topRight, function(pos)
+    world.destroyLiquid(pos)
+  end)
 end
 
 --- Fills a selection with a liquid.
@@ -1055,11 +1050,9 @@ end
 -- @param topRight Top right corner of the selection.
 -- @param liquidId ID of the liquid.
 function wedit.hydrate(bottomLeft, topRight, liquidId)
-  for i=0,math.ceil(topRight[1]-bottomLeft[1])-1 do
-    for j=0,math.ceil(topRight[2]-bottomLeft[2])-1 do
-      world.spawnLiquid({bottomLeft[1] + i, bottomLeft[2] + j}, liquidId, 1)
-    end
-  end
+  wedit.forEach(bottomLeft, topRight, function(pos)
+    world.spawnLiquid(pos, liquidId, 1)
+  end)
 end
 
 --- For each block in a line between two points, calls the callback function.
@@ -1119,6 +1112,21 @@ function wedit.line(startPos, endPos, layer, block)
     wedit.bresenham(startPos, endPos, function(x, y) world.placeMaterial({x, y}, layer, block, 0, true) end)
   else
     wedit.bresenham(startPos, endPos, function(x, y) world.damageTiles({{x,y}}, layer, {x,y}, "blockish", 9999, 0) end)
+  end
+end
+
+
+--- For each block between bottomLeft and topRight, calls callback.
+-- @param bottomLeft Bottom left corner of the selection.
+-- @param topRight Top right corner of the selection.
+-- @param callback Function called with {x,y} for every block.
+function wedit.forEach(bottomLeft, topRight, callback)
+  local bl, tr = vec2.floor(bottomLeft), vec2.floor(topRight)
+
+  for i=0, math.ceil(tr[1] - bl[1]) - 1 do
+    for j=0, math.ceil(tr[2] - bl[2]) - 1 do
+      callback({bl[1] + i, bl[2] + j})
+    end
   end
 end
 
