@@ -1055,6 +1055,82 @@ function wedit.hydrate(bottomLeft, topRight, liquidId)
   end)
 end
 
+--- Calculates an optimal 'delay'.
+-- A block is placed, modified and broken a total of 5 times.
+-- The time each step takes is used to determine the minimum delay WEdit can get away with.
+-- @param pos Position to calibrate on. Should have a background but no foreground.
+-- @param [maxTicks=60] Maximum delay. If calibration times out, this value is used.
+function wedit.calibrate(pos, maxTicks)
+  if world.tileIsOccupied(pos, true) or not world.material(pos, "background") then return end
+
+  local attempts = maxTicks or 60 -- 1 sec.
+  local times = {}
+
+  local placeBlock = function(task)
+    if task.stageProgress == 0 then
+      world.placeMaterial(pos, "foreground", "hazard")
+    end
+    task.stageProgress = task.stageProgress + 1
+    if world.material(pos, "foreground") or task.stageProgress > attempts then
+      table.insert(times, task.stageProgress)
+      task:nextStage()
+    end
+  end
+
+  local placeMod = function(task)
+    if task.stageProgress == 0 then
+      world.placeMod(pos, "foreground", "coal")
+    end
+    task.stageProgress = task.stageProgress + 1
+    if world.mod(pos, "foreground") or task.stageProgress > attempts then
+      table.insert(times, task.stageProgress)
+      task:nextStage()
+    end
+  end
+
+  local breakMod = function(task)
+    if task.stageProgress == 0 then
+      world.damageTiles({pos}, "foreground", pos, "blockish", 9999, 0)
+    end
+    task.stageProgress = task.stageProgress + 1
+    if not world.mod(pos, "foreground") or task.stageProgress > attempts then
+      table.insert(times, task.stageProgress)
+      task:nextStage()
+    end
+  end
+
+  local breakBlock = function(task)
+    if task.stageProgress == 0 then
+      world.damageTiles({pos}, "foreground", pos, "blockish", 9999, 0)
+    end
+    task.stageProgress = task.stageProgress + 1
+    if not world.material(pos, "foreground") or task.stageProgress > attempts then
+      table.insert(times, task.stageProgress)
+      task:nextStage()
+    end
+  end
+
+  local finalize = function(task)
+    local delay = 1
+    for _,v in ipairs(times) do
+      if v > delay then delay = v end
+    end
+
+    wedit.controller.setUserConfig("delay", delay + 1)
+    task:complete()
+  end
+
+  local stages = {
+    placeBlock, placeMod, breakMod, breakBlock,
+    placeBlock, placeMod, breakMod, breakBlock,
+    placeBlock, placeMod, breakMod, breakBlock,
+    placeBlock, placeMod, breakMod, breakBlock,
+    placeBlock, placeMod, breakMod, breakBlock,
+    finalize
+  }
+  wedit.taskManager:start(Task.new(stages, 1))
+end
+
 --- For each block in a line between two points, calls the callback function.
 -- This uses the bresenham algorithm implementation by kikito.
 -- Licensed under the MIT license: https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt.

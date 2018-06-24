@@ -329,7 +329,6 @@ function wedit.actions.WE_Stamp()
   controller.info("^shadow;^orange;WEdit: Stamp Tool")
   controller.info("^shadow;^yellow;Primary Fire: Copy selection.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Paste selection.", {0,-2})
-  controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
   controller.info("^shadow;^yellow;Shift + Primary Fire: Forget copy.", {0,-3})
   controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-4})
 
@@ -765,5 +764,21 @@ function wedit.actions.WE_Dye()
     elseif wedit.getUserConfigData("brushShape") == "circle" then
       wedit.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
     end
+  end
+end
+
+function wedit.actions.WE_Calibrate()
+  controller.info("^shadow;^orange;WEdit: Calibrator")
+  controller.info("^shadow;^yellow;Primary Fire: Calibrate delay.", {0,-1})
+  controller.info("^shadow;^yellow;Make sure the highlighted block is", {0,-2})
+  controller.info("^shadow;^yellow;empty and has a background block.", {0,-3})
+
+  local aimPos = tech.aimPosition()
+
+  wedit.debugRenderer:drawBlock(aimPos, "green")
+
+  if not controller.fireLocked and controller.primaryFire then
+    controller.fireLock()
+    wedit.calibrate(aimPos)
   end
 end
