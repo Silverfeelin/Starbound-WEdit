@@ -10,10 +10,13 @@
 
 require "/scripts/set.lua"
 require "/scripts/vec2.lua"
-require "/scripts/wedit/positionLocker.lua"
+require "/scripts/util.lua"
+
 require "/scripts/wedit/debugRenderer.lua"
 require "/scripts/wedit/logger.lua"
+require "/scripts/wedit/positionLocker.lua"
 require "/scripts/wedit/taskManager.lua"
+require "/scripts/wedit/fsmManager.lua"
 
 --- WEdit table, variables and functions accessed with 'wedit.' are stored here.
 -- Configuration values should be accessed with 'wedit.getUserConfigData(key'.
@@ -40,6 +43,7 @@ function wedit.init()
   wedit.debugRenderer = DebugRenderer.new()
   wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
   wedit.taskManager = TaskManager.new()
+  wedit.fsmManager = FSMManager.new()
 
   wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
 
@@ -48,7 +52,9 @@ end
 
 function wedit.update(...)
   wedit.taskManager:update()
-  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.taskManager:count()))
+  wedit.fsmManager:update()
+
+  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.fsmManager:count()))
 end
 
 function wedit.getConfigData(key)
@@ -296,28 +302,26 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
 
   local copy = wedit.copy(bottomLeft, topRight, copyOptions)
 
-  local iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer)
+  local fill = function(fsm)
+    local iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer)
+    for i=1, iterations do
+      -- Clear blocks
+      wedit.forEach(bottomLeft, topRight, function(pos)
+        world.placeMaterial(pos, layer, block, 0, true)
+      end)
 
-  local task = Task.new({
-    function(task)
-      if task.progress < iterations then
-        task.progress = task.progress + 1
+      -- Recalculate iterations needed
+      iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer == "foreground" and "background" or "foreground")
+      if i >= iterations then break end
 
-        wedit.forEach(bottomLeft, topRight, function(pos)
-          world.placeMaterial(pos, layer, block, 0, true)
-        end)
-      else
-        task:complete()
-      end
+      -- Wait
+      util.waitTicks(wedit.getUserConfigData("delay"), function()
+        wedit.debugRenderer:drawRectangle(bottomLeft, topRight, "orange")
+        world.debugText(string.format("^shadow;WEdit Fill (%s-%s) %s/%s", layer, block, i, iterations), {bottomLeft[1], topRight[2] - 1}, "orange")
+      end)
     end
-  }, wedit.getUserConfigData("delay"))
-
-  task.callback = function()
-    wedit.debugRenderer:drawRectangle(bottomLeft, topRight, "orange")
-    world.debugText(string.format("^shadow;WEdit Fill (%s-%s) %s/%s", layer, block, task.progress, iterations), {bottomLeft[1], topRight[2] - 1}, "orange")
   end
-
-  wedit.taskManager:start(task)
+  wedit.fsmManager:startNew(fill)
 
   wedit.logger:setLogMap("Fill", string.format("Task started with %s!", block))
 
@@ -362,21 +366,33 @@ end
 -- @param block Material name.
 -- @param[opt=wedit.neighborHueshift] hueshift Hueshift for the block. Determined by nearest blocks if omitted.
 function wedit.pencil(pos, layer, block, hueshift)
+  -- Prevent needless tasks.
+  local old = world.material(pos, layer)
+  if old == block or (not old and not block) then return end
+
+  -- Prevent multiple tasks.
+  if not wedit.positionLocker:lock(layer, pos) then return end
+
+  -- Attempt to clone hueshift of neighbouring tiles.
   if not hueshift then hueshift = wedit.neighborHueshift(pos, layer, block) or 0 end
 
-  local mat = world.material(pos, layer)
-  if (mat and mat ~= block) or not block then
-    world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-    if block and wedit.positionLocker:lock(layer, pos) then
-      wedit.taskManager:start(Task.new({function(task)
-        world.placeMaterial(pos, layer, block, hueshift, true)
-        wedit.positionLocker:unlock(layer, pos)
-        task:complete()
-      end}), wedit.getUserConfigData("delay"))
+  -- Start (re)placing
+  wedit.fsmManager:startNew(function()
+    -- Remove old block
+    if not block or (old and old ~= block) then
+      world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
+      util.waitFor(function() return not world.material(pos, layer) end)
     end
-  else
-    world.placeMaterial(pos, layer, block, hueshift, true)
-  end
+
+    -- Place new block
+    if block then
+      world.placeMaterial(pos, layer, block, hueshift, true)
+      util.waitFor(function() return world.material(pos, layer) end)
+    end
+
+    -- Unlock block position.
+    wedit.positionLocker:unlock(layer, pos)
+  end)
 
   wedit.logger:setLogMap("Pencil", string.format("Drawn %s.", block))
 end
