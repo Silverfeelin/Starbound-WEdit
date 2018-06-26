@@ -10,13 +10,13 @@
 
 require "/scripts/set.lua"
 require "/scripts/vec2.lua"
-require "/scripts/util.lua"
 
+require "/scripts/wedit/utilExt.lua"
 require "/scripts/wedit/debugRenderer.lua"
 require "/scripts/wedit/logger.lua"
 require "/scripts/wedit/positionLocker.lua"
 require "/scripts/wedit/taskManager.lua"
-require "/scripts/wedit/fsmManager.lua"
+require "/scripts/wedit/ssmManager.lua"
 
 --- WEdit table, variables and functions accessed with 'wedit.' are stored here.
 -- Configuration values should be accessed with 'wedit.getUserConfigData(key'.
@@ -43,7 +43,7 @@ function wedit.init()
   wedit.debugRenderer = DebugRenderer.new()
   wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
   wedit.taskManager = TaskManager.new()
-  wedit.fsmManager = FSMManager.new()
+  wedit.ssmManager = SSMManager:new()
 
   wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
 
@@ -52,9 +52,9 @@ end
 
 function wedit.update(...)
   wedit.taskManager:update()
-  wedit.fsmManager:update()
+  wedit.ssmManager:update()
 
-  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.fsmManager:count()))
+  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.ssmManager:count()))
 end
 
 function wedit.getConfigData(key)
@@ -302,7 +302,7 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
 
   local copy = wedit.copy(bottomLeft, topRight, copyOptions)
 
-  local fill = function(fsm)
+  wedit.ssmManager:startNew(function()
     local iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer)
     for i=1, iterations do
       -- Clear blocks
@@ -310,24 +310,23 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
         world.placeMaterial(pos, layer, block, 0, true)
       end)
 
-      -- Recalculate iterations needed
-      iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer == "foreground" and "background" or "foreground")
-      if i >= iterations then break end
-
       -- Wait
       util.waitTicks(wedit.getUserConfigData("delay"), function()
         wedit.debugRenderer:drawRectangle(bottomLeft, topRight, "orange")
         world.debugText(string.format("^shadow;WEdit Fill (%s-%s) %s/%s", layer, block, i, iterations), {bottomLeft[1], topRight[2] - 1}, "orange")
       end)
     end
-  end
-  wedit.fsmManager:startNew(fill)
+  end)
 
   wedit.logger:setLogMap("Fill", string.format("Task started with %s!", block))
 
   return copy
 end
 
+--- Breaks all blocks in in area.
+-- @param bottomLeft Bottom left corner of the area.
+-- @param topRight Top right corner of the area.
+-- @param layer foreground or background.
 function wedit.breakBlocks(bottomLeft, topRight, layer)
   bottomLeft = wedit.clonePoint(bottomLeft)
   topRight = wedit.clonePoint(topRight)
@@ -377,7 +376,7 @@ function wedit.pencil(pos, layer, block, hueshift)
   if not hueshift then hueshift = wedit.neighborHueshift(pos, layer, block) or 0 end
 
   -- Start (re)placing
-  wedit.fsmManager:startNew(function()
+  wedit.ssmManager:startNew(function()
     -- Remove old block
     if not block or (old and old ~= block) then
       world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
@@ -882,47 +881,69 @@ function wedit.flip(copy, direction)
   direction = direction:lower()
 
   if direction == "horizontal" then
-    -- Flip blocks horizontally
-    for i=1, math.floor(#copy.blocks / 2) do
-      for j,v in ipairs(copy.blocks[i]) do
+    return wedit.flipHorizontal(copy)
+  elseif direction == "vertical" then
+    return wedit.flipVertical(copy)
+  else
+    wedit.logger:logWarn("Could not flip copy in direction '" .. direction .. "'.")
+  end
+
+  return copy
+end
+
+--- Flips a copy horizontally.
+-- @param copy Copy to flip. Materials, mods, liquids and objects are flipped.
+-- @return Copy. Note: Same as first parameter. The object is directly modified.
+function wedit.flipHorizontal(copy)
+  -- Flip blocks
+  for i=1, math.floor(#copy.blocks / 2) do
+    for j,v in ipairs(copy.blocks[i]) do
+      v.offset[1] = copy.size[1] - i
+    end
+    for j,v in ipairs(copy.blocks[#copy.blocks - i + 1]) do
+      v.offset[1] = i - 1
+    end
+    copy.blocks[i], copy.blocks[#copy.blocks - i + 1] = copy.blocks[#copy.blocks - i + 1], copy.blocks[i]
+  end
+
+  -- Flip objects
+  for i,v in ipairs(copy.objects) do
+    v.offset[1] = copy.size[1] - v.offset[1]
+    if v.parameters and v.parameters.direction then
+      v.parameters.direction = v.parameters.direction == "right" and "left" or "right"
+    end
+  end
+
+  -- Mark flipped
+  copy.flipX = not copy.flipX
+  return copy
+end
+
+--- Flips a copy vertically.
+-- Does not work well with objects.
+-- @param copy Copy to flip. Materials, mods, liquids and objects are flipped.
+-- @return Copy. Note: Same as first parameter. The object is directly modified.
+function wedit.flipVertical(copy)
+  -- Flip blocks
+  for _,w in ipairs(copy.blocks) do
+    for i=1, math.floor(#w / 2) do
+      for j,v in ipairs(w[i]) do
         v.offset[1] = copy.size[1] - i
       end
-      for j,v in ipairs(copy.blocks[#copy.blocks - i + 1]) do
+      for j,v in ipairs(w[#w- i + 1]) do
         v.offset[1] = i - 1
       end
-      copy.blocks[i], copy.blocks[#copy.blocks - i + 1] = copy.blocks[#copy.blocks - i + 1], copy.blocks[i]
+      w[i], w[#w- i + 1] = w[#w - i + 1], w[i]
     end
-
-    -- Flip objects horizontally
-    for i,v in ipairs(copy.objects) do
-      v.offset[1] = copy.size[1] - v.offset[1]
-      if v.parameters and v.parameters.direction then
-        v.parameters.direction = v.parameters.direction == "right" and "left" or "right"
-      end
-    end
-
-    copy.flipX = not copy.flipX
-  elseif direction == "vertical" then
-    for _,w in ipairs(copy.blocks) do
-      for i=1, math.floor(#w / 2) do
-        for j,v in ipairs(w[i]) do
-          v.offset[1] = copy.size[1] - i
-        end
-        for j,v in ipairs(w[#w- i + 1]) do
-          v.offset[1] = i - 1
-        end
-        w[i], w[#w- i + 1] = w[#w - i + 1], w[i]
-      end
-    end
-
-    for i,v in ipairs(copy.objects) do
-      v.offset[2] = copy.size[2] - v.offset[2]
-    end
-
-    copy.flipY = not copy.flipY
-  else
-    wedit.logger:logInfo("Could not flip copy in direction '" .. direction .. "'.")
   end
+
+  -- Flip objects
+  for i,v in ipairs(copy.objects) do
+    v.offset[2] = copy.size[2] - v.offset[2]
+  end
+
+  -- Mark flipped
+  copy.flipY = not copy.flipY
 
   return copy
 end
@@ -1271,4 +1292,10 @@ function wedit.liquidName(liquidId)
   end
 
   return wedit.liquidNames[liquidId]
+end
+
+--- util.waitTicks using the current iteration delay.
+-- @param [cb] Function to call every tick while waiting. If the function returns true, cancels the waiting early.
+function wedit.wait(cb)
+  util.waitTicks(wedit.getUserConfigData("delay"), cb)
 end
