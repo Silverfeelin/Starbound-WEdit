@@ -772,9 +772,9 @@ function wedit.actions.WE_Calibrate()
   controller.info("^shadow;^yellow;Primary Fire: Calibrate delay.", {0,-1})
   controller.info("^shadow;^yellow;Make sure the highlighted block is", {0,-2})
   controller.info("^shadow;^yellow;empty and has a background block.", {0,-3})
+  controller.info("^shadow;^yellow;Delay: ^red;" .. wedit.controller.getUserConfig("delay"), {0, -4})
 
   local aimPos = tech.aimPosition()
-
   wedit.debugRenderer:drawBlock(aimPos, "green")
 
   if not controller.fireLocked and controller.primaryFire then

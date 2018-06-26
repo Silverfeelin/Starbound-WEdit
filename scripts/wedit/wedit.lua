@@ -1086,71 +1086,52 @@ function wedit.calibrate(pos, maxTicks)
   if world.tileIsOccupied(pos, true) or not world.material(pos, "background") then return end
 
   local attempts = maxTicks or 60 -- 1 sec.
-  local times = {}
+  local times = {0,0,0,0}
 
-  local placeBlock = function(task)
-    if task.stageProgress == 0 then
+  wedit.ssmManager:startNew(
+    -- Place block
+    function()
       world.placeMaterial(pos, "foreground", "hazard")
-    end
-    task.stageProgress = task.stageProgress + 1
-    if world.material(pos, "foreground") or task.stageProgress > attempts then
-      table.insert(times, task.stageProgress)
-      task:nextStage()
-    end
-  end
-
-  local placeMod = function(task)
-    if task.stageProgress == 0 then
+      util.waitFor(function()
+        times[1] = times[1] + 1
+        return world.material(pos, "foreground")
+      end)
+    end,
+    -- Place mod
+    function()
       world.placeMod(pos, "foreground", "coal")
-    end
-    task.stageProgress = task.stageProgress + 1
-    if world.mod(pos, "foreground") or task.stageProgress > attempts then
-      table.insert(times, task.stageProgress)
-      task:nextStage()
-    end
-  end
-
-  local breakMod = function(task)
-    if task.stageProgress == 0 then
+      util.waitFor(function()
+        times[2] = times[2] + 1
+        return world.mod(pos, "foreground")
+      end)
+    end,
+    -- Break mod
+    function()
       world.damageTiles({pos}, "foreground", pos, "blockish", 9999, 0)
-    end
-    task.stageProgress = task.stageProgress + 1
-    if not world.mod(pos, "foreground") or task.stageProgress > attempts then
-      table.insert(times, task.stageProgress)
-      task:nextStage()
-    end
-  end
-
-  local breakBlock = function(task)
-    if task.stageProgress == 0 then
+      util.waitFor(function()
+        times[3] = times[3] + 1
+        return not world.mod(pos, "foreground")
+      end)
+    end,
+    -- Break block
+    function()
       world.damageTiles({pos}, "foreground", pos, "blockish", 9999, 0)
-    end
-    task.stageProgress = task.stageProgress + 1
-    if not world.material(pos, "foreground") or task.stageProgress > attempts then
-      table.insert(times, task.stageProgress)
-      task:nextStage()
-    end
-  end
+      util.waitFor(function()
+        times[4] = times[4] + 1
+        return not world.material(pos, "foreground")
+      end)
+    end,
+    -- Finalize
+    function()
+      local delay = 1
+      for _,v in ipairs(times) do
+        if v > delay then delay = v end
+      end
 
-  local finalize = function(task)
-    local delay = 1
-    for _,v in ipairs(times) do
-      if v > delay then delay = v end
+      wedit.controller.setUserConfig("delay", delay + 1)
+      world.sendEntityMessage(entity.id(), "wedit.updateConfig")
     end
-
-    wedit.controller.setUserConfig("delay", delay + 1)
-    task:complete()
-  end
-
-  local stages = {
-    placeBlock, placeMod, breakMod, breakBlock,
-    placeBlock, placeMod, breakMod, breakBlock,
-    placeBlock, placeMod, breakMod, breakBlock,
-    placeBlock, placeMod, breakMod, breakBlock,
-    placeBlock, placeMod, breakMod, breakBlock,
-    finalize
-  }
-  wedit.taskManager:start(Task.new(stages, 1))
+  )
 end
 
 --- For each block in a line between two points, calls the callback function.
