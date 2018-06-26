@@ -980,8 +980,8 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   local placeholders = {}
   local replacing = {}
 
-  wedit.taskManager:start(Task.new({
-    function(task)
+  wedit.ssmManager:startNew(
+    function()
       -- Placeholders
       if toBlock then
         for i=0, size[1]-1 do
@@ -994,10 +994,10 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
             end
           end
         end
+        wedit.wait()
       end
-      task:nextStage()
     end,
-    function(task)
+    function()
       -- Break matching
       for i=0, size[1]-1 do
         if not replacing[i+1] then replacing[i+1] = {} end
@@ -1010,9 +1010,9 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
           end
         end
       end
-      task:nextStage()
+      wedit.wait()
     end,
-    function(task)
+    function()
       -- Place new
       if toBlock then
         for i,v in pairs(replacing) do
@@ -1021,10 +1021,10 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
             world.placeMaterial(pos, layer, toBlock, 0, true)
           end
         end
+        wedit.wait()
       end
-      task:nextStage()
     end,
-    function(task)
+    function()
       -- Remove placeholders
       for i,v in pairs(placeholders) do
         for j,k in pairs(v) do
@@ -1032,9 +1032,8 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
           world.damageTiles({pos}, oppositeLayer, pos, "blockish", 9999, 0)
         end
       end
-      task:complete()
     end
-  }, wedit.getUserConfigData("delay")))
+  )
 
   wedit.logger:setLogMap("Replace", "Command started!")
 
@@ -1283,6 +1282,9 @@ function wedit.circle(pos, radius, callback)
   return blocks
 end
 
+--- Returns the liquid name of a liquid id.
+-- Caches previously called IDs.
+-- @param liquidId ID of the liquid.
 function wedit.liquidName(liquidId)
   if not wedit.liquidNames[liquidId] then
     local cfg = root.liquidConfig(liquidId)

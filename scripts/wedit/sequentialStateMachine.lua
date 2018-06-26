@@ -6,7 +6,7 @@ SSM = {}
 function SSM:new(...)
   local args = {...}
   local states = {}
-  for _,v in pairs(args) do
+  for _,v in ipairs(args) do
     if type(v) == "table" then
       for _,f in ipairs(v) do table.insert(states, f) end
     elseif type(v) == "function" then
