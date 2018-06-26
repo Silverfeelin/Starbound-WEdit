@@ -958,16 +958,14 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   topRight = wedit.clonePoint(topRight)
 
   local copyOptions = {
-    ["foreground"] = false,
-    ["foregroundMods"] = false,
-    ["background"] = false,
-    ["backgroundMods"] = false,
+    ["foreground"] = true,
+    ["foregroundMods"] = true,
+    ["background"] = true,
+    ["backgroundMods"] = true,
     ["liquids"] = false,
     ["objects"] = false,
     ["containerLoot"] = false
   }
-  copyOptions[layer] = true
-  copyOptions[layer .. "Mods"] = true
 
   local copy = wedit.copy(bottomLeft, topRight, copyOptions)
 
@@ -981,56 +979,44 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   local replacing = {}
 
   wedit.ssmManager:startNew(
-    function()
-      -- Placeholders
-      if toBlock then
-        for i=0, size[1]-1 do
-          if not placeholders[i+1] then placeholders[i+1] = {} end
-          for j=0, size[2]-1 do
-            local pos = {bottomLeft[1] + 0.5 + i, bottomLeft[2] + 0.5 + j}
-            if not world.material(pos, oppositeLayer) then
-              world.placeMaterial(pos, oppositeLayer, "hazard", 0, true)
-              placeholders[i+1][j+1] = true
-            end
-          end
+    -- Placeholders
+    toBlock and function()
+      local predicatePos
+      wedit.forEach(bottomLeft, topRight, function(pos)
+        if world.material(pos, layer) and not world.material(pos, oppositeLayer) then
+          predicatePos = pos
+          table.insert(placeholders, pos)
+          world.placeMaterial(pos, oppositeLayer, "hazard", 0, true)
         end
-        wedit.wait()
-      end
+      end)
+      if predicatePos then util.waitFor(function() return world.material(predicatePos, oppositeLayer) end) end
     end,
+    -- Break matching
     function()
-      -- Break matching
-      for i=0, size[1]-1 do
-        if not replacing[i+1] then replacing[i+1] = {} end
-        for j=0, size[2]-1 do
-          local pos = {bottomLeft[1] + 0.5 + i, bottomLeft[2] + 0.5 + j}
-          local block = world.material(pos, layer)
-          if block and (not fromBlock or (block and block == fromBlock)) then
-            replacing[i+1][j+1] = true
-            world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-          end
+      local predicatePos
+      wedit.forEach(bottomLeft, topRight, function(pos)
+        local block = world.material(pos, layer)
+        if block and (not fromBlock or (block and block == fromBlock)) then
+          predicatePos = pos
+          table.insert(replacing, pos)
+          world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
         end
-      end
-      wedit.wait()
+      end)
+      if predicatePos then util.waitFor(function() return not world.material(predicatePos, layer) end) end
     end,
-    function()
-      -- Place new
-      if toBlock then
-        for i,v in pairs(replacing) do
-          for j,k in pairs(v) do
-            local pos = {bottomLeft[1] - 0.5 + i, bottomLeft[2] - 0.5 + j}
-            world.placeMaterial(pos, layer, toBlock, 0, true)
-          end
-        end
-        wedit.wait()
+    -- Place new
+    toBlock and function()
+      local predicatePos
+      for _,pos in ipairs(replacing) do
+        predicatePos = pos
+        world.placeMaterial(pos, layer, toBlock, 0, true)
       end
+      if predicatePos then util.waitFor(function() return world.material(predicatePos, layer) end) end
     end,
+    -- Remove placeholders
     function()
-      -- Remove placeholders
-      for i,v in pairs(placeholders) do
-        for j,k in pairs(v) do
-          local pos = {bottomLeft[1] - 0.5 + i, bottomLeft[2] - 0.5 + j}
-          world.damageTiles({pos}, oppositeLayer, pos, "blockish", 9999, 0)
-        end
+      for _,pos in ipairs(placeholders) do
+        world.damageTiles({pos}, oppositeLayer, pos, "blockish", 9999, 0)
       end
     end
   )
