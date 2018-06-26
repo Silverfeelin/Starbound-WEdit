@@ -46,8 +46,8 @@ function SSMManager:start(ssm)
   table.insert(self.items, ssm)
 end
 
-function SSMManager:startNew(states)
-  local ssm = SSM:new(states)
+function SSMManager:startNew(...)
+  local ssm = SSM:new(...)
   self:start(ssm)
   return ssm
 end
