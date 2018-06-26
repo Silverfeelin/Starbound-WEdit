@@ -9,7 +9,7 @@ function SSM:new(...)
   for _,v in pairs(args) do
     if type(v) == "table" then
       for _,f in ipairs(v) do table.insert(states, f) end
-    else
+    elseif type(v) == "function" then
       table.insert(states, v)
     end
   end
@@ -24,7 +24,8 @@ function SSM:new(...)
   local o = {
     states = states,
     index = 0,
-    count = c
+    count = c,
+    data = {}
   }
 
   setmetatable(o, { __index = self })
