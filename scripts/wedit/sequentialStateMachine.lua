@@ -24,6 +24,7 @@ function SSM:new(...)
   local o = {
     states = states,
     index = 0,
+    calls = 0,
     count = c,
     data = {}
   }
@@ -38,6 +39,7 @@ function SSM:resume(...)
   end
 
   if self.state then
+    self.calls = self.calls + 1
     local passed, ret = coroutine.resume(self.state, ...)
     if not passed then error(ret) end
     return ret
@@ -47,6 +49,8 @@ end
 function SSM:nextState(...)
   self.index = self.index + 1
   self.state = self.states[self.index] -- Can be nil (no next state).
+  self.calls = 0
+
   if self.state then
     self.state = coroutine.create(self.state, ...)
   else
@@ -55,5 +59,5 @@ function SSM:nextState(...)
 end
 
 function SSM:update()
-  self:resume()
+  self:resume(self)
 end
