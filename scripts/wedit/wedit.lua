@@ -360,6 +360,7 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
 end
 
 --- Draws a block. If there is already a block, replace it.
+-- Only replaces blocks if the block or hueshift is different.
 -- @param pos World position to place the block at.
 -- @param layer foreground or background
 -- @param block Material name.
@@ -367,18 +368,23 @@ end
 function wedit.pencil(pos, layer, block, hueshift)
   -- Prevent needless tasks.
   local old = world.material(pos, layer)
-  if old == block or (not old and not block) then return end
+  if (not old and not block) then return end
+  if old == block and (type(hueshift) == "nil" or world.materialHueShift(pos, layer) == hueshift) then return end
 
   -- Prevent multiple tasks.
   if not wedit.positionLocker:lock(layer, pos) then return end
 
   -- Attempt to clone hueshift of neighbouring tiles.
-  if not hueshift then hueshift = wedit.neighborHueshift(pos, layer, block) or 0 end
+  if not hueshift then
+    hueshift = wedit.neighborHueshift(pos, layer, block) or 0
+  end
 
   -- Start (re)placing
   wedit.ssmManager:startNew(function()
+    local mod = world.mod(pos, layer)
+
     -- Remove old block
-    if not block or (old and old ~= block) then
+    if not block or old then
       world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
       util.waitFor(function() return not world.material(pos, layer) end)
     end
@@ -387,6 +393,12 @@ function wedit.pencil(pos, layer, block, hueshift)
     if block then
       world.placeMaterial(pos, layer, block, hueshift, true)
       util.waitFor(function() return world.material(pos, layer) end)
+    end
+
+    -- Place mod
+    if mod then
+      world.placeMod(pos, layer, mod)
+      util.waitFor(function() return world.mod(pos, layer) end)
     end
 
     -- Unlock block position.

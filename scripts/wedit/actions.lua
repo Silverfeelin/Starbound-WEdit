@@ -4,6 +4,7 @@
 -- This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or controller.lua.
 
 require "/interface/wedit/dyePicker/dyePickerUtil.lua"
+require "/interface/wedit/huePicker/huePickerUtil.lua"
 
 wedit.actions = wedit.actions or {}
 local controller = wedit.controller
@@ -739,23 +740,23 @@ function wedit.actions.WE_Dye()
   controller.info("^shadow;^orange;WEdit: Dye Tool")
   controller.info("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
-  controller.info("^shadow;^yellow;Shift + Fire: Open Dye Picker.", {0,-3})
+  controller.info("^shadow;^yellow;Shift + Fire: Open Hue Picker.", {0,-3})
 
   local layer = controller.primaryFire and "foreground" or
     controller.altFire and "background" or nil
 
-  local colorIndex = dyePickerUtil.getColorIndex(dyePickerUtil.getSerializedColor()) or 0
+  local hue = huePickerUtil.getSerializedHue() or 0
 
   if controller.shiftHeld then
     if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
-      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/dyePicker/dyePicker.config")
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/huePicker/huePicker.config")
       controller.shiftFireLock()
     end
   elseif not controller.shiftFireLocked then
     local callback = function(pos)
         wedit.debugRenderer:drawBlock(pos)
         if layer then
-          wedit.dye(pos, layer, colorIndex)
+          wedit.pencil(pos, layer, world.material(pos, layer), hue)
         end
     end
 
