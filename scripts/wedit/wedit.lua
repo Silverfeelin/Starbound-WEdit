@@ -641,9 +641,12 @@ function wedit.paste(copy, position)
   if copy.options.background or copy.options.foreground then
     table.insert(stages, function(ssm)
       local it = iterations
+      ssm.data.it = 0
       while it > 0 do
+        ssm.data.it = ssm.data.it + 1
         it = it - 1
         local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
+
         if lessIterations < it then it = lessIterations end
 
         for i=0, copy.size[1]-1 do
@@ -668,12 +671,10 @@ function wedit.paste(copy, position)
           end
         end
 
-        wedit.wait(function() debug(string.format("^shadow;Placing background and placeholder blocks (%s/%s).", ssm.calls - 1, iterations)) end)
+        wedit.wait(function() debug(string.format("^shadow;Placing background and placeholder blocks (%s/%s).", ssm.data.it, ssm.data.it + it)) end)
       end
     end)
   end
-
-  wedit.ssmManager:startNew(stages)
 
   if copy.options.foreground then
     -- Break foreground
