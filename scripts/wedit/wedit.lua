@@ -15,7 +15,6 @@ require "/scripts/wedit/utilExt.lua"
 require "/scripts/wedit/debugRenderer.lua"
 require "/scripts/wedit/logger.lua"
 require "/scripts/wedit/positionLocker.lua"
-require "/scripts/wedit/taskManager.lua"
 require "/scripts/wedit/ssmManager.lua"
 
 --- WEdit table, variables and functions accessed with 'wedit.' are stored here.
@@ -42,7 +41,6 @@ function wedit.init()
   wedit.positionLocker = PositionLocker.new()
   wedit.debugRenderer = DebugRenderer.new()
   wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
-  wedit.taskManager = TaskManager.new()
   wedit.ssmManager = SSMManager:new()
 
   wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
@@ -51,7 +49,6 @@ function wedit.init()
 end
 
 function wedit.update(...)
-  wedit.taskManager:update()
   wedit.ssmManager:update()
 
   wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.ssmManager:count()))
