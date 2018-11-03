@@ -421,8 +421,8 @@ end
 -- The link is made through a schematicID, since storing the copy in the actual item causes massive lag.
 function wedit.actions.WE_Schematic()
   controller.info("^shadow;^orange;WEdit: Schematic")
-  controller.info("^shadow;^yellow;Primary Fire: Paste Schematic.", {0,-1})
-  controller.info("^shadow;^yellow;Alt Fire: DELETE Schematic.", {0,-2})
+  controller.info("^shadow;^yellow;Fire: Paste Schematic.", {0,-1})
+  controller.info("^shadow;^yellow;Shift + Fire: ^red;Delete ^yellow;Schematic.", {0,-2})
   controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
 
   if not storage.weditSchematics then return end
@@ -450,13 +450,13 @@ function wedit.actions.WE_Schematic()
     controller.info("^shadow;^yellow;No schematic found! Did you delete it?", {0,-4})
   end
 
-  if controller.primaryFire and controller.validSelection() and not controller.fireLocked and schematic then
-    controller.fireLock()
+  if not controller.shiftFireLocked and not controller.shiftHeld and (controller.primaryFire or controller.altFire) and schematic and controller.validSelection() then
+    controller.shiftFireLock()
 
     local position = {controller.selection[1][1], controller.selection[1][2]}
     local backup = wedit.paste(schematic, position)
     if backup then table.insert(controller.backup, backup) end
-  elseif controller.altFire and not controller.fireLocked and schematic then
+  elseif not controller.shiftFireLocked and controller.shiftHeld and (controller.primaryFire or controller.altFire) and schematic then
     storage.weditSchematics[storageSchematicKey] = nil
   end
 end
