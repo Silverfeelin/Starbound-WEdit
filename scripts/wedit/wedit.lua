@@ -1021,14 +1021,14 @@ function wedit.removeMod(pos, layer)
   if not wedit.breakMods[mod] then
     world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
   elseif wedit.positionLocker:lock(layer, pos) then
-    wedit.taskManager:start(Task.new({function(task)
-      world.placeMod(pos, layer, "grass", nil, false)
-      task:nextStage()
-    end, function(task)
-      world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
-      wedit.positionLocker:unlock(layer, pos)
-      task:complete()
-    end}, wedit.getUserConfigData("delay")))
+    wedit.ssmManager:startNew(
+      function()
+        world.placeMod(pos, layer, "grass", nil, false)
+        util.waitFor(function() world.mod(pos, layer) end)
+        world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
+        wedit.positionLocker:unlock(layer, pos)
+      end
+    )
   end
 end
 
