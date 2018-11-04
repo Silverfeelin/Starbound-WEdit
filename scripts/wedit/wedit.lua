@@ -383,19 +383,25 @@ function wedit.pencil(pos, layer, block, hueshift)
     -- Remove old block
     if not block or old then
       world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-      util.waitFor(function() return not world.material(pos, layer) end)
+      util.waitFor(function()
+        return not world.material(pos, layer)
+      end)
     end
 
     -- Place new block
     if block then
       world.placeMaterial(pos, layer, block, hueshift, true)
-      util.waitFor(function() return world.material(pos, layer) end)
+      util.waitFor(function()
+        return world.material(pos, layer)
+      end)
     end
 
     -- Place mod
     if mod then
       world.placeMod(pos, layer, mod)
-      util.waitFor(function() return world.mod(pos, layer) end)
+      util.waitFor(function()
+        return world.mod(pos, layer)
+      end)
     end
 
     -- Unlock block position.
@@ -627,7 +633,9 @@ function wedit.paste(copy, position)
     table.insert(stages, function()
       for i=1,3 do
         wedit.breakBlocks(position, topRight, "background")
-        wedit.wait(function() debug(string.format("^shadow;Breaking background blocks (%s/%s).", i, 3)) end)
+        wedit.wait(function()
+          debug(string.format("^shadow;Breaking background blocks (%s/%s).", i, 3))
+        end)
       end
     end)
   end
@@ -668,7 +676,9 @@ function wedit.paste(copy, position)
           end
         end
 
-        wedit.wait(function() debug(string.format("^shadow;Placing background and placeholder blocks (%s/%s).", ssm.data.it, ssm.data.it + it)) end)
+        wedit.wait(function()
+          debug(string.format("^shadow;Placing background and placeholder blocks (%s/%s).", ssm.data.it, ssm.data.it + it))
+        end)
       end
     end)
   end
@@ -678,7 +688,9 @@ function wedit.paste(copy, position)
     table.insert(stages, function(ssm)
       for i=1,3 do
         wedit.breakBlocks(position, topRight, "foreground")
-        wedit.wait(function() debug(string.format("^shadow;Breaking foreground blocks (%s/%s).", i, 3)) end)
+        wedit.wait(function()
+          debug(string.format("^shadow;Breaking foreground blocks (%s/%s).", i, 3))
+        end)
       end
     end)
 
@@ -697,7 +709,9 @@ function wedit.paste(copy, position)
         end
       end
 
-      wedit.wait(function() debug("^shadow;Placing foreground blocks.") end)
+      wedit.wait(function()
+        debug("^shadow;Placing foreground blocks.")
+      end)
     end)
   end
 
@@ -716,7 +730,9 @@ function wedit.paste(copy, position)
         end
       end
 
-      wedit.wait(function() debug("^shadow;Placing liquids.") end)
+      wedit.wait(function()
+        debug("^shadow;Placing liquids.")
+      end)
     end)
   end
   -- #endregion
@@ -731,7 +747,9 @@ function wedit.paste(copy, position)
         end
       end
 
-      wedit.wait(function() debug("^shadow;Removing placeholder blocks.") end)
+      wedit.wait(function()
+        debug("^shadow;Removing placeholder blocks.")
+      end)
     end)
   end
   -- #endregion
@@ -760,7 +778,9 @@ function wedit.paste(copy, position)
         if v.items ~= nil then hasItems = true end
       end
 
-      wedit.wait(function() debug("^shadow;Placing objects.") end)
+      wedit.wait(function()
+        debug("^shadow;Placing objects.")
+      end)
     end)
     -- #endregion
 
@@ -778,7 +798,9 @@ function wedit.paste(copy, position)
           end
         end
 
-        wedit.wait(function() debug("^shadow;Placing items in containers.") end)
+        wedit.wait(function()
+          debug("^shadow;Placing items in containers.")
+        end)
       end)
     end
     -- #endregion
@@ -802,7 +824,9 @@ function wedit.paste(copy, position)
         end
       end
 
-      wedit.wait(function() debug("^shadow;Placing material mods.") end)
+      wedit.wait(function()
+        debug("^shadow;Placing material mods.")
+      end)
     end)
   end
   -- #endregion
@@ -824,14 +848,18 @@ function wedit.paste(copy, position)
         end
       end
 
-      wedit.wait(function() debug("^shadow;Dyeing tiles.") end)
+      wedit.wait(function()
+        debug("^shadow;Dyeing tiles.")
+      end)
     end)
   end
   -- #endregion
 
   -- #region Stage 11: Done
   table.insert(stages, function()
-    wedit.wait(function() debug("^shadow;Done pasting!") end)
+    wedit.wait(function()
+      debug("^shadow;Done pasting!")
+    end)
   end)
   -- #endregion
 
@@ -960,7 +988,11 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
           world.placeMaterial(pos, oppositeLayer, "hazard", 0, true)
         end
       end)
-      if predicatePos then util.waitFor(function() return world.material(predicatePos, oppositeLayer) end) end
+      if predicatePos then
+        util.waitFor(function()
+          return world.material(predicatePos, oppositeLayer)
+        end)
+      end
     end,
     -- Break matching
     function()
@@ -973,7 +1005,11 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
           world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
         end
       end)
-      if predicatePos then util.waitFor(function() return not world.material(predicatePos, layer) end) end
+      if predicatePos then
+        util.waitFor(function()
+          return not world.material(predicatePos, layer)
+        end)
+      end
     end,
     -- Place new
     toBlock and function()
@@ -982,7 +1018,11 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
         predicatePos = pos
         world.placeMaterial(pos, layer, toBlock, 0, true)
       end
-      if predicatePos then util.waitFor(function() return world.material(predicatePos, layer) end) end
+      if predicatePos then
+        util.waitFor(function()
+          return world.material(predicatePos, layer)
+        end)
+      end
     end,
     -- Remove placeholders
     function()
@@ -1021,7 +1061,9 @@ function wedit.removeMod(pos, layer)
     wedit.ssmManager:startNew(
       function()
         world.placeMod(pos, layer, "grass", nil, false)
-        util.waitFor(function() world.mod(pos, layer) end)
+        util.waitFor(function()
+          world.mod(pos, layer)
+        end)
         world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
         wedit.positionLocker:unlock(layer, pos)
       end
