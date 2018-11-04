@@ -1,9 +1,7 @@
 --- Simple manager for (multiple) SSM objects.
 --
 -- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+-- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
 
 require "/scripts/wedit/sequentialStateMachine.lua"
 

@@ -3,9 +3,7 @@
 -- The feature could be expanded on by supporting rectangles, since a lot of WEdit actions make use of rectangular selections.
 --
 -- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+-- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
 
 PositionLocker = {}
 PositionLocker.__index = PositionLocker

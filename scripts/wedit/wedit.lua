@@ -3,10 +3,8 @@
 -- WEdit must be initialized with wedit.init() and updated every tick with wedit.update(args).
 --
 -- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
--- The bresemham function (wedit.bresenham) falls under a different license; refer to its documentation for licensing information.
+-- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+-- wedit.bresenham: https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt
 
 require "/scripts/set.lua"
 require "/scripts/vec2.lua"

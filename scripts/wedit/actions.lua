@@ -2,6 +2,9 @@
 --
 -- Script used by controller.lua. Keeps all WEdit actions centralized in one place.
 -- This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or controller.lua.
+--
+-- LICENSE
+-- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
 
 require "/interface/wedit/dyePicker/dyePickerUtil.lua"
 require "/interface/wedit/huePicker/huePickerUtil.lua"

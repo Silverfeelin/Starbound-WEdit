@@ -1,4 +1,9 @@
---- A simple state machine class used for sequential states.
+--- Sequential State Machine
+-- A class for sequential coroutines.
+--
+-- LICENSE
+-- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+
 SSM = {}
 
 --- Instantiates a new sequential state machine

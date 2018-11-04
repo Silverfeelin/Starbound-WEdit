@@ -2,9 +2,7 @@
 -- Handles input and executes actions.
 --
 -- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+-- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
 --
 -- USAGE
 -- To load this script:
