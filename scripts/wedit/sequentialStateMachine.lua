@@ -1,5 +1,6 @@
 --- Sequential State Machine
 -- A class for sequential coroutines.
+-- .. or you could just use a single coroutine.
 --
 -- LICENSE
 -- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE

@@ -626,243 +626,221 @@ function wedit.paste(copy, position)
     wedit.debugRenderer:drawText(msg, {position[1], topRight[2]-1}, "orange")
   end
 
-  -- Break background
-  if copy.options.background then
-    table.insert(stages, function()
-      for i=1,3 do
-        wedit.breakBlocks(position, topRight, "background")
-        wedit.wait(function()
-          debug(string.format("^shadow;Breaking background blocks (%s/%s).", i, 3))
-        end)
-      end
-    end)
-  end
+ wedit.ssmManager:startNew(function()
+   -- Break background
+   if copy.options.background then
+     for i=1,3 do
+       wedit.breakBlocks(position, topRight, "background")
+       wedit.wait(function()
+         debug(string.format("^shadow;Breaking background blocks (%s/%s).", i, 3))
+       end)
+     end
+   end
 
-  local iterations = wedit.calculateIterations(position, copy.size)
+   local iterations = wedit.calculateIterations(position, copy.size)
 
-  -- Place background
-  if copy.options.background or copy.options.foreground then
-    table.insert(stages, function(ssm)
-      local it = iterations
-      ssm.data.it = 0
-      while it > 0 do
-        ssm.data.it = ssm.data.it + 1
-        it = it - 1
-        local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
+   -- Place background
+   if copy.options.background or copy.options.foreground then
+     local it = iterations
+     local calls = 0
+     while it > 0 do
+       calls = calls + 1
+       it = it - 1
+       local lessIterations = wedit.calculateIterations(position, copy.size, "foreground")
 
-        if lessIterations < it then it = lessIterations end
+       if lessIterations < it then it = lessIterations end
 
-        for i=0, copy.size[1]-1 do
-          for j=0, copy.size[2]-1 do
-            local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
-            -- Check if there's a background block here
-            local block = copy.blocks[i+1][j+1]
-            if block and copy.options.background and block.background.material then
-              -- Place the background block.
-              world.placeMaterial(pos, "background", block.background.material, block.background.materialHueshift, true)
-            else
-              if copy.options.foreground then
-                -- Add a placeholder that reminds us later to remove the dirt placed here temporarily.
-                if not paste.placeholders[i+1] then paste.placeholders[i+1] = {} end
-                if not world.material(pos, "background") then
-                  paste.placeholders[i+1][j+1] = true
+       for i=0, copy.size[1]-1 do
+         for j=0, copy.size[2]-1 do
+           local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
+           -- Check if there's a background block here
+           local block = copy.blocks[i+1][j+1]
+           if block and copy.options.background and block.background.material then
+             -- Place the background block.
+             world.placeMaterial(pos, "background", block.background.material, block.background.materialHueshift, true)
+           else
+             if copy.options.foreground then
+               -- Add a placeholder that reminds us later to remove the dirt placed here temporarily.
+               if not paste.placeholders[i+1] then paste.placeholders[i+1] = {} end
+               if not world.material(pos, "background") then
+                 paste.placeholders[i+1][j+1] = true
 
-                  world.placeMaterial(pos, "background", "hazard", 0, true)
-                end
-              end
-            end
-          end
-        end
+                 world.placeMaterial(pos, "background", "hazard", 0, true)
+               end
+             end
+           end
+         end
+       end
 
-        wedit.wait(function()
-          debug(string.format("^shadow;Placing background and placeholder blocks (%s/%s).", ssm.data.it, ssm.data.it + it))
-        end)
-      end
-    end)
-  end
+       wedit.wait(function()
+         debug(string.format("^shadow;Placing background and placeholder blocks (%s/%s).", calls, calls + it))
+       end)
+     end
+   end
 
-  if copy.options.foreground then
-    -- Break foreground
-    table.insert(stages, function(ssm)
-      for i=1,3 do
-        wedit.breakBlocks(position, topRight, "foreground")
-        wedit.wait(function()
-          debug(string.format("^shadow;Breaking foreground blocks (%s/%s).", i, 3))
-        end)
-      end
-    end)
+   if copy.options.foreground then
+     -- Break foreground
+     for i=1,3 do
+       wedit.breakBlocks(position, topRight, "foreground")
+       wedit.wait(function()
+         debug(string.format("^shadow;Breaking foreground blocks (%s/%s).", i, 3))
+       end)
+     end
 
-    -- Place foreground
-    table.insert(stages, function(ssm)
-      for i=0, copy.size[1]-1 do
-        for j=0, copy.size[2]-1 do
-          local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
+     -- Place foreground
+     for i=0, copy.size[1]-1 do
+       for j=0, copy.size[2]-1 do
+         local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
 
-          -- Check if there's a background block here
-          local block = copy.blocks[i+1][j+1]
-          if block and block.foreground.material then
-            -- Place the background block.
-            world.placeMaterial(pos, "foreground", block.foreground.material, block.foreground.materialHueshift, true)
-          end
-        end
-      end
+         -- Check if there's a background block here
+         local block = copy.blocks[i+1][j+1]
+         if block and block.foreground.material then
+           -- Place the background block.
+           world.placeMaterial(pos, "foreground", block.foreground.material, block.foreground.materialHueshift, true)
+         end
+       end
+     end
 
-      wedit.wait(function()
-        debug("^shadow;Placing foreground blocks.")
-      end)
-    end)
-  end
+     wedit.wait(function()
+       debug("^shadow;Placing foreground blocks.")
+     end)
+   end
 
-  -- #region Stage 5: If copy has liquids, place them.
-  if copy.options.liquids then
-    table.insert(stages, function()
-      for i=0,copy.size[1]-1 do
-        for j=0,copy.size[2]-1 do
+   -- #region Stage 5: If copy has liquids, place them.
+   if copy.options.liquids then
+     for i=0,copy.size[1]-1 do
+       for j=0,copy.size[2]-1 do
 
-          local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
+         local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
 
-          local block = copy.blocks[i+1][j+1]
-          if block and block.liquid then
-            world.spawnLiquid(pos, block.liquid[1], block.liquid[2])
-          end
-        end
-      end
+         local block = copy.blocks[i+1][j+1]
+         if block and block.liquid then
+           world.spawnLiquid(pos, block.liquid[1], block.liquid[2])
+         end
+       end
+     end
 
-      wedit.wait(function()
-        debug("^shadow;Placing liquids.")
-      end)
-    end)
-  end
-  -- #endregion
+     wedit.wait(function()
+       debug("^shadow;Placing liquids.")
+     end)
+   end
+   -- #endregion
 
-  -- #region Stage 6: If paste has foreground, and thus may need placeholders, remove the placeholders.
-  if copy.options.foreground then
-    table.insert(stages, function()
-      for i,v in pairs(paste.placeholders) do
-        for j,k in pairs(v) do
-          local pos = {position[1] - 0.5 + i, position[2] - 0.5 + j}
-          world.damageTiles({pos}, "background", pos, "blockish", 9999, 0)
-        end
-      end
+   -- #region Stage 6: If paste has foreground, and thus may need placeholders, remove the placeholders.
+   if copy.options.foreground then
+     for i,v in pairs(paste.placeholders) do
+       for j,k in pairs(v) do
+         local pos = {position[1] - 0.5 + i, position[2] - 0.5 + j}
+         world.damageTiles({pos}, "background", pos, "blockish", 9999, 0)
+       end
+     end
 
-      wedit.wait(function()
-        debug("^shadow;Removing placeholder blocks.")
-      end)
-    end)
-  end
-  -- #endregion
+     wedit.wait(function()
+       debug("^shadow;Removing placeholder blocks.")
+     end)
+   end
+   -- #endregion
 
-  if copy.options.objects and #copy.objects > 0 then
-    local hasItems = false
+   if copy.options.objects and #copy.objects > 0 then
+     local hasItems = false
 
-    -- #region Stage 7: If copy has objects, place them.
-    table.insert(stages, function()
-      local centerOffset = copy.size[1] / 2
-      for _,v in pairs(copy.objects) do
-        local dir = v.parameters and v.parameters.direction == "left" and -1 or
-          v.parameters and v.parameters.direction == "right" and 1 or
-          v.offset[1] < centerOffset and 1 or -1
+     -- #region Stage 7: If copy has objects, place them.
+     local centerOffset = copy.size[1] / 2
+     for _,v in pairs(copy.objects) do
+       local dir = v.parameters and v.parameters.direction == "left" and -1 or
+         v.parameters and v.parameters.direction == "right" and 1 or
+         v.offset[1] < centerOffset and 1 or -1
 
-        -- Create unique ID
-        local tempId = nil
-        if v.parameters and v.parameters.uniqueId then
-          tempId, v.parameters.uniqueId = v.parameters.uniqueId, sb.makeUuid()
-        end
-        world.placeObject(v.name, {position[1] + v.offset[1], position[2] + v.offset[2]}, dir, v.parameters)
+       -- Create unique ID
+       local tempId = nil
+       if v.parameters and v.parameters.uniqueId then
+         tempId, v.parameters.uniqueId = v.parameters.uniqueId, sb.makeUuid()
+       end
+       world.placeObject(v.name, {position[1] + v.offset[1], position[2] + v.offset[2]}, dir, v.parameters)
 
-        -- Restore unique ID of original object.
-        if tempId then v.parameters.uniqueId = tempId end
+       -- Restore unique ID of original object.
+       if tempId then v.parameters.uniqueId = tempId end
 
-        if v.items ~= nil then hasItems = true end
-      end
+       if v.items ~= nil then hasItems = true end
+     end
 
-      wedit.wait(function()
-        debug("^shadow;Placing objects.")
-      end)
-    end)
-    -- #endregion
+     wedit.wait(function()
+       debug("^shadow;Placing objects.")
+     end)
+     -- #endregion
 
-    -- #region Stage 8: If copy has containers, place items in them.
-    if copy.options.containerLoot and hasItems then
-      table.insert(stages, function()
-        for i,v in pairs(copy.objects) do
-          if v.items then
-            local ids = world.objectQuery({position[1] + v.offset[1], position[2] + v.offset[2]}, 1, {order="nearest"})
-            if ids and ids[1] then
-              for j,k in ipairs(v.items) do
-                world.containerAddItems(ids[1], k)
-              end
-            end
-          end
-        end
+     -- #region Stage 8: If copy has containers, place items in them.
+     if copy.options.containerLoot and hasItems then
+       for i,v in pairs(copy.objects) do
+         if v.items then
+           local ids = world.objectQuery({position[1] + v.offset[1], position[2] + v.offset[2]}, 1, {order="nearest"})
+           if ids and ids[1] then
+             for j,k in ipairs(v.items) do
+               world.containerAddItems(ids[1], k)
+             end
+           end
+         end
+       end
 
-        wedit.wait(function()
-          debug("^shadow;Placing items in containers.")
-        end)
-      end)
-    end
-    -- #endregion
-  end
+       wedit.wait(function()
+         debug("^shadow;Placing items in containers.")
+       end)
+     end
+     -- #endregion
+   end
 
-  -- #region Stage 9: If copy has matmods, place them
-  if copy.options.foregroundMods or copy.options.backgroundMods then
-    table.insert(stages, function()
-      for i=0, copy.size[1]-1 do
-        for j=0, copy.size[2]-1 do
-          local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
-          local block = copy.blocks[i+1][j+1]
+   -- #region Stage 9: If copy has matmods, place them
+   if copy.options.foregroundMods or copy.options.backgroundMods then
+     for i=0, copy.size[1]-1 do
+       for j=0, copy.size[2]-1 do
+         local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
+         local block = copy.blocks[i+1][j+1]
 
-          if copy.options.foregroundMods and block.foreground.mod then
-            world.placeMod(pos, "foreground", block.foreground.mod, nil, false)
-          end
+         if copy.options.foregroundMods and block.foreground.mod then
+           world.placeMod(pos, "foreground", block.foreground.mod, nil, false)
+         end
 
-          if copy.options.backgroundMods and block.background.mod then
-            world.placeMod(pos, "background", block.background.mod, nil, false)
-          end
-        end
-      end
+         if copy.options.backgroundMods and block.background.mod then
+           world.placeMod(pos, "background", block.background.mod, nil, false)
+         end
+       end
+     end
 
-      wedit.wait(function()
-        debug("^shadow;Placing material mods.")
-      end)
-    end)
-  end
-  -- #endregion
+     wedit.wait(function()
+       debug("^shadow;Placing material mods.")
+     end)
+   end
+   -- #endregion
 
-  -- #region Stage 10: If copy has material colors, paint.
-  if copy.options.materialColors then
-    table.insert(stages, function()
-      for i=0,copy.size[1]-1 do
-        for j=0,copy.size[2]-1 do
-          local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
-          local block = copy.blocks[i+1][j+1]
+   -- #region Stage 10: If copy has material colors, paint.
+   if copy.options.materialColors then
+     for i=0,copy.size[1]-1 do
+       for j=0,copy.size[2]-1 do
+         local pos = {position[1] + 0.5 + i, position[2] + 0.5 + j}
+         local block = copy.blocks[i+1][j+1]
 
-          if block.foreground.materialColor then
-            wedit.dye(pos, "foreground", block.foreground.materialColor)
-          end
-          if block.background.materialColor then
-            wedit.dye(pos, "background", block.background.materialColor)
-          end
-        end
-      end
+         if block.foreground.materialColor then
+           wedit.dye(pos, "foreground", block.foreground.materialColor)
+         end
+         if block.background.materialColor then
+           wedit.dye(pos, "background", block.background.materialColor)
+         end
+       end
+     end
 
-      wedit.wait(function()
-        debug("^shadow;Dyeing tiles.")
-      end)
-    end)
-  end
-  -- #endregion
+     wedit.wait(function()
+       debug("^shadow;Dyeing tiles.")
+     end)
+   end
+   -- #endregion
 
-  -- #region Stage 11: Done
-  table.insert(stages, function()
-    wedit.wait(function()
-      debug("^shadow;Done pasting!")
-    end)
-  end)
-  -- #endregion
+   -- #region Stage 11: Done
+   wedit.wait(function()
+     debug("^shadow;Done pasting!")
+   end)
+   -- #endregion
 
-  -- Create paste task, and start it.
-  wedit.ssmManager:startNew(stages)
+ end)
 
   wedit.logger:setLogMap("Paste", string.format("Beginning new paste at (%s,%s)", position[1], position[2]))
 
@@ -976,24 +954,25 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   local replacing = {}
 
   wedit.ssmManager:startNew(
-    -- Placeholders
-    toBlock and function()
-      local predicatePos
-      wedit.forEach(bottomLeft, topRight, function(pos)
-        if world.material(pos, layer) and not world.material(pos, oppositeLayer) then
-          predicatePos = pos
-          table.insert(placeholders, pos)
-          world.placeMaterial(pos, oppositeLayer, "hazard", 0, true)
-        end
-      end)
-      if predicatePos then
-        util.waitFor(function()
-          return world.material(predicatePos, oppositeLayer)
-        end)
-      end
-    end,
-    -- Break matching
     function()
+      if toBlock then
+        -- Placeholders
+        local predicatePos
+        wedit.forEach(bottomLeft, topRight, function(pos)
+          if world.material(pos, layer) and not world.material(pos, oppositeLayer) then
+            predicatePos = pos
+            table.insert(placeholders, pos)
+            world.placeMaterial(pos, oppositeLayer, "hazard", 0, true)
+          end
+        end)
+        if predicatePos then
+          util.waitFor(function()
+            return world.material(predicatePos, oppositeLayer)
+          end)
+        end
+      end
+
+      -- Break matching
       local predicatePos
       wedit.forEach(bottomLeft, topRight, function(pos)
         local block = world.material(pos, layer)
@@ -1008,22 +987,22 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
           return not world.material(predicatePos, layer)
         end)
       end
-    end,
-    -- Place new
-    toBlock and function()
-      local predicatePos
-      for _,pos in ipairs(replacing) do
-        predicatePos = pos
-        world.placeMaterial(pos, layer, toBlock, 0, true)
+
+      -- Place new
+      if toBlock then
+        local predicatePos
+        for _,pos in ipairs(replacing) do
+          predicatePos = pos
+          world.placeMaterial(pos, layer, toBlock, 0, true)
+        end
+        if predicatePos then
+          util.waitFor(function()
+            return world.material(predicatePos, layer)
+          end)
+        end
       end
-      if predicatePos then
-        util.waitFor(function()
-          return world.material(predicatePos, layer)
-        end)
-      end
-    end,
-    -- Remove placeholders
-    function()
+
+      -- Remove placeholders
       for _,pos in ipairs(placeholders) do
         world.damageTiles({pos}, oppositeLayer, pos, "blockish", 9999, 0)
       end
@@ -1100,40 +1079,36 @@ function wedit.calibrate(pos, maxTicks)
   local times = {0,0,0,0}
 
   wedit.ssmManager:startNew(
-    -- Place block
     function()
+      -- Place block
       world.placeMaterial(pos, "foreground", "hazard")
       util.waitFor(function()
         times[1] = times[1] + 1
         return world.material(pos, "foreground")
       end)
-    end,
-    -- Place mod
-    function()
+
+      -- Place mod
       world.placeMod(pos, "foreground", "coal")
       util.waitFor(function()
         times[2] = times[2] + 1
         return world.mod(pos, "foreground")
       end)
-    end,
-    -- Break mod
-    function()
+
+      -- Break mod
       world.damageTiles({pos}, "foreground", pos, "blockish", 9999, 0)
       util.waitFor(function()
         times[3] = times[3] + 1
         return not world.mod(pos, "foreground")
       end)
-    end,
-    -- Break block
-    function()
+
+      -- Break block
       world.damageTiles({pos}, "foreground", pos, "blockish", 9999, 0)
       util.waitFor(function()
         times[4] = times[4] + 1
         return not world.material(pos, "foreground")
       end)
-    end,
-    -- Finalize
-    function()
+
+      -- Finalize
       local delay = 1
       for _,v in ipairs(times) do
         if v > delay then delay = v end
