@@ -21,7 +21,7 @@ local brushShapes = {
 }
 
 function init()
-  widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "g")
+  widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "specialTwo")
   widget.setText(widgets.noclipSpeed, weditInterface.getConfigData("noclipSpeed") or 0.75)
   widget.setText(widgets.delay, weditInterface.getConfigData("delay") or 15)
   widget.setChecked(widgets.doubleIterations, weditInterface.getConfigData("doubleIterations") or false)
