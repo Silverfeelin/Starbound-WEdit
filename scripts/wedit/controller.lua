@@ -227,41 +227,28 @@ function controller.init()
   -- Set up noclip using Keybinds.
   local noclipBind = wedit.getUserConfigData("noclipBind")
   if noclipBind and noclipBind ~= "" then
+    -- Toggle noclip bind
     Bind.create(noclipBind, function()
       controller.noclipping = not controller.noclipping
-      if controller.noclipping then
-        tech.setParentState("fly")
-        for _,v in ipairs(controller.noclipBinds) do v:rebind() end
-      else
-        tech.setParentState()
-        for i,v in ipairs(controller.noclipBinds) do v:unbind() end
-      end
+      tech.setParentState(controller.noclipping and "fly" or nil)
+      for i,v in ipairs(controller.noclipBinds) do v:toggle(controller.noclipping) end
     end)
 
+    -- Offset current position by offset
     local adjustPosition = function(offset)
       local pos = mcontroller.position()
       mcontroller.setPosition({pos[1] + offset[1], pos[2] + offset[2]})
       mcontroller.setVelocity({0,0})
     end
+
+    -- Create movement binds
     controller.noclipBinds = {}
-    table.insert(controller.noclipBinds, Bind.create("up", function()
-      adjustPosition({0,wedit.getUserConfigData("noclipSpeed")})
-    end, true))
-    table.insert(controller.noclipBinds, Bind.create("down", function()
-      adjustPosition({0,-wedit.getUserConfigData("noclipSpeed")})
-    end, true))
-    table.insert(controller.noclipBinds, Bind.create("left", function()
-      adjustPosition({-wedit.getUserConfigData("noclipSpeed"),0})
-    end, true))
-    table.insert(controller.noclipBinds, Bind.create("right", function()
-      adjustPosition({wedit.getUserConfigData("noclipSpeed"),0})
-    end, true))
-    table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function()
-      mcontroller.setVelocity({0,0})
-    end, false))
-    for _,v in ipairs(controller.noclipBinds) do
-      v:unbind()
-    end
+    table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.getUserConfigData("noclipSpeed")}) end, true))
+    table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.getUserConfigData("noclipSpeed")}) end, true))
+    table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.getUserConfigData("noclipSpeed"),0}) end, true))
+    table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.getUserConfigData("noclipSpeed"),0}) end, true))
+    table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false))
+    for _,v in ipairs(controller.noclipBinds) do v:unbind() end
   end
 
   -- #endregion

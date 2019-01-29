@@ -59,9 +59,7 @@ end
 function wedit.getUserConfigData(key)
   local v = wedit.user[key]
   if v == nil then v = wedit.default[key] end
-  if v == nil then
-    wedit.logger:logError("The configuration key '%s' does not exist!", k)
-  end
+  if v == nil then wedit.logger:logError("The configuration key '%s' does not exist!", k) end
   return v
 end
 
