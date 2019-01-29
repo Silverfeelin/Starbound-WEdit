@@ -147,11 +147,21 @@ end
 function controller.updateUserConfig()
     -- Load config data
   local cfg = controller.getUserConfig()
+
   for k in pairs(wedit.user) do
     wedit.user[k] = nil
   end
   for k,v in pairs(cfg) do
     wedit.user[k] = v
+  end
+
+  if controller.noclipBind then
+    if cfg.noclipBind == "" then
+      controller.noclipBind:unbind()
+    else
+      controller.noclipBind:rebind()
+      controller.noclipBind:change(cfg.noclipBind)
+    end
   end
 
   if wedit.getUserConfigData("clearSchematics") then
@@ -186,6 +196,8 @@ function controller.init()
   status.setStatusProperty("wedit.matmodPicker.open", nil)
   status.setStatusProperty("wedit.materialPicker.open", nil)
 
+  -- Holds the noclip toggle Bind
+  controller.noclipBind = nil
   -- Default noclip status (on tech selection or character load)
   controller.noclipping = false
   -- Selected liquid ID. Expected to have name and liquidId at all times.
@@ -222,31 +234,24 @@ function controller.init()
   -- #region NoClip Binds
 
   -- Set up noclip using Keybinds.
-  local noclipBind = wedit.getUserConfigData("noclipBind")
-  if noclipBind and noclipBind ~= "" then
-    -- Toggle noclip bind
-    Bind.create(noclipBind, function()
-      controller.noclipping = not controller.noclipping
-      tech.setParentState(controller.noclipping and "fly" or nil)
-      for i,v in ipairs(controller.noclipBinds) do v:toggle(controller.noclipping) end
-    end)
+  local noclipBind = wedit.getUserConfigData("noclipBind");
+  controller.noclipBind = Bind.create(noclipBind, function()
+    controller.noclipping = not controller.noclipping
+    tech.setParentState(controller.noclipping and "fly" or nil)
+    for i,v in ipairs(controller.noclipBinds) do v:toggle(controller.noclipping) end
+  end, false, noclipBind == "")
 
-    -- Offset current position by offset
-    local adjustPosition = function(offset)
-      local pos = mcontroller.position()
-      mcontroller.setPosition({pos[1] + offset[1], pos[2] + offset[2]})
-      mcontroller.setVelocity({0,0})
-    end
-
-    -- Create movement binds
-    controller.noclipBinds = {}
-    table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.getUserConfigData("noclipSpeed")}) end, true))
-    table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.getUserConfigData("noclipSpeed")}) end, true))
-    table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.getUserConfigData("noclipSpeed"),0}) end, true))
-    table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.getUserConfigData("noclipSpeed"),0}) end, true))
-    table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false))
-    for _,v in ipairs(controller.noclipBinds) do v:unbind() end
+  local adjustPosition = function(offset)
+    local pos = mcontroller.position()
+    mcontroller.setPosition({pos[1] + offset[1], pos[2] + offset[2]})
+    mcontroller.setVelocity({0,0})
   end
+  controller.noclipBinds = {}
+  table.insert(controller.noclipBinds, Bind.create("up", function() adjustPosition({0,wedit.getUserConfigData("noclipSpeed")}) end, true, true))
+  table.insert(controller.noclipBinds, Bind.create("down", function() adjustPosition({0,-wedit.getUserConfigData("noclipSpeed")}) end, true, true))
+  table.insert(controller.noclipBinds, Bind.create("left", function() adjustPosition({-wedit.getUserConfigData("noclipSpeed"),0}) end, true, true))
+  table.insert(controller.noclipBinds, Bind.create("right", function() adjustPosition({wedit.getUserConfigData("noclipSpeed"),0}) end, true, true))
+  table.insert(controller.noclipBinds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false, true))
 
   -- #endregion
 
