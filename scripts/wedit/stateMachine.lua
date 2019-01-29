@@ -5,11 +5,11 @@
 -- LICENSE
 -- MIT License. https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
 
-SSM = {}
+SM = {}
 
 --- Instantiates a new sequential state machine
 -- @param ... States
-function SSM:new(...)
+function SM:new(...)
   local args = {...}
   local states = {}
   for _,v in ipairs(args) do
@@ -22,9 +22,9 @@ function SSM:new(...)
   local c = #states
 
   -- Error checking
-  if c == 0 then error("SSM must have at least one state") end
+  if c == 0 then error("SM must have at least one state") end
   for _,f in ipairs(states) do
-    if type(f) ~= "function" then error("SSM only supports functions as states") end
+    if type(f) ~= "function" then error("SM only supports functions as states") end
   end
 
   local o = {
@@ -42,7 +42,7 @@ end
 --- Resumes the current state.
 -- If the state has finished, start the next state.
 -- @param ... Coroutine arguments.
-function SSM:resume(...)
+function SM:resume(...)
   if not self.state or coroutine.status(self.state) == "dead" then
     self:nextState(...)
   end
@@ -57,7 +57,7 @@ end
 
 --- Process to the next state.
 -- If all states have finished, sets finished to true.
-function SSM:nextState(...)
+function SM:nextState(...)
   self.index = self.index + 1
   self.state = self.states[self.index] -- Can be nil (no next state).
   self.calls = 0
@@ -71,7 +71,7 @@ end
 
 --- Continues the current state.
 -- The state machine object is passed to the state function.
--- @see SSM:resume
-function SSM:update()
+-- @see SM:resume
+function SM:update()
   self:resume(self)
 end

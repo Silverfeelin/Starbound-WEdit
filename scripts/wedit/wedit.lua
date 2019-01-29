@@ -13,7 +13,7 @@ require "/scripts/wedit/utilExt.lua"
 require "/scripts/wedit/debugRenderer.lua"
 require "/scripts/wedit/logger.lua"
 require "/scripts/wedit/positionLocker.lua"
-require "/scripts/wedit/ssmManager.lua"
+require "/scripts/wedit/smManager.lua"
 
 --- WEdit table, variables and functions accessed with 'wedit.' are stored here.
 -- Configuration values should be accessed with 'wedit.getUserConfigData(key'.
@@ -39,7 +39,7 @@ function wedit.init()
   wedit.positionLocker = PositionLocker.new()
   wedit.debugRenderer = DebugRenderer.new()
   wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
-  wedit.ssmManager = SSMManager:new()
+  wedit.smManager = SMManager:new()
 
   wedit.colorLevel = { orange = 1, yellow = 2, red = 3}
 
@@ -47,9 +47,9 @@ function wedit.init()
 end
 
 function wedit.update(...)
-  wedit.ssmManager:update()
+  wedit.smManager:update()
 
-  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.ssmManager:count()))
+  wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.smManager:count()))
 end
 
 function wedit.getConfigData(key)
@@ -282,7 +282,7 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
 
   local copy = wedit.copy(bottomLeft, topRight, copyOptions)
 
-  wedit.ssmManager:startNew(function()
+  wedit.smManager:startNew(function()
     local iterations = wedit.calculateIterations(bottomLeft, {width, height}, layer)
     for i=1, iterations do
       -- Clear blocks
@@ -360,7 +360,7 @@ function wedit.pencil(pos, layer, block, hueshift)
   end
 
   -- Start (re)placing
-  wedit.ssmManager:startNew(function()
+  wedit.smManager:startNew(function()
     local mod = world.mod(pos, layer)
 
     -- Remove old block
@@ -611,7 +611,7 @@ function wedit.paste(copy, position)
     wedit.debugRenderer:drawText(msg, {position[1], topRight[2]-1}, "orange")
   end
 
- wedit.ssmManager:startNew(function()
+ wedit.smManager:startNew(function()
    -- Break background
    if copy.options.background then
      for i=1,3 do
@@ -938,7 +938,7 @@ function wedit.replace(bottomLeft, topRight, layer, toBlock, fromBlock)
   local placeholders = {}
   local replacing = {}
 
-  wedit.ssmManager:startNew(
+  wedit.smManager:startNew(
     function()
       if toBlock then
         -- Placeholders
@@ -1020,7 +1020,7 @@ function wedit.removeMod(pos, layer)
   if not wedit.breakMods[mod] then
     world.damageTiles({pos}, layer, pos, "blockish", 0, 0)
   elseif wedit.positionLocker:lock(layer, pos) then
-    wedit.ssmManager:startNew(
+    wedit.smManager:startNew(
       function()
         world.placeMod(pos, layer, "grass", nil, false)
         util.waitFor(function()
@@ -1063,7 +1063,7 @@ function wedit.calibrate(pos, maxTicks)
   local attempts = maxTicks or 60 -- 1 sec.
   local times = {0,0,0,0}
 
-  wedit.ssmManager:startNew(
+  wedit.smManager:startNew(
     function()
       -- Place block
       world.placeMaterial(pos, "foreground", "hazard")
