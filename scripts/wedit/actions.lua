@@ -342,12 +342,12 @@ function wedit.actions.WE_Stamp()
 
   if not controller.shiftFireLocked then
     if not controller.shiftHeld then
-      if controller.primaryFire then
+      if controller.primaryFire and controller.validSelection() then
         -- Store copy
         storage.weditCopy = wedit.copy(controller.selection[1], controller.selection[2], nil, true)
         controller.shiftFireLock()
       elseif controller.altFire then
-        if storage.weditCopy then
+        if storage.weditCopy and controller.validSelection() then
           -- Start paste
           local position = {controller.selection[1][1], controller.selection[1][2]}
           local backup = wedit.paste(storage.weditCopy, position)
