@@ -743,19 +743,30 @@ function wedit.actions.WE_Dye()
   controller.info("^shadow;^orange;WEdit: Dye Tool")
   controller.info("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
-  controller.info("^shadow;^yellow;Shift + Fire: Open Hue Picker.", {0,-3})
-
-  local layer = controller.primaryFire and "foreground" or
-    controller.altFire and "background" or nil
-
+  controller.info("^shadow;^yellow;Shift + Primary Fire: Open Hue Picker.", {0,-3})
+  controller.info("^shadow;^yellow;Shift + Alt Fire: Copy hue.", {0,-4})
   local hue = huePickerUtil.getSerializedHue() or 0
+  controller.info("^shadow;^yellow;Current hue: ^red;" .. math.floor(hue) .. "^yellow;.", {0, -5})
 
+  if controller.shiftFireLocked then return end
   if controller.shiftHeld then
-    if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
+    wedit.debugRenderer:drawBlock(tech.aimPosition())
+    if controller.primaryFire then
+      -- Shift + LMB: open hue picker
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/huePicker/huePicker.config")
       controller.shiftFireLock()
+    elseif controller.altFire then
+      -- Shift + RMB: select hue
+      local pos = tech.aimPosition()
+      local newHue = world.materialHueShift(pos, world.material(tech.aimPosition(), "foreground") and "foreground" or "background")
+      huePickerUtil.serializeHue(newHue or 0)
     end
-  elseif not controller.shiftFireLocked then
+  else
+    -- LMB: dye foreground, RMB: dye background
+    local layer = controller.primaryFire and "foreground" or
+      controller.altFire and "background" or nil
+
+    -- Indicate affected blocks
     local callback = function(pos)
         wedit.debugRenderer:drawBlock(pos)
         if layer then
@@ -763,9 +774,11 @@ function wedit.actions.WE_Dye()
         end
     end
 
-    if wedit.getUserConfigData("brushShape") == "square" then
+    -- Draw indication/dye blocks.
+    local brushShape = wedit.getUserConfigData("brushShape")
+    if brushShape  == "square" then
       wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
-    elseif wedit.getUserConfigData("brushShape") == "circle" then
+    elseif brushShape == "circle" then
       wedit.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
     end
   end
