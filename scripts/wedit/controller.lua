@@ -212,9 +212,6 @@ function controller.init()
   controller.selectedBlock = "dirt"
   -- Table used to store copies of areas prior to commands such as fill.
   controller.backup = {}
-  -- Table used to display information in certain colors. { title & operations, description, variables }
-  controller.colors = { "^orange;", "^yellow;", "^red;"}
-  wedit.colors = controller.colors
   -- Shows usage text below the character. 0 = nothing, 1 = variables , 2 = usage & variables.
   controller.showInfo = true
   status.setStatusProperty("wedit.showingInfo", true)

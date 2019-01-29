@@ -715,25 +715,15 @@ function wedit.actions.WE_Hydrator()
 end
 
 --- Function to obtain all WEdit Tools.
--- Uses controller.colors to color the names and descriptions of the tools.
 function wedit.actions.WE_ItemBox()
   controller.info("^shadow;^orange;WEdit: Item Box")
   controller.info("^shadow;^yellow;Primary Fire: Spawn Tools.", {0,-1})
 
   if not controller.fireLocked and controller.primaryFire then
     controller.fireLock()
-
     local items = root.assetJson("/wedit/items.json")
-
     for i=1,#items do
-      local item = items[i]
-      if item.parameters.category then
-        item.parameters.category = item.parameters.category:gsub("%^orange;", controller.colors[1])
-      end
-      if item.parameters.description then
-        item.parameters.description = item.parameters.description:gsub("%^yellow;", controller.colors[2])
-      end
-      world.spawnItem(item, mcontroller.position())
+      world.spawnItem(items[i], mcontroller.position())
     end
   end
 end
@@ -763,8 +753,7 @@ function wedit.actions.WE_Dye()
     end
   else
     -- LMB: dye foreground, RMB: dye background
-    local layer = controller.primaryFire and "foreground" or
-      controller.altFire and "background" or nil
+    local layer = controller.primaryFire and "foreground" or controller.altFire and "background" or nil
 
     -- Indicate affected blocks
     local callback = function(pos)
@@ -784,6 +773,7 @@ function wedit.actions.WE_Dye()
   end
 end
 
+-- Attempts to calibrate WEdit by placing and breaking a block and measuring the frames needed to do so.
 function wedit.actions.WE_Calibrate()
   controller.info("^shadow;^orange;WEdit: Calibrator")
   controller.info("^shadow;^yellow;Primary Fire: Calibrate delay.", {0,-1})

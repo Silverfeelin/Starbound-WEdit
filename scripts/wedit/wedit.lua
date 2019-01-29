@@ -63,26 +63,13 @@ function wedit.getUserConfigData(key)
   return v
 end
 
---- Recolors the info text to use a color scheme.
--- @param str A string of text.
--- @return String with the recolors applied.
--- @see wedit.colors
-function wedit.colorText(str)
-  if not wedit.colors then return str;
-  else
-    return str:gsub("%^(.-);",function(code)
-      return wedit.controller.colors[wedit.colorLevel[code]]
-    end)
-  end
-end
-
 ---  Draws debug text below the user's character, or with an offset relative to it.
 -- @param str Text to draw.
 -- @param[opt={0,0}] offset {x,y} Offset relative to the feet of the player's character.
 function wedit.info(str, offset)
   if type(offset) == "nil" then offset = {0,0} end
   if wedit.getUserConfigData("lineSpacing") and wedit.getUserConfigData("lineSpacing") ~= 1 then offset[2] = offset[2] * wedit.getUserConfigData("lineSpacing") end
-  wedit.debugRenderer:drawText(wedit.colorText(str), {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
+  wedit.debugRenderer:drawText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
 --- Returns a copy of the given {x,y} point.
