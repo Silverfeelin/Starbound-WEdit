@@ -301,8 +301,8 @@ function controller.update(args)
     mcontroller.controlParameters({
       gravityEnabled = false,
       collisionEnabled = false,
-      standingPoly = {},
-      crouchingPoly = {},
+      standingPoly = {{0,0},{0,0}},
+      crouchingPoly = {{0,0},{0,0}},
       physicsEffectCategories = {"immovable"},
       mass = 0,
       runSpeed = 0,
