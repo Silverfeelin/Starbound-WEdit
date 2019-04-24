@@ -32,9 +32,20 @@
 			}
 		}
 	},
-  {
-    "op": "add",
-    "path": "/deploymentConfig/scripts/-",
-    "value": "/scripts/wedit/techLoader.lua"
-  }
+  [
+    {"op" : "test", "path" : "/genericScriptContexts", "inverse": true},
+    {
+      "op": "add",
+      "path": "/deploymentConfig/scripts/-",
+      "value": "/scripts/wedit/techLoader.lua"
+    }
+  ],
+  [
+    {"op" : "test", "path" : "/genericScriptContexts"},
+    {
+      "op": "add",
+      "path": "/genericScriptContexts/wedit-techLoader",
+      "value": "/scripts/wedit/techLoader.lua"
+    }
+  ]
 ]
