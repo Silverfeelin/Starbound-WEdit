@@ -44,7 +44,7 @@
     {"op" : "test", "path" : "/genericScriptContexts"},
     {
       "op": "add",
-      "path": "/genericScriptContexts/wedit-techLoader",
+      "path": "/genericScriptContexts/wedit",
       "value": "/scripts/wedit/techLoader.lua"
     }
   ]
