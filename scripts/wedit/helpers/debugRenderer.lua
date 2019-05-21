@@ -43,7 +43,7 @@ function DebugRenderer:drawBlock(p, color)
   if not self.enabled then return end
   color = color or self.defaultColor
   local x1, y1 = math.floor(p[1]), math.floor(p[2])
-  self:drawRectangle({x1, y1}, {x1 + 1, y1 + 1}, color)
+  self:drawRectangle({x1, y1}, {x1, y1}, color)
 end
 
 --- Draws a line.

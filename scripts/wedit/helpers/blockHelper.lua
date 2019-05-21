@@ -28,6 +28,7 @@ function BlockHelper.place(pos, layer, block, hueshift)
   taskManager:startNew(function()
     -- Remove old block
     if not block or old then
+      -- TODO: Force break (i.e. grass fails on one damage tick).
       world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
       util.waitFor(function() return not world.material(pos, layer) end)
     end
@@ -62,7 +63,6 @@ function BlockHelper.fill(shape, layer, block)
 end
 
 function BlockHelper.replace(shape, layer, block, fromBlock)
-  sb.logInfo("%s %s %s %s", shape, layer, block, fromBlock)
   for p in shape:each() do
     local mat = world.material(p, layer)
 

@@ -4,6 +4,7 @@
 -- This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or controller.lua.
 
 require "/interface/wedit/dyePicker/dyePickerUtil.lua"
+require "/interface/wedit/huePicker/huePickerUtil.lua"
 require "/scripts/wedit/libs/include.lua"
 
 local controller = include("/scripts/wedit/controller.lua")
@@ -216,8 +217,6 @@ function wedit.actions.WE_BlockPinner()
         else
           local itemCfg = root.itemConfig(tileCfg.config.itemDrop)
           icon = controller.fixImagePath(itemCfg.directory, itemCfg.config.inventoryIcon) .. "?hueshift=" .. math.floor(hueshift * 360 / 255)
-          sb.logInfo("Block hueshift: %s", hueshift)
-          sb.logInfo("Icon: %s", icon)
           local params = controller.spawnOreParameters("WE_Block",
             "^yellow;Primary Fire: Place foreground.\nAlt Fire: Place background.",
             string.format("^orange;WEdit: %s (hue:%s)", block, math.floor(hueshift)),
@@ -682,28 +681,28 @@ function wedit.actions.WE_Dye()
   controller.info("^shadow;^orange;WEdit: Dye Tool")
   controller.info("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
-  controller.info("^shadow;^yellow;Shift + Fire: Open Dye Picker.", {0,-3})
+  controller.info("^shadow;^yellow;Shift + Fire: Open Hue Picker.", {0,-3})
 
   local layer = InputHelper.primary and "foreground" or
     InputHelper.alt and "background" or nil
 
-  local colorIndex = dyePickerUtil.getColorIndex(dyePickerUtil.getSerializedColor()) or 0
+  local hue = huePickerUtil.getSerializedHue() or 0
 
   if InputHelper.shift then
     if not InputHelper.isShiftLocked() and (InputHelper.primary or InputHelper.alt) then
-      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/dyePicker/dyePicker.config")
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/huePicker/huePicker.config")
       InputHelper.shiftLock()
     end
   elseif not InputHelper.isShiftLocked() then
     local callback = function(pos)
         debugRenderer:drawBlock(pos)
         if layer then
-          wedit.dye(pos, layer, colorIndex)
+          BlockHelper.place(pos, layer, world.material(pos, layer), hue)
         end
     end
 
     if wedit.getUserConfigData("brushShape") == "square" then
-      shapes.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
+      shapes.box(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
     elseif wedit.getUserConfigData("brushShape") == "circle" then
       shapes.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
     end
