@@ -5,25 +5,22 @@
 -- This file falls under an MIT License, which is part of this project.
 -- An online copy can be viewed via the following link:
 -- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
---
--- USAGE
--- To load this script:
--- 1. require "/scripts/wedit/controller.lua"
--- 2. On init, call wedit.controller.init(). This will internally initialize wedit, so wedit.init() shouldn't be called.
--- 3. On update, call wedit.controller.update(args). This will internally update wedit, so wedit.update(args) shouldn't be called.
 
 wedit = {}
-wedit.controller = {}
-wedit.actions = {}
-local controller = wedit.controller
-
+wedit.actions = wedit.actions or {}
 -- Load dependencies
-require "/scripts/keybinds.lua"
+require "/scripts/wedit/libs/keybinds.lua"
 require "/scripts/messageutil.lua"
--- Load core library
+-- Core library
 require "/scripts/wedit/wedit.lua"
--- Load tool actions
-require "/scripts/wedit/actions.lua"
+require "/scripts/wedit/libs/include.lua"
+
+local debugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua").instance
+local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
+local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")
+
+local controller = {}
+module = controller
 
 --- Sets a value under the "wedit" status property.
 -- @param key wedit table key.
@@ -88,6 +85,7 @@ end
 -- @param layer Layer to select block from.
 -- @return Material name or false (air).
 function controller.updateColor(layer)
+  sb.logInfo("updateColor %s", layer)
   local tile = world.material(tech.aimPosition(), layer)
   if tile then
     controller.selectedBlock = tile
@@ -96,13 +94,6 @@ function controller.updateColor(layer)
   end
 
   return tile or false
-end
-
---- Returns a value indicating whether there's currently a valid selection.
--- Done by confirming both the bottom left and top right point are set.
--- @return True if a valid selection is made, false otherwise.
-function controller.validSelection()
-  return next(controller.selection[1]) and next(controller.selection[2]) and true or false
 end
 
 function controller.validLine()
@@ -114,33 +105,16 @@ end
 --- Draws rectangle(s) indicating the current selection and paste area.
 function controller.showSelection()
   -- Draw selections if they have been made.
-  if controller.validSelection() then
-    wedit.debugRenderer:drawRectangle(controller.selection[1], controller.selection[2])
-    wedit.debugRenderer:drawText(string.format("^shadow;WEdit Selection (%sx%s)", controller.selection[2][1] - controller.selection[1][1], controller.selection[2][2] - controller.selection[1][2]), {controller.selection[1][1], controller.selection[2][2]}, "green")
-
+  if SelectionHelper.isValid() then
     if storage.weditCopy and storage.weditCopy.size then
       local copy = storage.weditCopy
-      local top = controller.selection[1][2] + copy.size[2]
-      wedit.debugRenderer:drawRectangle(controller.selection[1], {controller.selection[1][1] + copy.size[1], top}, "cyan")
+      local top = SelectionHelper.getStart()[2] + copy.size[2]
+      debugRenderer:drawRectangle(SelectionHelper.getStart(), {SelectionHelper.getStart()[1] + copy.size[1], top}, "cyan")
 
-      if top == controller.selection[2][2] then top = controller.selection[2][2] + 1 end
-      wedit.debugRenderer:drawText("^shadow;WEdit Paste Selection", {controller.selection[1][1], top}, "cyan")
+      if top == SelectionHelper.getEnd()[2] then top = SelectionHelper.getEnd()[2] + 1 end
+      debugRenderer:drawText("^shadow;WEdit Paste Selection", {SelectionHelper.getStart()[1], top}, "cyan")
     end
   end
-end
-
---- Disables certain actions until lmb and rmb are released.
--- Sets fireLocked to true. This indicates that certain actions should not activate until both fire buttons are released.
-function controller.fireLock()
-  controller.fireLocked = true
-end
-
---- Disables certain actions until shift, lmb and rmb are released.
--- Sets shiftFireLocked and fireLocked to true. This indicates that certain actions should not activate until both fire buttons and shift are released.
--- fireLocked may be false when shiftFireLocked is true, if the user is only holding shift.
-function controller.shiftFireLock()
-  controller.fireLocked = true
-  controller.shiftFireLocked = true
 end
 
 --- Updates the wedit.user configuration
@@ -203,19 +177,6 @@ function controller.init()
   controller.noclipping = false
   -- Selected liquid ID. Expected to have name and liquidId at all times.
   controller.liquid = { name = "water", liquidId = 1 }
-  -- Variables used to determine if LMB and/or RMB are held down.
-  controller.primaryFire, controller.altFire = false, false
-  controller.fireLocked = false
-  -- Used to determine if Shift is held down.
-  controller.shiftHeld = false
-  -- Number used by WE_Select to determine the selection stage (0: Nothing, 1: Selecting).
-  controller.selectStage = 0
-  -- Table used to store the current raw selection coordinates.
-  -- [1] Start selection or nil, [2] End selection or nil.
-  controller.rawSelection = {}
-  -- Table used to store the current selection coordinates, converted to block coordinates.
-  -- [1] Bottom left corner of selection, [2] Top right corner of selection.
-  controller.selection = {{},{}}
   -- Number used by WE_Ruler to determien the line selection stage.
   controller.lineStage = 0
   -- Table used to store the current line selection coordinates.
@@ -225,9 +186,6 @@ function controller.init()
   controller.selectedBlock = "dirt"
   -- Table used to store copies of areas prior to commands such as fill.
   controller.backup = {}
-  -- Table used to display information in certain colors. { title & operations, description, variables }
-  controller.colors = { "^orange;", "^yellow;", "^red;"}
-  wedit.colors = controller.colors
   -- Shows usage text below the character. 0 = nothing, 1 = variables , 2 = usage & variables.
   controller.showInfo = true
   status.setStatusProperty("wedit.showingInfo", true)
@@ -293,21 +251,8 @@ end
 
 --- Update function, called in the main update callback.
 function controller.update(args)
+  InputHelper.update(args)
   wedit.update(args)
-
-  -- Check if LMB / RMB are held down this game tick.
-  controller.primaryFire = args.moves["primaryFire"]
-  controller.altFire = args.moves["altFire"]
-  controller.shiftHeld = not args.moves["run"]
-
-  -- Removes the lock on your fire keys (LMB/RMB) if both have been released.
-  if controller.fireLocked and not controller.primaryFire and not controller.altFire then
-    controller.fireLocked = false
-  end
-
-  if controller.shiftFireLocked and not controller.shiftHeld and not controller.primaryFire and not controller.altFire then
-    controller.shiftFireLocked = false
-  end
 
   -- Set noclip movement parameters, if noclipping is enabled.
   if controller.noclipping then
@@ -341,10 +286,11 @@ function controller.update(args)
       action = status.statusProperty("wedit.compact.action", "WE_Select")
     end
 
-    wedit.actions[action]()
+    controller.executeAction(wedit.actions[action])
   end
 
-  if controller.validSelection() then
+  if SelectionHelper.isValid() then
+    SelectionHelper.render(debugRenderer)
     controller.showSelection()
   end
 end
@@ -354,7 +300,7 @@ function controller.uninit()
   tech.setParentState()
 
   -- Mark interfaces for closing.
-  if status.statusProperty("wedit.compact.open", false) then
+  if status.statusProperty("wedit.compact.open") then
     status.setStatusProperty("wedit.compact.close", true)
   end
 end
@@ -362,6 +308,11 @@ end
 -- #endregion
 
 -- #region WEdit Tools
+
+function controller.executeAction(m)
+  -- TODO: Remove and call m.action directly.
+  if type(m) == "function" then m() else m.action() end
+end
 
 --- Returns parameters for a trianglium ore used for WEdit tools.
 -- Vanilla parameters such as blueprints and radio messages are removed.

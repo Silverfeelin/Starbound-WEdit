@@ -1,6 +1,9 @@
-require "/scripts/wedit/scriptHooks.lua"
-require "/scripts/wedit/controller.lua"
+require "/scripts/wedit/libs/scriptHooks.lua"
+require "/scripts/wedit/libs/include.lua"
 
-hook("init", wedit.controller.init)
-hook("update", wedit.controller.update)
-hook("uninit", wedit.controller.uninit)
+local controller = include("/scripts/wedit/controller.lua")
+require "/scripts/wedit/actions.lua"
+
+hook("init", controller.init)
+hook("update", controller.update)
+hook("uninit", controller.uninit)

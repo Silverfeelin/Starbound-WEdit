@@ -7,8 +7,9 @@
 -- An online copy can be viewed via the following link:
 -- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
 
-PositionLocker = {}
+local PositionLocker = {}
 PositionLocker.__index = PositionLocker
+module = PositionLocker
 
 -- Rounds coordinates down, and optionally converts {x,y} into x,y.
 -- @param x Coordinate x or table {x,y}.
@@ -76,3 +77,6 @@ end
 function PositionLocker:clear()
   self.positions = { foreground = {}, background = {} }
 end
+
+-- Shared instance.
+PositionLocker.instance = PositionLocker.new()

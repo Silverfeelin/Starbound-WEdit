@@ -2,25 +2,49 @@
   "global": {
     "type": "table",
     "fields": {
+      "Circle": {
+        "type": "table",
+        "fields": {
+          "create": {
+            "type": "function",
+            "args": [{"name": "self"}, {"name": "a"}],
+            "argsDisplay": "self[, a]",
+            "argsDisplayOmitSelf": "[a]"
+          }
+        }
+      },
       "wedit": {
         "type": "table",
-        "description": "Core WEdit functions",
+        "description": "Core WEdit functions. This is out of date.",
         "fields": {
+          "shapes": {
+            "type": "table",
+            "description": "Contains iterators for various shapes",
+            "fields": {
+              "circle": {
+                "type": "function",
+                "args": [{ "name": "position", "type": "Vec2" }, { "name": "radius", "type": "number" }, { "name": "callback", "type": "function" }]
+              },
+              "box": {
+                "type": "function",
+                "args": [{ "name": "position", "type": "Vec2" }, { "name": "width", "type": "number" }, { "name": "height", "type": "number" }, { "name": "callback", "type": "function" }]
+              },
+              "rectangle": {
+                "type": "function",
+                "args": [{ "name": "position", "type": "Vec2" }, { "name": "width", "type": "number" }, { "name": "height", "type": "number" }, { "name": "callback", "type": "function" }]
+              },
+              "bresenham": {
+                "type": "function",
+                "description": "For each block in a line between two points, calls the callback function.\n\nThis uses the bresenham algorithm implementation by **kikito**, licensed under the [MIT license](https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt).",
+                "link": "https://github.com/kikito/bresenham.lua",
+                "args": [{ "name": "startPos", "type": "Vec2" }, { "name": "endPos", "type": "Vec2" }, { "name": "callback", "type": "function "}]
+              }
+            }
+          },
           "breakBlocks": {
             "type": "function",
             "description": "Breaks all blocks in a rectangular selection.\n\nReturns a copy of the area before any blocks are modified.",
             "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}]
-          },
-          "bresenham": {
-            "type": "function",
-            "description": "For each block in a line between two points, calls the callback function.\n\nThis uses the bresenham algorithm implementation by **kikito**, licensed under the [MIT license](https://github.com/kikito/bresenham.lua/blob/master/MIT-LICENSE.txt).",
-            "link": "https://github.com/kikito/bresenham.lua",
-            "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "callback"}]
-          },
-          "circle": {
-            "type": "function",
-            "description": "For each block in a circle around the given position and radius, calls the callback function with the block position `{x,y}`.",
-            "args": [{ "name": "position" }, { "name": "radius" }, { "name": "callback"}]
           },
           "copy": {
             "type": "function",
@@ -40,7 +64,7 @@
           },
           "flip": {
             "type": "function",
-            "description": "Starts a flip operation. The operation will take time to complete. Direction can be `horizontal` or `vertical`. Vertically flipping can cause issues with objects and matmods. See `wedit.copy`.\n\nNote that the given copy is directly modified!",
+            "description": "Starts a flip operation. The operation will take time to complete. Direction can be `horizontal` or `vertical`. Vertically flipping can cause issues with objects and matmods. See `stamp.copy`.\n\nNote that the given copy is directly modified!",
             "args": [{ "name": "copy" }, { "name": "direction" }]
           },
           "hydrate": {
@@ -48,18 +72,13 @@
             "description": "Fills a rectangular selection with a liquid. Both positions are included in this rectangle.",
             "args": [{ "name": "bottomLeft" }, { "name": "topRight" }, { "name": "liquidId"}]
           },
-          "line": {
-            "type": "function",
-            "description": "Place a block at every position on a line between two points. Uses `wedit.bresenham`.",
-            "args": [{ "name": "startPos", "type": "vec2" }, { "name": "endPos", "type": "vec2" }, { "name": "layer", "type": "string"}, { "name": "callback", "type": "function"}]
-          },
           "logENV": {
             "type": "function",
             "description": "Dumps the _ENV values and table subvalues. Can't have enough of these at hand."
           },
           "paste": {
             "type": "function",
-            "description": "Starts a paste operation. The operation will take time to complete. See `wedit.copy`.\n\nReturns a copy of the area before any blocks are modified.",
+            "description": "Starts a paste operation. The operation will take time to complete. See `stamp.copy`.\n\nReturns a copy of the area before any blocks are modified.",
             "args": [{ "name": "copy" }, { "name": "position" }]
           },
           "pencil": {
@@ -72,11 +91,6 @@
             "type": "function",
             "description": "Places a material mod at the given position and layer.",
             "args": [{ "name": "startPos" }, { "name": "endPos" }, { "name": "layer"}, { "name": "callback"}]
-          },
-          "rectangle": {
-            "type": "function",
-            "description": "For each block in a rectangle around the given center position, calls the callback function with the block position `{x,y}`.",
-            "args": [{ "name": "center" }, { "name": "width" }, { "name": "height"}, { "name": "callback"}]
           },
           "removeMod": {
             "type": "function",

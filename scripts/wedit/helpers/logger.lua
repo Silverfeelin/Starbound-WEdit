@@ -7,6 +7,7 @@
 
 Logger = {}
 Logger.__index = Logger
+module = Logger
 
 --- Instantates a new logger.
 -- @param[opt=""] logPrefix Prefix for logged messages.  Should end with a space to separate prefix from message.

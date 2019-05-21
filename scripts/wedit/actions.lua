@@ -4,9 +4,17 @@
 -- This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or controller.lua.
 
 require "/interface/wedit/dyePicker/dyePickerUtil.lua"
+require "/scripts/wedit/libs/include.lua"
+
+local controller = include("/scripts/wedit/controller.lua")
+local debugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua").instance
+local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
+local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")
+local stamp = include("/scripts/wedit/helpers/stamp.lua")
+local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
+local shapes = include("/scripts/wedit/shapes.lua")
 
 wedit.actions = wedit.actions or {}
-local controller = wedit.controller
 
 --- Function that appears to lack functionality, yet mysteriously accomplishes just about everything.
 -- @see controller.update
@@ -15,68 +23,15 @@ function wedit.actions.WE_AllInOne()
     controller.info("^shadow;^orange;WEdit: All in One")
     controller.info("^shadow;^yellow;Primary Fire: Open Compact Interface.", {0,-1})
 
-    local c = controller
-    if not c.fireLocked and (c.primaryFire or c.altFire) then
-      c.fireLock()
+    if not InputHelper.isLocked() and (InputHelper.primary or InputHelper.alt) then
+      InputHelper.lock()
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/compact/compact.config")
     end
   end
 end
 
 --- Sets or updates the selection area.
-function wedit.actions.WE_Select()
-  controller.info("^shadow;^orange;WEdit: Selection Tool")
-
-  if controller.validSelection() then
-    controller.info("^shadow;^yellow;Alt Fire: Remove selection.", {0,-2})
-    local w, h = controller.selection[2][1] - controller.selection[1][1], controller.selection[2][2] - controller.selection[1][2]
-    controller.info(string.format("^shadow;^yellow;Current Selection: ^red;(%sx%s)^yellow;.", w, h), {0,-3})
-  end
-
-  -- RMB resets selection entirely
-  if not controller.fireLocked and controller.altFire then
-    controller.fireLock()
-    controller.selectStage = 0
-    controller.selection = {{},{}}
-    return
-  end
-
-  if controller.selectStage == 0 then
-    -- Select stage 0: Not selecting.
-    controller.info("^shadow;^yellow;Primary Fire: Select area.", {0,-1})
-
-    if controller.primaryFire and not controller.fireLocked then
-      -- Start selection; set first point.
-      controller.selectStage = 1
-      controller.rawSelection[1] = tech.aimPosition()
-    end
-  elseif controller.selectStage == 1 then
-  controller.info("^shadow;^yellow;Drag mouse and let go to select an area.", {0,-1})
-    -- Select stage 1: Selection started.
-    if controller.primaryFire then
-      -- Dragging selection; update second point.
-      controller.rawSelection[2] = tech.aimPosition()
-
-      -- Update converted coördinates.
-      -- Compare X (1 is smallest):
-      controller.selection[1][1] = math.floor((controller.rawSelection[1][1] <  controller.rawSelection[2][1]) and controller.rawSelection[1][1] or controller.rawSelection[2][1])
-      controller.selection[2][1] = math.ceil((controller.rawSelection[1][1] <  controller.rawSelection[2][1]) and controller.rawSelection[2][1] or controller.rawSelection[1][1])
-
-      -- Compare Y (1 is smallest):
-      controller.selection[1][2] = math.floor((controller.rawSelection[1][2] <  controller.rawSelection[2][2]) and controller.rawSelection[1][2] or controller.rawSelection[2][2])
-      controller.selection[2][2] = math.ceil((controller.rawSelection[1][2] <  controller.rawSelection[2][2]) and controller.rawSelection[2][2] or controller.rawSelection[1][2])
-    else
-      -- Selection ended; reset stage.
-      controller.selectStage = 0
-
-      -- We can forget about the raw coördinates now.
-      controller.rawSelection = {}
-    end
-  else
-    -- Select stage is not valid; reset it.
-    controller.selectStage = 0
-  end
-end
+wedit.actions.WE_Select = include("/scripts/wedit/actions/select.lua")
 
 --- Function to erase all blocks in the current selection.
 function wedit.actions.WE_Erase()
@@ -85,18 +40,18 @@ function wedit.actions.WE_Erase()
   controller.info("^shadow;^yellow;Primary Fire: foreground.", {0,-2})
   controller.info("^shadow;^yellow;Alt Fire: background.", {0,-3})
 
-  if not controller.fireLocked and controller.validSelection() then
-    if controller.primaryFire then
+  if not InputHelper.isLocked() and SelectionHelper.isValid() then
+    if InputHelper.primary then
       -- Remove Foreground
-      controller.fireLock()
-      local backup = wedit.breakBlocks(controller.selection[1], controller.selection[2], "foreground")
+      InputHelper.lock()
+      local backup = wedit.breakBlocks(SelectionHelper.getStart(), SelectionHelper.getEnd(), "foreground")
 
       if backup then table.insert(controller.backup, backup) end
 
-    elseif controller.altFire then
+    elseif InputHelper.alt then
       -- Remove Background
-      controller.fireLock()
-      local backup = wedit.breakBlocks(controller.selection[1], controller.selection[2], "background")
+      InputHelper.lock()
+      local backup = wedit.breakBlocks(SelectionHelper.getStart(), SelectionHelper.getEnd(), "background")
 
       if backup then table.insert(controller.backup, backup) end
     end
@@ -117,22 +72,22 @@ function wedit.actions.WE_Undo()
   if backupSize > 0 then
     local backup = controller.backup[backupSize]
     local top = backup.origin[2] + backup.size[2]
-    if controller.validSelection() and math.ceil(controller.selection[2][2]) == math.ceil(top) then top = top + 1 end
-    wedit.debugRenderer:drawText("^shadow;WEdit Undo Position", {backup.origin[1], top}, "#FFBF87")
-    wedit.debugRenderer:drawRectangle(backup.origin, {backup.origin[1] + backup.size[1], backup.origin[2] + backup.size[2]}, "#FFBF87")
+    if SelectionHelper.isValid() and math.ceil(SelectionHelper.getEnd()[2]) == math.ceil(top) then top = top + 1 end
+    debugRenderer:drawText("^shadow;WEdit Undo Position", {backup.origin[1], top}, "#FFBF87")
+    debugRenderer:drawRectangle(backup.origin, {backup.origin[1] + backup.size[1], backup.origin[2] + backup.size[2]}, "#FFBF87")
   end
 
   -- Actions
-  if not controller.fireLocked then
-    if controller.primaryFire then
+  if not InputHelper.isLocked() then
+    if InputHelper.primary then
       -- Undo
-      controller.fireLock()
+      InputHelper.lock()
       if backupSize > 0 then
-        wedit.paste(controller.backup[backupSize], controller.backup[backupSize].origin)
+        stamp.paste(controller.backup[backupSize], controller.backup[backupSize].origin)
       end
-    elseif controller.altFire then
+    elseif InputHelper.alt then
       -- Remove Undo
-      controller.fireLock()
+      InputHelper.lock()
       if backupSize > 0 then
         table.remove(controller.backup, backupSize)
       end
@@ -149,21 +104,20 @@ function wedit.actions.WE_ColorPicker()
   controller.info("^shadow;^yellow;Shift + Fire: Open material picker.", {0,-4})
   controller.info("^shadow;^yellow;Current Block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-5})
 
-  wedit.debugRenderer:drawBlock(tech.aimPosition())
-
-  if controller.shiftHeld then
-    if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
+  debugRenderer:drawBlock(tech.aimPosition())
+  if InputHelper.shift then
+    if not InputHelper.isShiftLocked() and (InputHelper.primary or InputHelper.alt) then
       require "/interface/wedit/materialPicker/materialPickerLoader.lua"
       materialPickerLoader.initializeConfig()
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", materialPickerLoader.config)
-      controller.shiftFireLock()
+      InputHelper.shiftLock()
     end
-  elseif not controller.shiftFireLocked then
-    if controller.primaryFire then
-        controller.fireLock()
+  elseif not InputHelper.isShiftLocked() then
+    if InputHelper.primary then
+        InputHelper.lock()
         controller.updateColor("foreground")
-    elseif controller.altFire then
-      controller.fireLock()
+    elseif InputHelper.alt then
+      InputHelper.lock()
       controller.updateColor("background")
     end
   end
@@ -177,17 +131,17 @@ function wedit.actions.WE_Fill()
   controller.info("^shadow;^yellow;Alt Fire: background.", {0,-3})
   controller.info("^shadow;^yellow;Current Block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-4})
 
-  if not controller.fireLocked and controller.validSelection() then
-    if controller.primaryFire then
-      controller.fireLock()
+  if not InputHelper.isLocked() and SelectionHelper.isValid() then
+    if InputHelper.primary then
+      InputHelper.lock()
 
-      local backup = wedit.fillBlocks(controller.selection[1], controller.selection[2], "foreground", controller.selectedBlock)
+      local backup = wedit.fillBlocks(SelectionHelper.getStart(), SelectionHelper.getEnd(), "foreground", controller.selectedBlock)
 
       if backup then table.insert(controller.backup, backup) end
-    elseif controller.altFire then
-      controller.fireLock()
+    elseif InputHelper.alt then
+      InputHelper.lock()
 
-      local backup = wedit.fillBlocks(controller.selection[1], controller.selection[2], "background", controller.selectedBlock)
+      local backup = wedit.fillBlocks(SelectionHelper.getStart(), SelectionHelper.getEnd(), "background", controller.selectedBlock)
 
       if backup then table.insert(controller.backup, backup) end
     end
@@ -203,26 +157,26 @@ function wedit.actions.WE_Pencil()
   controller.info("^shadow;^yellow;Current Block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-3})
 
   local debugCallback = function(pos)
-    wedit.debugRenderer:drawBlock(pos)
+    debugRenderer:drawBlock(pos)
   end
 
-  local layer = controller.primaryFire and "foreground" or
-    controller.altFire and "background" or nil
+  local layer = InputHelper.primary and "foreground" or
+    InputHelper.alt and "background" or nil
 
   local callback
   if controller.selectedBlock ~= nil and layer then
     callback = function(pos)
       debugCallback(pos)
-      wedit.pencil(pos, layer, controller.selectedBlock)
+      BlockHelper.place(pos, layer, controller.selectedBlock)
     end
   else
     callback = debugCallback
   end
 
   if wedit.getUserConfigData("brushShape") == "square" then
-    wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
+    shapes.box(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
   elseif wedit.getUserConfigData("brushShape") == "circle" then
-    wedit.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
+    shapes.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
   end
 end
 
@@ -233,7 +187,7 @@ function wedit.actions.WE_BlockPinner()
   controller.info("^shadow;^yellow;Alt Fire: Pin background.", {0,-2})
   local aimPos = tech.aimPosition()
 
-  wedit.debugRenderer:drawBlock(aimPos)
+  debugRenderer:drawBlock(aimPos)
 
   local fg, bg = world.material(aimPos, "foreground"), world.material(aimPos, "background")
   local fgh, bgh = world.materialHueShift(aimPos, "foreground") or 0, world.materialHueShift(aimPos, "background") or 0
@@ -248,11 +202,11 @@ function wedit.actions.WE_BlockPinner()
     controller.info("^shadow;^yellow;Background Block: ^red;None^yellow;.", {0,-4})
   end
 
-  if not controller.fireLocked then
-    if controller.primaryFire or controller.altFire then
-      controller.fireLock()
-      local block = controller.primaryFire and fg or controller.altFire and bg
-      local hueshift = controller.primaryFire and fgh or controller.altFire and bgh
+  if not InputHelper.isLocked() then
+    if InputHelper.primary or InputHelper.alt then
+      InputHelper.lock()
+      local block = InputHelper.primary and fg or InputHelper.alt and bg
+      local hueshift = InputHelper.primary and fgh or InputHelper.alt and bgh
       if type(block) == "nil" then return end
 
       if type(block) ~= "boolean" then
@@ -301,11 +255,11 @@ function wedit.actions.WE_Block()
   end
 
   local debugCallback = function(pos)
-    wedit.debugRenderer:drawBlock(pos)
+    debugRenderer:drawBlock(pos)
   end
 
-  local layer = controller.primaryFire and "foreground" or
-    controller.altFire and "background" or nil
+  local layer = InputHelper.primary and "foreground" or
+    InputHelper.alt and "background" or nil
 
   local callback
   if controller.selectedBlock ~= nil and layer then
@@ -318,9 +272,9 @@ function wedit.actions.WE_Block()
   end
 
   if wedit.getUserConfigData("brushShape") == "square" then
-    wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("blockSize"), nil, callback)
+    shapes.rectangle(tech.aimPosition(), wedit.getUserConfigData("blockSize"), nil, callback)
   elseif wedit.getUserConfigData("brushShape") == "circle" then
-    wedit.circle(tech.aimPosition(), wedit.getUserConfigData("blockSize"), callback)
+    shapes.circle(tech.aimPosition(), wedit.getUserConfigData("blockSize"), callback)
   end
 end
 
@@ -332,28 +286,24 @@ function wedit.actions.WE_Stamp()
   controller.info("^shadow;^yellow;Shift + Primary Fire: Forget copy.", {0,-3})
   controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-4})
 
-  if controller.validSelection() then
-    controller.showSelection()
-  end
-
-  if not controller.shiftFireLocked then
-    if not controller.shiftHeld then
-      if controller.primaryFire then
+  if not InputHelper.isShiftLocked() then
+    if not InputHelper.shift then
+      if InputHelper.primary then
         -- Store copy
-        storage.weditCopy = wedit.copy(controller.selection[1], controller.selection[2], nil, true)
-        controller.shiftFireLock()
-      elseif controller.altFire then
+        storage.weditCopy = stamp.copy(SelectionHelper.getStart(), SelectionHelper.getEnd(), nil, true)
+        InputHelper.shiftLock()
+      elseif InputHelper.alt then
         if storage.weditCopy then
           -- Start paste
-          local position = {controller.selection[1][1], controller.selection[1][2]}
-          local backup = wedit.paste(storage.weditCopy, position)
+          local position = {SelectionHelper.getStart()[1], SelectionHelper.getStart()[2]}
+          local backup = stamp.paste(storage.weditCopy, position)
           if backup then table.insert(controller.backup, backup) end
         end
-        controller.shiftFireLock()
+        InputHelper.shiftLock()
       end
-    elseif controller.primaryFire then
+    elseif InputHelper.primary then
       storage.weditCopy = nil
-      controller.shiftFireLock()
+      InputHelper.shiftLock()
     end
   end
 end
@@ -378,13 +328,13 @@ function wedit.actions.WE_Flip()
     controller.info(msg .. dir, {0,-4})
   end
 
-  if not controller.fireLocked and controller.primaryFire then
-    controller.fireLock()
+  if not InputHelper.isLocked() and InputHelper.primary then
+    InputHelper.lock()
     if c then
       storage.weditCopy = wedit.flip(storage.weditCopy, "horizontal")
     end
-  elseif not controller.fireLocked and controller.altFire then
-    controller.fireLock()
+  elseif not InputHelper.isLocked() and InputHelper.alt then
+    InputHelper.lock()
     if c then
       storage.weditCopy = wedit.flip(storage.weditCopy, "vertical")
     end
@@ -396,10 +346,10 @@ function wedit.actions.WE_SchematicMaker()
   controller.info("^shadow;^orange;WEdit: Schematic Maker")
   controller.info("^shadow;^yellow;Primary Fire: Create Schematic.", {0,-1})
 
-  if not controller.fireLocked and controller.primaryFire and controller.validSelection() then
-    controller.fireLock()
+  if not InputHelper.isLocked() and InputHelper.primary and SelectionHelper.isValid() then
+    InputHelper.lock()
 
-    local copy = wedit.copy(controller.selection[1], controller.selection[2], nil, true)
+    local copy = stamp.copy(SelectionHelper.getStart(), SelectionHelper.getEnd(), nil, true)
 
     local icon = "/assetMissing.png?replace;00000000=ffffff;ffffff00=ffffff?setcolor=ffffff?scalenearest=1?crop=0;0;16;15?blendmult=/objects/outpost/customsign/signplaceholder.png;0;0?replace;01000101=FFFFFF00;01000201=FFFFFF00;01000301=090A0BFF;01000401=090A0BFF;01000501=090A0BFF;01000601=090A0BFF;01000701=090A0BFF;01000801=090A0BFF;02000101=FFFFFF00;02000201=090A0BFF;02000301=1B63ABFF;02000401=5796D5FF;02000501=5796D5FF;02000601=5796D5FF;02000701=5796D5FF;02000801=5796D5FF;03000101=FFFFFF00;03000201=090A0BFF;03000301=5796D5FF;03000401=77B9EAFF;03000501=9ED1F7FF;03000601=77B9EAFF;03000701=77B9EAFF;03000801=9ED1F7FF;04000101=FFFFFF00;04000201=090A0BFF;04000301=5796D5FF;04000401=77B9EAFF;04000501=5796D5FF;04000601=77B9EAFF;04000701=090A0BFF;04000801=090A0BFF;05000101=FFFFFF00;05000201=090A0BFF;05000301=5796D5FF;05000401=77B9EAFF;05000501=9ED1F7FF;05000601=090A0BFF;05000701=B1B1B1FF;05000801=B1B1B1FF;06000101=FFFFFF00;06000201=090A0BFF;06000301=5796D5FF;06000401=77B9EAFF;06000501=090A0BFF;06000601=B1B1B1FF;06000701=566EB1FF;06000801=749FC7FF;07000101=FFFFFF00;07000201=090A0BFF;07000301=5796D5FF;07000401=090A0BFF;07000501=B1B1B1FF;07000601=566EB1FF;07000701=CBECF4FF;07000801=CBECF4FF;08000101=FFFFFF00;08000201=090A0BFF;08000301=5796D5FF;08000401=090A0BFF;08000501=B1B1B1FF;08000601=749FC7FF;08000701=CBECF4FF;08000801=CBECF4FF;09000101=FFFFFF00;09000201=090A0BFF;09000301=5796D5FF;09000401=090A0BFF;09000501=B1B1B1FF;09000601=749FC7FF;09000701=9DD7E6FF;09000801=9DD7E6FF;10000101=FFFFFF00;10000201=090A0BFF;10000301=5796D5FF;10000401=090A0BFF;10000501=B1B1B1FF;10000601=566EB1FF;10000701=9DD7E6FF;10000801=9DD7E6FF;11000101=FFFFFF00;11000201=090A0BFF;11000301=5796D5FF;11000401=090A0BFF;11000501=743D23FF;11000601=B1B1B1FF;11000701=566EB1FF;11000801=749FC7FF;12000101=FFFFFF00;12000201=090A0BFF;12000301=090A0BFF;12000401=743D23FF;12000501=8D5834FF;12000601=BD8549FF;12000701=B1B1B1FF;12000801=B1B1B1FF;13000101=FFFFFF00;13000201=090A0BFF;13000301=743D23FF;13000401=8D5834FF;13000501=BD8549FF;13000601=090A0BFF;13000701=090A0BFF;13000801=090A0BFF;14000101=090A0BFF;14000201=743D23FF;14000301=8D5834FF;14000401=BD8549FF;14000501=090A0BFF;14000601=5796D5FF;14000701=5796D5FF;14000801=5796D5FF;15000101=090A0BFF;15000201=743D23FF;15000301=BD8549FF;15000401=090A0BFF;15000501=090A0BFF;15000601=090A0BFF;15000701=090A0BFF;15000801=090A0BFF;16000101=FFFFFF00;16000201=090A0BFF;16000301=090A0BFF;16000401=FFFFFF00;16000501=FFFFFF00;16000601=FFFFFF00;16000701=FFFFFF00;16000801=FFFFFF00?blendmult=/objects/outpost/customsign/signplaceholder.png;0;-8?replace;01000101=090A0BFF;01000201=090A0BFF;01000301=090A0BFF;01000401=090A0BFF;01000501=090A0BFF;01000601=090A0BFF;01000701=FFFFFF00;02000101=5796D5FF;02000201=5796D5FF;02000301=5796D5FF;02000401=5796D5FF;02000501=5796D5FF;02000601=1B63ABFF;02000701=090A0BFF;03000101=77B9EAFF;03000201=9ED1F7FF;03000301=77B9EAFF;03000401=9ED1F7FF;03000501=77B9EAFF;03000601=5796D5FF;03000701=090A0BFF;04000101=090A0BFF;04000201=090A0BFF;04000301=77B9EAFF;04000401=9ED1F7FF;04000501=77B9EAFF;04000601=5796D5FF;04000701=090A0BFF;05000101=B1B1B1FF;05000201=B1B1B1FF;05000301=090A0BFF;05000401=9ED1F7FF;05000501=77B9EAFF;05000601=5796D5FF;05000701=090A0BFF;06000101=749FC7FF;06000201=566EB1FF;06000301=B1B1B1FF;06000401=090A0BFF;06000501=77B9EAFF;06000601=5796D5FF;06000701=090A0BFF;07000101=9DD7E6FF;07000201=9DD7E6FF;07000301=566EB1FF;07000401=B1B1B1FF;07000501=090A0BFF;07000601=5796D5FF;07000701=090A0BFF;08000101=9DD7E6FF;08000201=9DD7E6FF;08000301=749FC7FF;08000401=B1B1B1FF;08000501=090A0BFF;08000601=5796D5FF;08000701=090A0BFF;09000101=9DD7E6FF;09000201=9DD7E6FF;09000301=749FC7FF;09000401=B1B1B1FF;09000501=090A0BFF;09000601=5796D5FF;09000701=090A0BFF;10000101=9DD7E6FF;10000201=9DD7E6FF;10000301=566EB1FF;10000401=B1B1B1FF;10000501=090A0BFF;10000601=5796D5FF;10000701=090A0BFF;11000101=749FC7FF;11000201=566EB1FF;11000301=B1B1B1FF;11000401=090A0BFF;11000501=77B9EAFF;11000601=5796D5FF;11000701=090A0BFF;12000101=B1B1B1FF;12000201=B1B1B1FF;12000301=090A0BFF;12000401=9ED1F7FF;12000501=77B9EAFF;12000601=5796D5FF;12000701=090A0BFF;13000101=090A0BFF;13000201=090A0BFF;13000301=77B9EAFF;13000401=77B9EAFF;13000501=77B9EAFF;13000601=5796D5FF;13000701=090A0BFF;14000101=5796D5FF;14000201=5796D5FF;14000301=5796D5FF;14000401=5796D5FF;14000501=5796D5FF;14000601=1B63ABFF;14000701=090A0BFF;15000101=090A0BFF;15000201=090A0BFF;15000301=090A0BFF;15000401=090A0BFF;15000501=090A0BFF;15000601=090A0BFF;15000701=FFFFFF00;16000101=FFFFFF00;16000201=FFFFFF00;16000301=FFFFFF00;16000401=FFFFFF00;16000501=FFFFFF00;16000601=FFFFFF00;16000701=FFFFFF00"
 
@@ -434,28 +384,27 @@ function wedit.actions.WE_Schematic()
     if v.id == schematicID then
       schematic = v.copy
       storageSchematicKey = i
-      goto brk
+      break
     end
   end
-  ::brk::
 
-  if controller.validSelection() and schematicID and schematic then
-    local top = controller.selection[1][2] + schematic.size[2]
-    wedit.debugRenderer:drawRectangle(controller.selection[1], {controller.selection[1][1] + schematic.size[1], top}, "cyan")
+  if SelectionHelper.isValid() and schematicID and schematic then
+    local top = SelectionHelper.getStart()[2] + schematic.size[2]
+    debugRenderer:drawRectangle(SelectionHelper.getStart(), {SelectionHelper.getStart()[1] + schematic.size[1], top}, "cyan")
 
-    if top == controller.selection[2][2] then top = controller.selection[2][2] + 1 end
-    wedit.debugRenderer:drawText("^shadow;WEdit Schematic Paste Area", {controller.selection[1][1], top}, "cyan")
+    if top == SelectionHelper.getEnd()[2] then top = SelectionHelper.getEnd()[2] + 1 end
+    debugRenderer:drawText("^shadow;WEdit Schematic Paste Area", {SelectionHelper.getStart()[1], top}, "cyan")
   else
     controller.info("^shadow;^yellow;No schematic found! Did you delete it?", {0,-4})
   end
 
-  if controller.primaryFire and controller.validSelection() and not controller.fireLocked and schematic then
-    controller.fireLock()
+  if InputHelper.primary and SelectionHelper.isValid() and not InputHelper.isLocked() and schematic then
+    InputHelper.lock()
 
-    local position = {controller.selection[1][1], controller.selection[1][2]}
-    local backup = wedit.paste(schematic, position)
+    local position = {SelectionHelper.getStart()[1], SelectionHelper.getStart()[2]}
+    local backup = stamp.paste(schematic, position)
     if backup then table.insert(controller.backup, backup) end
-  elseif controller.altFire and not controller.fireLocked and schematic then
+  elseif InputHelper.alt and not InputHelper.isLocked() and schematic then
     storage.weditSchematics[storageSchematicKey] = nil
   end
 end
@@ -472,15 +421,16 @@ function wedit.actions.WE_Replace()
   controller.info("^shadow;^yellow;Replace Block: ^red;" .. controller.blockToString(fgTile) .. "^yellow; / ^red;" .. controller.blockToString(bgTile), {0,-4})
   controller.info("^shadow;^yellow;Replace With: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-5})
 
-  if not controller.shiftFireLocked and controller.validSelection() then
-    local layer = controller.primaryFire and "foreground" or controller.altFire and "background" or nil
+  if not InputHelper.isShiftLocked() and SelectionHelper.isValid() then
+    local layer = InputHelper.primary and "foreground" or InputHelper.alt and "background" or nil
     local tile = layer == "foreground" and fgTile or layer == "background" and bgTile or nil
-    if not tile and not controller.shiftHeld then return end -- To replace air, use fill tool.
+    if not tile and not InputHelper.shift then return end -- To replace air, use fill tool.
 
     if layer then
-      controller.shiftFireLock()
-      local backup = wedit.replace(controller.selection[1], controller.selection[2], layer, controller.selectedBlock, not controller.shiftHeld and tile)
-      if backup then table.insert(controller.backup, backup) end
+      InputHelper.shiftLock()
+      BlockHelper.replace(SelectionHelper.selection, layer, controller.selectedBlock, not InputHelper.shift and tile)
+      --local backup = wedit.replace(SelectionHelper.getStart(), SelectionHelper.getEnd(), layer, controller.selectedBlock, not InputHelper.shift and tile)
+      --if backup then table.insert(controller.backup, backup) end
     end
   end
 end
@@ -493,19 +443,19 @@ function wedit.actions.WE_Modifier()
   controller.info("^shadow;^yellow;Shift + Fire: Select mod.", {0,-3})
   controller.info("^shadow;^yellow;Current Mod: ^red;" .. controller.getSelectedMod() .. "^yellow;.", {0,-4})
 
-  wedit.debugRenderer:drawBlock(tech.aimPosition())
+  debugRenderer:drawBlock(tech.aimPosition())
 
-  if controller.shiftHeld then
-    if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
+  if InputHelper.shift then
+    if not InputHelper.isShiftLocked() and (InputHelper.primary or InputHelper.alt) then
       require "/interface/wedit/matmodPicker/matmodPickerLoader.lua"
       matmodPickerLoader.initializeConfig()
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", matmodPickerLoader.config)
-      controller.shiftFireLock()
+      InputHelper.shiftLock()
     end
-  elseif not controller.shiftFireLocked then
-    if controller.primaryFire then
+  elseif not InputHelper.isShiftLocked() then
+    if InputHelper.primary then
       wedit.placeMod(tech.aimPosition(), "foreground", controller.getSelectedMod())
-    elseif controller.altFire then
+    elseif InputHelper.alt then
       wedit.placeMod(tech.aimPosition(), "background", controller.getSelectedMod())
     end
   end
@@ -517,12 +467,12 @@ function wedit.actions.WE_ModRemover()
   controller.info("^shadow;^yellow;Primary Fire: Remove from foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Remove from background.", {0,-2})
 
-  wedit.debugRenderer:drawBlock(tech.aimPosition())
+  debugRenderer:drawBlock(tech.aimPosition())
 
-  if not controller.fireLocked then
-    if controller.primaryFire then
+  if not InputHelper.isLocked() then
+    if InputHelper.primary then
       wedit.removeMod(tech.aimPosition(), "foreground")
-    elseif controller.altFire then
+    elseif InputHelper.alt then
       wedit.removeMod(tech.aimPosition(), "background")
     end
   end
@@ -534,7 +484,7 @@ function wedit.actions.WE_ModPinner()
   controller.info("^shadow;^yellow;Primary Fire: Pin foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Pin background.", {0,-2})
 
-  wedit.debugRenderer:drawBlock(tech.aimPosition())
+  debugRenderer:drawBlock(tech.aimPosition())
 
   local fg, bg = world.mod(tech.aimPosition(), "foreground"), world.mod(tech.aimPosition(), "background")
   if fg then
@@ -548,10 +498,10 @@ function wedit.actions.WE_ModPinner()
     controller.info("^shadow;^yellow;Background Mod: ^red;None^yellow;.", {0,-4})
   end
 
-  if not controller.fireLocked then
-    if controller.primaryFire or controller.altFire then
-      controller.fireLock()
-      local mod = controller.primaryFire and fg or controller.altFire and bg
+  if not InputHelper.isLocked() then
+    if InputHelper.primary or InputHelper.alt then
+      InputHelper.lock()
+      local mod = InputHelper.primary and fg or InputHelper.alt and bg
       if not mod then return end
 
       local path = "/tiles/mods/"
@@ -581,11 +531,11 @@ function wedit.actions.WE_Mod()
   end
 
   local debugCallback = function(pos)
-    wedit.debugRenderer:drawBlock(pos)
+    debugRenderer:drawBlock(pos)
   end
 
-  local layer = controller.primaryFire and "foreground" or
-    controller.altFire and "background" or nil
+  local layer = InputHelper.primary and "foreground" or
+    InputHelper.alt and "background" or nil
 
   local callback
   if controller.selectedBlock ~= nil and layer then
@@ -598,9 +548,9 @@ function wedit.actions.WE_Mod()
   end
 
   if wedit.getUserConfigData("brushShape") == "square" then
-    wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), nil, callback)
+    shapes.rectangle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), nil, callback)
   elseif wedit.getUserConfigData("brushShape") == "circle" then
-    wedit.circle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), callback)
+    shapes.circle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), callback)
   end
 end
 
@@ -617,8 +567,8 @@ function wedit.actions.WE_Ruler()
   local line = controller.lineSelection
 
   -- Draw line
-  if not wedit.ruler.selecting and controller.shiftHeld and controller.primaryFire and not controller.shiftFireLocked then
-    controller.shiftFireLock()
+  if not wedit.ruler.selecting and InputHelper.shift and InputHelper.primary and not InputHelper.isShiftLocked() then
+    InputHelper.shiftLock()
 
     -- Set first point
     line[1] = tech.aimPosition()
@@ -646,17 +596,17 @@ function wedit.actions.WE_Ruler()
   end
 
   -- Fill / Clear line
-  if not controller.shiftFireLocked and not wedit.ruler.selecting then
-    if controller.shiftHeld and controller.altFire then
+  if not InputHelper.isShiftLocked() and not wedit.ruler.selecting then
+    if InputHelper.shift and InputHelper.alt then
       -- Clear line
-      controller.shiftFireLock()
+      InputHelper.shiftLock()
       controller.lineSelection = {{},{}}
-    elseif not controller.shiftHeld then
+    elseif not InputHelper.shift then
       -- Fill line
-      local layer = controller.primaryFire and "foreground" or controller.altFire and "background" or nil
+      local layer = InputHelper.primary and "foreground" or InputHelper.alt and "background" or nil
       if layer and controller.validLine() then
-        controller.shiftFireLock()
-        wedit.line(line[1], line[2], controller.primaryFire and "foreground" or "background", controller.selectedBlockToString())
+        InputHelper.shiftLock()
+        wedit.line(line[1], line[2], InputHelper.primary and "foreground" or "background", controller.selectedBlockToString())
       end
     end
   end
@@ -664,7 +614,7 @@ function wedit.actions.WE_Ruler()
   -- Draw information
   if controller.validLine() then
     -- Draw boxes around every block in the current selection.
-    wedit.bresenham(line[1], line[2],
+    shapes.line(line[1], line[2],
     function(x, y)
       world.debugLine({x, y}, {x + 1, y}, "green")
       world.debugLine({x, y + 1}, {x + 1, y + 1}, "green")
@@ -684,9 +634,9 @@ function wedit.actions.WE_Dehydrator()
   controller.info("^shadow;^orange;WEdit: Dehydrator")
   controller.info("^shadow;^yellow;Primary Fire: Dehydrate selection.", {0,-1})
 
-  if not controller.fireLocked and controller.primaryFire and controller.validSelection() then
-    controller.fireLock()
-    wedit.drain(controller.selection[1], controller.selection[2])
+  if not InputHelper.isLocked() and InputHelper.primary and SelectionHelper.isValid() then
+    InputHelper.lock()
+    wedit.drain(SelectionHelper.getStart(), SelectionHelper.getEnd())
   end
 end
 
@@ -697,38 +647,31 @@ function wedit.actions.WE_Hydrator()
   controller.info("^shadow;^yellow;Alt Fire: Select liquid.", {0,-2})
   controller.info("^shadow;^yellow;Current Liquid: ^red;" .. controller.liquid.name .. "^yellow;.", {0,-3})
 
-  if not controller.fireLocked then
-    if controller.primaryFire and controller.validSelection() then
-      wedit.hydrate(controller.selection[1], controller.selection[2], controller.liquid.liquidId)
-      controller.fireLock()
-    elseif controller.altFire then
+  if not InputHelper.isLocked() then
+    if InputHelper.primary and SelectionHelper.isValid() then
+      wedit.hydrate(SelectionHelper.getStart(), SelectionHelper.getEnd(), controller.liquid.liquidId)
+      InputHelper.lock()
+    elseif InputHelper.alt then
       require "/interface/wedit/liquidPicker/liquidPickerLoader.lua"
       liquidPickerLoader.initializeConfig()
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", liquidPickerLoader.config)
-      controller.fireLock()
+      InputHelper.lock()
     end
   end
 end
 
 --- Function to obtain all WEdit Tools.
--- Uses controller.colors to color the names and descriptions of the tools.
 function wedit.actions.WE_ItemBox()
   controller.info("^shadow;^orange;WEdit: Item Box")
   controller.info("^shadow;^yellow;Primary Fire: Spawn Tools.", {0,-1})
 
-  if not controller.fireLocked and controller.primaryFire then
-    controller.fireLock()
+  if not InputHelper.isLocked() and InputHelper.primary then
+    InputHelper.lock()
 
     local items = root.assetJson("/wedit/items.json")
 
     for i=1,#items do
       local item = items[i]
-      if item.parameters.category then
-        item.parameters.category = item.parameters.category:gsub("%^orange;", controller.colors[1])
-      end
-      if item.parameters.description then
-        item.parameters.description = item.parameters.description:gsub("%^yellow;", controller.colors[2])
-      end
       world.spawnItem(item, mcontroller.position())
     end
   end
@@ -741,28 +684,28 @@ function wedit.actions.WE_Dye()
   controller.info("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
   controller.info("^shadow;^yellow;Shift + Fire: Open Dye Picker.", {0,-3})
 
-  local layer = controller.primaryFire and "foreground" or
-    controller.altFire and "background" or nil
+  local layer = InputHelper.primary and "foreground" or
+    InputHelper.alt and "background" or nil
 
   local colorIndex = dyePickerUtil.getColorIndex(dyePickerUtil.getSerializedColor()) or 0
 
-  if controller.shiftHeld then
-    if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
+  if InputHelper.shift then
+    if not InputHelper.isShiftLocked() and (InputHelper.primary or InputHelper.alt) then
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/dyePicker/dyePicker.config")
-      controller.shiftFireLock()
+      InputHelper.shiftLock()
     end
-  elseif not controller.shiftFireLocked then
+  elseif not InputHelper.isShiftLocked() then
     local callback = function(pos)
-        wedit.debugRenderer:drawBlock(pos)
+        debugRenderer:drawBlock(pos)
         if layer then
           wedit.dye(pos, layer, colorIndex)
         end
     end
 
     if wedit.getUserConfigData("brushShape") == "square" then
-      wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
+      shapes.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
     elseif wedit.getUserConfigData("brushShape") == "circle" then
-      wedit.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
+      shapes.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
     end
   end
 end
@@ -775,10 +718,10 @@ function wedit.actions.WE_Calibrate()
 
   local aimPos = tech.aimPosition()
 
-  wedit.debugRenderer:drawBlock(aimPos, "green")
+  debugRenderer:drawBlock(aimPos, "green")
 
-  if not controller.fireLocked and controller.primaryFire then
-    controller.fireLock()
+  if not InputHelper.isLocked() and InputHelper.primary then
+    InputHelper.lock()
     wedit.calibrate(aimPos)
   end
 end

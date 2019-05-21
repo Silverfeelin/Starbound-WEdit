@@ -8,15 +8,17 @@
 
 require "/scripts/vec2.lua"
 
-DebugRenderer = {}
+local DebugRenderer = {}
+module = DebugRenderer
+
 DebugRenderer.__index = DebugRenderer
 DebugRenderer.defaultColor = "green"
 
 --- Instantiates a new debug renderer.
 -- @return Debug renderer.
-function DebugRenderer.new()
-  local instance = {}
-  setmetatable(instance, DebugRenderer)
+function DebugRenderer:new()
+  local instance = { enabled = true }
+  setmetatable(instance, self)
   return instance
 end
 
@@ -25,8 +27,9 @@ end
 -- @param p2 Top right world position {x, y}.
 -- @param[opt="green"] color Line color. String or {r,g,b}.
 function DebugRenderer:drawRectangle(p1, p2, color)
+  if not self.enabled then return end
   color = color or self.defaultColor
-  x1, y1, x2, y2 = math.floor(p1[1]), math.floor(p1[2]), math.ceil(p2[1]), math.ceil(p2[2])
+  x1, y1, x2, y2 = math.floor(p1[1]), math.floor(p1[2]), math.ceil(p2[1]) + 1, math.ceil(p2[2]) + 1
   self:drawLine({x1, y2}, {x2, y2}, color) -- top edge
   self:drawLine({x1, y1}, {x1, y2}, color) -- left edge
   self:drawLine({x2, y1}, {x2, y2}, color) -- right edge
@@ -37,6 +40,7 @@ end
 -- @param p Block world position {x, y}.
 -- @param[opt="green"] color Line color. String or {r,g,b}.
 function DebugRenderer:drawBlock(p, color)
+  if not self.enabled then return end
   color = color or self.defaultColor
   local x1, y1 = math.floor(p[1]), math.floor(p[2])
   self:drawRectangle({x1, y1}, {x1 + 1, y1 + 1}, color)
@@ -47,6 +51,7 @@ end
 -- @param p2 Second world position {x, y}.
 -- @param[opt="green"] color Line color. String or {r,g,b}.
 function DebugRenderer:drawLine(p1, p2, color)
+  if not self.enabled then return end
   color = color or self.defaultColor
   world.debugLine(p1, p2, color)
 end
@@ -56,6 +61,7 @@ end
 -- @param p World position.
 -- @param[opt="green"] color Text color. String or {r,g,b}.
 function DebugRenderer:drawText(text, p, color)
+  if not self.enabled then return end
   color = color or self.defaultColor
   world.debugText(text, p, color)
 end
@@ -65,8 +71,12 @@ end
 -- @param offset Offset from the player position.
 -- @parm[opt="green"] color Text color. String or {r,g,b}.
 function DebugRenderer:drawPlayerText(text, offset, color)
+  if not self.enabled then return end
   color = color or self.defaultColor
   offset = offset or {0, 0}
   local p = vec2.add(mcontroller.position(), offset)
   world.debugText(text, p, color)
 end
+
+-- Shared instance
+DebugRenderer.instance = DebugRenderer:new()
