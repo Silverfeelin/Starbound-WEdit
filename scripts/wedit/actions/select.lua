@@ -1,7 +1,8 @@
-local controller = include("/scripts/wedit/controller.lua")
+local Rectangle = include("/scripts/wedit/objects/shapes/rectangle.lua")
+
+local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
 local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")
-local Rectangle = include("/scripts/wedit/objects/shapes/rectangle.lua")
 
 local data = {
   selection = {{},{}},
@@ -9,25 +10,26 @@ local data = {
 }
 
 local function Select()
-  controller.info("^shadow;^orange;WEdit: Selection Tool")
+  DebugRenderer.info:drawPlayerText("^shadow;^orange;WEdit: Selection Tool")
 
   if SelectionHelper.isValid() then
-    controller.info("^shadow;^yellow;Alt Fire: Remove selection.", {0,-2})
+    DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: Remove selection.", {0,-2})
     local w, h = SelectionHelper.getEnd()[1] - SelectionHelper.getStart()[1], SelectionHelper.getEnd()[2] - SelectionHelper.getStart()[2]
-    controller.info(string.format("^shadow;^yellow;Current Selection: ^red;(%sx%s)^yellow;.", w, h), {0,-3})
+    DebugRenderer.info:drawPlayerText(string.format("^shadow;^yellow;Current Selection: ^red;(%sx%s)^yellow;.", w, h), {0,-3})
   end
 
   -- RMB resets selection entirely
   if not InputHelper.isLocked() and InputHelper.alt then
     InputHelper.lock();
     data.stage = 0
-    SelectionHelper.clearSelection()
+    SelectionHelper.clear()
     return
   end
 
   if data.stage == 0 then
     -- Select stage 0: Not selecting.
-    controller.info("^shadow;^yellow;Primary Fire: Select area.", {0,-1})
+    DebugRenderer.info:drawPlayerText("^shadow;^yellow;Primary Fire: Select area.", {0,-1})
+    DebugRenderer.instance:drawBlock(tech.aimPosition())
 
     if InputHelper.primary and not InputHelper.isLocked() then
       -- Start selection; set first point.
@@ -39,7 +41,7 @@ local function Select()
 
   if data.stage == 1 then
     -- Select stage 1: Selection started.
-    controller.info("^shadow;^yellow;Drag mouse and let go to select an area.", {0,-1})
+    DebugRenderer.info:drawPlayerText("^shadow;^yellow;Drag mouse and let go to select an area.", {0,-1})
 
     if not InputHelper.primary then
       data.stage = 0
@@ -62,7 +64,7 @@ local function Select()
      math.floor(math.max(data.rawSelection[1][2], data.rawSelection[2][2]))
     }
 
-    SelectionHelper.setSelection(Rectangle:create(bottomLeft, topRight))
+    SelectionHelper.set(Rectangle:create(bottomLeft, topRight))
     return
   end
 

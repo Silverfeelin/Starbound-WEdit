@@ -32,7 +32,7 @@ local PositionLocker = include("/scripts/wedit/helpers/positionLocker.lua")
 local Logger = include("/scripts/wedit/helpers/logger.lua")
 
 local shapes = include("/scripts/wedit/shapes.lua")
-local stamp = include("/scripts/wedit/helpers/stamp.lua")
+local StampHelper = include("/scripts/wedit/helpers/stampHelper.lua")
 local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
 
 local cfg = {}
@@ -41,7 +41,7 @@ function wedit.init()
   -- Load config
   cfg = root.assetJson("/scripts/wedit/wedit.config")
 
-  wedit.default = wedit.getConfigData("defaultConfig")
+  wedit.default = wedit.getConfigData("defaultConfig") or {}
   wedit.user = wedit.user or {}
 
   ---  Mods that require breaking the tile to remove them.
@@ -52,12 +52,9 @@ function wedit.init()
   wedit.positionLocker = PositionLocker.new()
   wedit.logger = Logger.new("WEdit: ", "^cyan;WEdit ")
   wedit.taskManager = TaskManager.instance
-
-  wedit.liquidNames = {}
 end
 
 function wedit.update(...)
-  wedit.taskManager:update()
   wedit.logger:setLogMap("Tasks", string.format("(%s) running.", wedit.taskManager:count()))
 end
 
@@ -72,15 +69,6 @@ function wedit.getUserConfigData(key)
     wedit.logger:logError("The configuration key '%s' does not exist!", k)
   end
   return v
-end
-
----  Draws debug text below the user's character, or with an offset relative to it.
--- @param str Text to draw.
--- @param[opt={0,0}] offset {x,y} Offset relative to the feet of the player's character.
-function wedit.info(str, offset)
-  if type(offset) == "nil" then offset = {0,0} end
-  if wedit.getUserConfigData("lineSpacing") and wedit.getUserConfigData("lineSpacing") ~= 1 then offset[2] = offset[2] * wedit.getUserConfigData("lineSpacing") end
-  debugRenderer:drawText(str, {mcontroller.position()[1] + offset[1], mcontroller.position()[2] - 3 + offset[2]})
 end
 
 --- Returns a copy of the given {x,y} point.
@@ -144,7 +132,7 @@ function wedit.fillBlocks(bottomLeft, topRight, layer, block)
   }
   copyOptions[layer] = true
 
-  local copy = stamp.copy(bottomLeft, topRight, copyOptions)
+  local copy = StampHelper.copy(bottomLeft, topRight, copyOptions)
 
   local rect = Rectangle:create(bottomLeft, topRight)
   BlockHelper.fill(rect, layer, block)
@@ -161,7 +149,7 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
   copyOptions[layer] = true
   copyOptions[layer .. "Mods"] = true
 
-  local copy = stamp.copy(bottomLeft, topRight, copyOptions)
+  local copy = StampHelper.copy(bottomLeft, topRight, copyOptions)
 
   local rect = Rectangle:create(bottomLeft, topRight)
   BlockHelper.clear(rect, layer)
@@ -176,60 +164,6 @@ end
 -- Counting up from 0: none, red, blue, green, yellow, orange, pink, black, white.
 function wedit.dye(pos, layer, colorIndex)
   world.setMaterialColor(pos, layer, colorIndex or 0)
-end
-
---- Flips a copy horizontally or vertically.
--- Does not work well on objects when flipping vertically.
--- @param copy Copy to flip. Materials, mods, liquids and objects are flipped.
--- @param direction horizontal or vertical.
--- @return Copy. Note: Same as first parameter. The object is directly modified.
-function wedit.flip(copy, direction)
-  direction = direction:lower()
-
-  if direction == "horizontal" then
-    -- Flip blocks horizontally
-    for i=1, math.floor(#copy.blocks / 2) do
-      for j,v in ipairs(copy.blocks[i]) do
-        v.offset[1] = copy.size[1] - i
-      end
-      for j,v in ipairs(copy.blocks[#copy.blocks - i + 1]) do
-        v.offset[1] = i - 1
-      end
-      copy.blocks[i], copy.blocks[#copy.blocks - i + 1] = copy.blocks[#copy.blocks - i + 1], copy.blocks[i]
-    end
-
-    -- Flip objects horizontally
-    for i,v in ipairs(copy.objects) do
-      v.offset[1] = copy.size[1] - v.offset[1]
-      if v.parameters and v.parameters.direction then
-        v.parameters.direction = v.parameters.direction == "right" and "left" or "right"
-      end
-    end
-
-    copy.flipX = not copy.flipX
-  elseif direction == "vertical" then
-    for _,w in ipairs(copy.blocks) do
-      for i=1, math.floor(#w / 2) do
-        for j,v in ipairs(w[i]) do
-          v.offset[1] = copy.size[1] - i
-        end
-        for j,v in ipairs(w[#w- i + 1]) do
-          v.offset[1] = i - 1
-        end
-        w[i], w[#w- i + 1] = w[#w - i + 1], w[i]
-      end
-    end
-
-    for i,v in ipairs(copy.objects) do
-      v.offset[2] = copy.size[2] - v.offset[2]
-    end
-
-    copy.flipY = not copy.flipY
-  else
-    wedit.logger:logInfo("Could not flip copy in direction '" .. direction .. "'.")
-  end
-
-  return copy
 end
 
 --- Applies a mod to the block.
@@ -371,15 +305,4 @@ function wedit.line(startPos, endPos, layer, block)
   else
     shapes.line(startPos, endPos, function(x, y) world.damageTiles({{x,y}}, layer, {x,y}, "blockish", 9999, 0) end)
   end
-end
-
-function wedit.liquidName(liquidId)
-  if not wedit.liquidNames[liquidId] then
-    local cfg = root.liquidConfig(liquidId)
-    if cfg then
-      wedit.liquidNames[liquidId] = cfg.config.name
-    end
-  end
-
-  return wedit.liquidNames[liquidId]
 end

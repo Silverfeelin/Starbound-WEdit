@@ -1,13 +1,8 @@
+require "/scripts/vec2.lua"
+require "/scripts/wedit/libs/scriptHooks.lua"
+
 --- Debug renderers can be used to render lines, points and text on the world.
 -- Each rendered element lasts one frame.
---
--- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
-
-require "/scripts/vec2.lua"
-
 local DebugRenderer = {}
 module = DebugRenderer
 
@@ -73,10 +68,23 @@ end
 function DebugRenderer:drawPlayerText(text, offset, color)
   if not self.enabled then return end
   color = color or self.defaultColor
+
   offset = offset or {0, 0}
-  local p = vec2.add(mcontroller.position(), offset)
-  world.debugText(text, p, color)
+  local lineSpacing = status.statusProperty("wedit.info.lineSpacing") or 1
+  offset[2] = offset[2] * lineSpacing
+
+  local pos = vec2.add(mcontroller.position(), {0, -3})
+  pos = vec2.add(pos, offset)
+  world.debugText(text, pos, color)
 end
 
 -- Shared instance
 DebugRenderer.instance = DebugRenderer:new()
+DebugRenderer.info = DebugRenderer:new()
+
+hook("init", function()
+  message.setHandler("wedit.showInfo", localHandler(function(enabled)
+    DebugRenderer.info.enabled = enabled
+    status.setStatusProperty("wedit.showingInfo", bool)
+  end))
+end)

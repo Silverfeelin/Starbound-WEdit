@@ -59,6 +59,14 @@ function Rectangle:outline()
   end)
 end
 
+function Rectangle:getStart()
+  return self.bl
+end
+
+function Rectangle:getEnd()
+  return self.tr
+end
+
 --[[
 local db = DebugRenderer.new()
 

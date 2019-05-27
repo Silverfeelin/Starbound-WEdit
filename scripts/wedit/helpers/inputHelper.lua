@@ -1,7 +1,9 @@
+require "/scripts/wedit/libs/scriptHooks.lua"
+
 local InputHelper = {}
 module = InputHelper
 
-function InputHelper.update(args)
+hook("update", function(args)
   InputHelper.primary = args.moves.primaryFire
   InputHelper.alt = args.moves.altFire
   InputHelper.shift = not args.moves.run
@@ -15,7 +17,7 @@ function InputHelper.update(args)
   if InputHelper.shiftLocked and not InputHelper.shift and not InputHelper.primary and not InputHelper.alt then
     InputHelper.shiftUnlock()
   end
-end
+end)
 
 function InputHelper.lock() InputHelper.locked = true end
 function InputHelper.shiftLock() InputHelper.shiftLocked = true; InputHelper.lock() end

@@ -1,10 +1,4 @@
 --- Loggers can be used to log information with a prefix or write information to the log map.
---
--- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
-
 Logger = {}
 Logger.__index = Logger
 module = Logger
@@ -62,3 +56,5 @@ function Logger:setLogMap(key, value)
   key = self.mapPrefix .. key
   sb.setLogMap(key, value)
 end
+
+Logger.instance = Logger.new("WEdit: ", "^cyan;WEdit ")

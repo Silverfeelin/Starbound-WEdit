@@ -17,5 +17,5 @@ function uninit()
 end
 
 function pickMaterial(w, data)
-  world.sendEntityMessage(player.id(), "wedit.updateColor", data)
+  world.sendEntityMessage(player.id(), "wedit.setMaterial", data)
 end

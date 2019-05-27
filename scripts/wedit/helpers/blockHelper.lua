@@ -1,6 +1,4 @@
-local Task = include("/scripts/wedit/objects/task.lua")
 local HueshiftHelper = include("/scripts/wedit/helpers/hueshiftHelper.lua")
-local stamp = include("/scripts/wedit/helpers/stamp.lua")
 local positionLocker = include("/scripts/wedit/helpers/positionLocker.lua").instance
 local taskManager = include("/scripts/wedit/helpers/taskManager.lua").instance
 
@@ -25,7 +23,7 @@ function BlockHelper.place(pos, layer, block, hueshift)
   hueshift = hueshift or HueshiftHelper.neighbor(pos, layer, block) or 0
   local mod = world.mod(pos, layer)
 
-  taskManager:startNew(function()
+  return taskManager:startNew(function()
     -- Remove old block
     if not block or old then
       -- TODO: Force break (i.e. grass fails on one damage tick).
@@ -63,6 +61,7 @@ function BlockHelper.fill(shape, layer, block)
 end
 
 function BlockHelper.replace(shape, layer, block, fromBlock)
+  local tasks = {}
   for p in shape:each() do
     local mat = world.material(p, layer)
 
@@ -71,14 +70,16 @@ function BlockHelper.replace(shape, layer, block, fromBlock)
     if fromBlock and mat ~= fromBlock then goto continue end
 
     -- Replace
-    taskManager:startNew(function()
+    local task = taskManager:startNew(function()
       BlockHelper.remove(p, layer)
       util.waitFor(function() return not world.material(p, layer) end)
       BlockHelper.place(p, layer, block)
     end)
+    table.insert(tasks, task)
 
     ::continue::
   end
+  return tasks
 end
 
 function BlockHelper.clear(shape, layer)
