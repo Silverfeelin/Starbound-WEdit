@@ -1,5 +1,6 @@
 local BackupHelper = include("/scripts/wedit/helpers/backupHelper.lua")
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
+local ItemHelper = include("/scripts/wedit/helpers/itemHelper.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
 local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")
 local StampHelper = include("/scripts/wedit/helpers/stampHelper.lua")
@@ -13,8 +14,8 @@ local function Schematic()
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
 
   if not storage.weditSchematics then return end
-
-  local schematicID = controller.itemData and controller.itemData.schematicID
+  local itemData = ItemHelper.getItemData()
+  local schematicID = itemData and itemData.schematicID
   local schematic
   local storageSchematicKey
 
@@ -27,11 +28,11 @@ local function Schematic()
   end
 
   if SelectionHelper.isValid() and schematicID and schematic then
-    local top = SelectionHelper.getStart()[2] + schematic.size[2]
-    DebugRenderer.instance:drawRectangle(SelectionHelper.getStart(), {SelectionHelper.getStart()[1] + schematic.size[1], top}, "cyan")
+    local top = SelectionHelper.getStart()[2] + schematic.size[2] - 1
+    DebugRenderer.instance:drawRectangle(SelectionHelper.getStart(), {SelectionHelper.getStart()[1] + schematic.size[1] - 1, top}, "cyan")
 
     if top == SelectionHelper.getEnd()[2] then top = SelectionHelper.getEnd()[2] + 1 end
-    DebugRenderer.instance:drawText("^shadow;WEdit Schematic Paste Area", {SelectionHelper.getStart()[1], top}, "cyan")
+    DebugRenderer.instance:drawText("^shadow;WEdit Schematic Paste Area", {SelectionHelper.getStart()[1], top + 1}, "cyan")
   else
     DebugRenderer.info:drawPlayerText("^shadow;^yellow;No schematic found! Did you delete it?", {0,-4})
   end
