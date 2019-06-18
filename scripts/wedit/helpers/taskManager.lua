@@ -1,7 +1,10 @@
+require "/scripts/wedit/libs/scriptHooks.lua"
+
+local Task = include("/scripts/wedit/objects/task.lua")
+local Logger = include("/scripts/wedit/helpers/logger.lua")
+
 --- Manager class that tracks an indefinite amount of task objects.
 -- All task objects are updated when the manager is updated.
-local Task = include("/scripts/wedit/objects/task.lua")
-
 local TaskManager = {}
 TaskManager.__index = TaskManager
 module = TaskManager
@@ -63,3 +66,8 @@ end
 
 -- Shared instance
 TaskManager.instance = TaskManager:new()
+
+hook("update", function()
+  TaskManager.instance:update()
+  Logger.instance:setLogMap("Tasks", string.format("(%s) running.", TaskManager.instance:count()))
+end)

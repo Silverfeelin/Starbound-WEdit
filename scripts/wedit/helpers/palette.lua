@@ -1,3 +1,5 @@
+require "/scripts/wedit/libs/scriptHooks.lua"
+
 local Palette = {
   material = "dirt",
   mod = "grass",
@@ -16,7 +18,7 @@ function Palette.getMaterial()
 end
 
 function Palette.getMaterialName(mat)
-  if not mat then mat = Palette.material end
+  if mat == nil then mat = Palette.material end
   return mat or mat == nil and "none" or mat == false and "air"
 end
 
@@ -55,3 +57,9 @@ function Palette.setLiquid(liquid)
 end
 
 -- #endregion
+
+hook("init", function()
+  message.setHandler("wedit.setMaterial", localHandler(Palette.setMaterial))
+  message.setHandler("wedit.updateLiquid", localHandler(Palette.setLiquid))
+  message.setHandler("wedit.updateMatmod", localHandler(Palette.setMod))
+end)

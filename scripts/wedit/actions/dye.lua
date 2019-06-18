@@ -1,3 +1,6 @@
+require "/interface/wedit/huePicker/huePickerUtil.lua"
+
+local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
 local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")

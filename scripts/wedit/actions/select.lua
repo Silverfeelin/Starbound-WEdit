@@ -15,7 +15,7 @@ local function Select()
   if SelectionHelper.isValid() then
     DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: Remove selection.", {0,-2})
     local w, h = SelectionHelper.getEnd()[1] - SelectionHelper.getStart()[1], SelectionHelper.getEnd()[2] - SelectionHelper.getStart()[2]
-    DebugRenderer.info:drawPlayerText(string.format("^shadow;^yellow;Current Selection: ^red;(%sx%s)^yellow;.", w, h), {0,-3})
+    DebugRenderer.info:drawPlayerText(string.format("^shadow;^yellow;Current Selection: (^red;%s^yellow;x^red;%s^yellow;).", w, h), {0,-3})
   end
 
   -- RMB resets selection entirely

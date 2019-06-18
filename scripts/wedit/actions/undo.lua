@@ -17,8 +17,8 @@ local function Undo()
 
   -- Show undo area.
   local backup = BackupHelper.peek()
-  local top = backup.origin[2] + backup.size[2] - 1
-  if SelectionHelper.isValid() and math.floor(SelectionHelper.getEnd()[2]) == math.floor(top) then top = top + 1 end
+  local top = backup.origin[2] + backup.size[2] - 2
+  if SelectionHelper.isValid() and math.floor(SelectionHelper.getEnd()[2]) == math.floor(top) then top = top - 1 end
   DebugRenderer.instance:drawText("^shadow;WEdit Undo Position", {backup.origin[1], top + 1}, "#FFBF87")
   DebugRenderer.instance:drawRectangle(backup.origin, {backup.origin[1] + backup.size[1] - 1, backup.origin[2] + backup.size[2] - 1}, "#FFBF87")
 

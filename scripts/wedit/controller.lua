@@ -1,28 +1,17 @@
 --- WEdit controller (https://github.com/Silverfeelin/Starbound-WEdit)
--- Handles input and executes actions.
---
--- LICENSE
--- This file falls under an MIT License, which is part of this project.
--- An online copy can be viewed via the following link:
--- https://github.com/Silverfeelin/Starbound-WEdit/blob/master/LICENSE
+-- Executes actions.
 
 wedit = wedit or {}
-wedit.actions = wedit.actions or {}
 wedit.user = wedit.user or {}
 wedit.default = wedit.default or {}
 
--- Load dependencies
-require "/scripts/wedit/libs/keybinds.lua"
-require "/scripts/messageutil.lua"
--- Core library
-require "/scripts/wedit/wedit.lua"
 require "/scripts/wedit/libs/include.lua"
+require "/scripts/messageutil.lua"
+require "/scripts/wedit/libs/scriptHooks.lua"
 
-local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
-local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
-local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")
-local Palette = include("/scripts/wedit/helpers/palette.lua")
-local Logger = include("/scripts/wedit/helpers/logger.lua")
+include("/scripts/wedit/wedit.lua")
+local Actions = include("/scripts/wedit/actions.lua")
+local ItemHelper = include("/scripts/wedit/helpers/itemHelper.lua")
 
 local controller = {}
 module = controller
@@ -66,15 +55,6 @@ function controller.updateUserConfig()
   for k,v in pairs(cfg) do
     wedit.user[k] = v
   end
-
-  if controller.noclipBind then
-    if cfg.noclipBind == "" then
-      controller.noclipBind:unbind()
-    else
-      controller.noclipBind:rebind()
-      controller.noclipBind:change(cfg.noclipBind)
-    end
-  end
 end
 
 -- #endregion
@@ -95,8 +75,6 @@ function controller.init()
   -- Table used to store the current line selection coordinates.
   -- [1] Starting point, [2] Ending point.
   controller.lineSelection = {{},{}}
-  -- Table used to store copies of areas prior to commands such as fill.
-  controller.backup = {}
 
   -- Load config once while still initializing.
   controller.updateUserConfig()
@@ -104,9 +82,6 @@ function controller.init()
   -- #region Message Handlers
 
   message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfig))
-  message.setHandler("wedit.setMaterial", localHandler(Palette.setMaterial))
-  message.setHandler("wedit.updateLiquid", localHandler(Palette.setLiquid))
-  message.setHandler("wedit.updateMatmod", localHandler(Palette.setMod))
 
   -- #endregion
 
@@ -120,15 +95,15 @@ function controller.update(args)
   local action = nil
   if primaryItem and primaryItem.parameters and primaryItem.parameters.shortdescription then action = primaryItem.parameters.shortdescription end
 
-  if action and wedit.actions[action] then
-    controller.itemData = primaryItem.parameters.wedit
+  if action and Actions[action] then
+    ItemHelper.setItemData(primaryItem.parameters.wedit)
 
     -- Determine action for the all in one tool using the compact interface.
     if action == "WE_AllInOne" and status.statusProperty("wedit.compact.open") then
       action = status.statusProperty("wedit.compact.action", "WE_Select")
     end
 
-    controller.executeAction(wedit.actions[action])
+    controller.executeAction(Actions[action])
   end
 end
 
@@ -146,7 +121,12 @@ end
 
 function controller.executeAction(m)
   -- TODO: Remove and call m.action directly once all actions have been ported.
+  if not m then return end
   if type(m) == "function" then m() else m.action() end
 end
 
 -- #endregion
+
+hook("init", controller.init)
+hook("update", controller.update)
+hook("uninit", controller.uninit)
