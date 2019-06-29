@@ -23,8 +23,7 @@ local function SchematicMaker()
 
   local params = ItemHelper.oreParameters("WE_Schematic", "^yellow;Primary Fire: Paste Schematic.", "^orange;WEdit: Schematic " .. schematicID, icon, "essential")
   params.wedit = { schematicID = schematicID }
-
-  world.spawnItem("triangliumore", mcontroller.position(), 1, params)
+  ItemHelper.spawnOre(params)
 end
 
 module = {

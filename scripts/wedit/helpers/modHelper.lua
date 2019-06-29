@@ -8,8 +8,6 @@ local Config = include("/scripts/wedit/helpers/config.lua")
 local ModHelper = {}
 module = ModHelper
 
-ModHelper.breakMods = set.new(Config.fromFile("/scripts/wedit/wedit.config", true).data.breakMods)
-
 function ModHelper.place(pos, layer, mod)
   world.placeMod(pos, layer, mod, nil, false)
 end
@@ -49,3 +47,7 @@ function ModHelper.clear(shape, layer)
 end
 
 -- #endregion
+
+hook("init", function()
+  ModHelper.breakMods = set.new(Config.fromFile("/scripts/wedit/wedit.config", true).data.breakMods)
+end)

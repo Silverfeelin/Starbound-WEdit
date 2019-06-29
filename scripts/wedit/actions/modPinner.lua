@@ -27,7 +27,7 @@ local function ModPinner()
     local params = ItemHelper.oreParameters("WE_Mod", "^yellow;Primary Fire: Modify foreground.\nAlt Fire: Modify background.", "^orange;WEdit: " .. mod .. " MatMod", icon, "essential")
     params.wedit = { mod = mod }
 
-    world.spawnItem("triangliumore", mcontroller.position(), 1, params)
+    ItemHelper.spawnOre(params)
   end
 end
 

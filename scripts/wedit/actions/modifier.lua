@@ -1,5 +1,6 @@
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
+local ModHelper = include("/scripts/wedit/helpers/modHelper.lua")
 local Palette = include("/scripts/wedit/helpers/palette.lua")
 
 local function Modifier()
@@ -22,9 +23,9 @@ local function Modifier()
     end
   elseif not InputHelper.isShiftLocked() then
     if InputHelper.primary then
-      wedit.placeMod(tech.aimPosition(), "foreground", mod)
+      ModHelper.place(tech.aimPosition(), "foreground", mod)
     elseif InputHelper.alt then
-      wedit.placeMod(tech.aimPosition(), "background", mod)
+      ModHelper.place(tech.aimPosition(), "background", mod)
     end
   end
 end

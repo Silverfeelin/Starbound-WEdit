@@ -1,65 +1,13 @@
---- WEdit controller (https://github.com/Silverfeelin/Starbound-WEdit)
--- Executes actions.
-
-wedit = wedit or {}
-wedit.user = wedit.user or {}
-wedit.default = wedit.default or {}
-
 require "/scripts/wedit/libs/include.lua"
 require "/scripts/messageutil.lua"
 require "/scripts/wedit/libs/scriptHooks.lua"
 
-include("/scripts/wedit/wedit.lua")
 local Actions = include("/scripts/wedit/actions.lua")
 local ItemHelper = include("/scripts/wedit/helpers/itemHelper.lua")
+local Config = include("/scripts/wedit/helpers/config.lua")
 
 local controller = {}
 module = controller
-
---- Sets a value under the "wedit" status property.
--- @param key wedit table key.
--- @param value Property value.
--- @see controller.getUserConfig
-function controller.setUserConfig(key, value)
-  local cfg = status.statusProperty("wedit") or {}
-  cfg[key] = value
-  status.setStatusProperty("wedit", cfg)
-end
-
---- Gets a value under the "wedit" status property.
--- @param key wedit table key.
--- @see controller.setUserConfig
-function controller.getUserConfig(key)
-  local cfg = status.statusProperty("wedit") or {}
-  return key == nil and cfg or cfg[key]
-end
-
--- #region Useful functions
-
-function controller.validLine()
-  local line = controller.lineSelection
-  if not line then return false end
-  return not not (line[1] and line[1][1] and line[2] and line[2][1])
-end
-
---- Updates the wedit.user configuration
--- Clears schematics if requested.
--- @see wedit.user
-function controller.updateUserConfig()
-    -- Load config data
-  local cfg = controller.getUserConfig()
-
-  for k in pairs(wedit.user) do
-    wedit.user[k] = nil
-  end
-  for k,v in pairs(cfg) do
-    wedit.user[k] = v
-  end
-end
-
--- #endregion
-
--- #region Script Callbacks
 
 function controller.init()
   -- Failsafe: If the interface was somehow marked open on init, this ensures it's marked closed. Otherwise it could become impossible to open it again.
@@ -70,25 +18,11 @@ function controller.init()
   status.setStatusProperty("wedit.matmodPicker.open", nil)
   status.setStatusProperty("wedit.materialPicker.open", nil)
 
-  -- Number used by WE_Ruler to determien the line selection stage.
-  controller.lineStage = 0
-  -- Table used to store the current line selection coordinates.
-  -- [1] Starting point, [2] Ending point.
-  controller.lineSelection = {{},{}}
-
-  -- Load config once while still initializing.
-  controller.updateUserConfig()
-
-  -- #region Message Handlers
-
-  message.setHandler("wedit.updateConfig", localHandler(controller.updateUserConfig))
-
-  -- #endregion
-
-  sb.logInfo("WEdit Controller: Initialized WEdit.")
+  message.setHandler("wedit.schematics.clear", localHandler(function()
+    storage.weditSchematics = nil
+  end))
 end
 
---- Update function, called in the main update callback.
 function controller.update(args)
   -- As all WEdit items are two handed, we only have to check the primary item.
   local primaryItem = world.entityHandItemDescriptor(entity.id(), "primary")
@@ -107,7 +41,6 @@ function controller.update(args)
   end
 end
 
---- Uninit function, called in the main uninit callback.
 function controller.uninit()
   -- Mark interfaces for closing.
   if status.statusProperty("wedit.compact.open") then
@@ -115,17 +48,9 @@ function controller.uninit()
   end
 end
 
--- #endregion
-
--- #region WEdit Tools
-
 function controller.executeAction(m)
-  -- TODO: Remove and call m.action directly once all actions have been ported.
-  if not m then return end
-  if type(m) == "function" then m() else m.action() end
+  m.action()
 end
-
--- #endregion
 
 hook("init", controller.init)
 hook("update", controller.update)

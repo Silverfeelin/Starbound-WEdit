@@ -6,7 +6,6 @@ local widgets = {
   noclipBind = "weditScroll.noClipBind",
   noclipSpeed = "weditScroll.noClipSpeed",
   delay = "weditScroll.delay",
-  doubleIterations = "weditScroll.doubleIterations",
   clearSchematics = "weditScroll.clearSchematics",
   lineSpacing = "weditScroll.lineSpacing",
   brushShape = "weditScroll.brushShape",
@@ -21,12 +20,10 @@ local brushShapes = {
 }
 
 function init()
-  widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclipBind") or "g")
+  widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclip.bind") or "specialTwo")
   widget.setText(widgets.noclipSpeed, weditInterface.getConfigData("noclipSpeed") or 0.75)
-  widget.setText(widgets.delay, weditInterface.getConfigData("delay") or 15)
-  widget.setChecked(widgets.doubleIterations, weditInterface.getConfigData("doubleIterations") or false)
   widget.setChecked(widgets.clearSchematics, false)
-  widget.setText(widgets.lineSpacing, weditInterface.getConfigData("lineSpacing") or 1)
+  widget.setText(widgets.lineSpacing, weditInterface.getConfigData("info.lineSpacing") or 1)
   widget.setSelectedOption(widgets.brushShape, weditInterface.getConfigData("brushShapeIndex") or -1)
   widget.setText(widgets.pencilSize, weditInterface.getConfigData("pencilSize") or 1)
   widget.setText(widgets.blockSize, weditInterface.getConfigData("blockSize") or 1)
@@ -34,34 +31,22 @@ function init()
 end
 
 function weditInterface.setConfigData(key, value)
-  local config = status.statusProperty("wedit") or {}
-  config[key] = value
-  status.setStatusProperty("wedit", config)
-
-  world.sendEntityMessage(player.id(), "wedit.updateConfig")
+  status.setStatusProperty("wedit." .. key, value)
 end
 
-function weditInterface.getConfigData(key)
-  local config = status.statusProperty("wedit") or {}
-  return key == nil and config or config[key]
+function weditInterface.getConfigData(key, default)
+  local config = status.statusProperty("wedit." .. key)
+  if config ~= nil then return config else return default end
 end
 
 function weditInterface.changeNoClipBind()
-  weditInterface.setConfigData("noclipBind", widget.getText(widgets.noclipBind))
+  local bind = widget.getText(widgets.noclipBind)
+  world.sendEntityMessage(player.id(), "wedit.noclip.setBind", bind)
 end
 
 function weditInterface.changeNoClipSpeed()
   local speed = tonumber(widget.getText(widgets.noclipSpeed)) or 0.75
-  weditInterface.setConfigData("noclipSpeed", speed)
-end
-
-function weditInterface.changeDelay()
-  local delay = tonumber(widget.getText(widgets.delay)) or 15
-  weditInterface.setConfigData("delay", math.ceil(delay))
-end
-
-function weditInterface.changeDoubleIterations()
-  weditInterface.setConfigData("doubleIterations", widget.getChecked(widgets.doubleIterations))
+  world.sendEntityMessage(player.id(), "wedit.noclip.setSpeed", speed)
 end
 
 function weditInterface.changeClearSchematics()
@@ -70,25 +55,44 @@ end
 
 function weditInterface.changeLineSpacing()
   local spacing = tonumber(widget.getText(widgets.lineSpacing)) or 1
-  weditInterface.setConfigData("lineSpacing", spacing)
+  world.sendEntityMessage(player.id(), "wedit.info.setLineSpacing", spacing)
 end
 
 function weditInterface.changeBrushShape(_, data)
-  weditInterface.setConfigData("brushShapeIndex", brushShapes[data])
-  weditInterface.setConfigData("brushShape", data)
+  local cfg = status.statusProperty("wedit.brush") or {}
+  cfg.shape = data
+  cfg.shapeIndex = brushShapes[data]
+  status.setStatusProperty("wedit.brush", cfg)
+  
+  world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
 
 function weditInterface.changePencilSize()
   local size = tonumber(widget.getText(widgets.pencilSize)) or 1
-  weditInterface.setConfigData("pencilSize", size)
+
+  local cfg = status.statusProperty("wedit.brush") or {}
+  cfg.pencilSize = size
+  status.setStatusProperty("wedit.brush", cfg)
+
+  world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
 
 function weditInterface.changeBlockSize()
   local size = tonumber(widget.getText(widgets.blockSize)) or 1
-  weditInterface.setConfigData("blockSize", size)
+
+  local cfg = status.statusProperty("wedit.brush") or {}
+  cfg.blockSize = size
+  status.setStatusProperty("wedit.brush", cfg)
+
+  world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
 
 function weditInterface.changeMatmodSize()
   local size = tonumber(widget.getText(widgets.matmodSize)) or 1
-  weditInterface.setConfigData("matmodSize", size)
+  
+  local cfg = status.statusProperty("wedit.brush") or {}
+  cfg.modSize = size
+  status.setStatusProperty("wedit.brush", cfg)
+
+  world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end

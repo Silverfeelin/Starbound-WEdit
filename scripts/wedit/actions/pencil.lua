@@ -1,4 +1,5 @@
 local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
+local BrushHelper = include("/scripts/wedit/helpers/BrushHelper.lua")
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
 local Palette = include("/scripts/wedit/helpers/palette.lua")
@@ -29,10 +30,13 @@ local function Pencil()
     callback = debugCallback
   end
 
-  if wedit.getUserConfigData("brushShape") == "square" then
-    shapes.box(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
-  elseif wedit.getUserConfigData("brushShape") == "circle" then
-    shapes.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
+  local shape = BrushHelper.getShape()
+  local size = BrushHelper.getPencilSize()
+  
+  if shape == "square" then
+    shapes.box(tech.aimPosition(), size, nil, callback)
+  elseif shape == "circle" then
+    shapes.circle(tech.aimPosition(), size, callback)
   end
 end
 

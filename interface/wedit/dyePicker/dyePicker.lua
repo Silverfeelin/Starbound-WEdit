@@ -7,9 +7,6 @@ local widgetColorIndices = { none = -1, white = 0, black = 1, red = 2, orange = 
 local forceClosed = false
 
 function init()
-  -- Prevent multiples dye pickers.
-  -- If the value is somehow true while the interface is closed, a reload should fix this.
-  -- controller.lua forces them back to false on init.
   if status.statusProperty("wedit.dyePicker.open") then
     forceClosed = true
     pane.dismiss()

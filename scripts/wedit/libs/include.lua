@@ -11,7 +11,11 @@
 
 local modules = {}
 
+local loaded = {}
+
 local req = function(script)
+  table.insert(loaded, script)
+
   local old, m
   old, _ENV.module = _ENV.module, nil
   require(script)

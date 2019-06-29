@@ -11,9 +11,9 @@ DebugRenderer.defaultColor = "green"
 
 --- Instantiates a new debug renderer.
 -- @return Debug renderer.
-function DebugRenderer:new()
+function DebugRenderer.new()
   local instance = { enabled = true }
-  setmetatable(instance, self)
+  setmetatable(instance, DebugRenderer)
   return instance
 end
 
@@ -70,7 +70,7 @@ function DebugRenderer:drawPlayerText(text, offset, color)
   color = color or self.defaultColor
 
   offset = offset or {0, 0}
-  local lineSpacing = status.statusProperty("wedit.info.lineSpacing") or 1
+  local lineSpacing = self.lineSpacing or 1
   offset[2] = offset[2] * lineSpacing
 
   local pos = vec2.add(mcontroller.position(), {0, -3})
@@ -79,12 +79,21 @@ function DebugRenderer:drawPlayerText(text, offset, color)
 end
 
 -- Shared instance
-DebugRenderer.instance = DebugRenderer:new()
-DebugRenderer.info = DebugRenderer:new()
+DebugRenderer.instance = DebugRenderer.new()
+DebugRenderer.info = DebugRenderer.new()
 
 hook("init", function()
+  DebugRenderer.info.enabled = status.statusProperty("wedit.info.visible", true)
+  DebugRenderer.info.lineSpacing = status.statusProperty("wedit.info.lineSpacing") or 1
+
   message.setHandler("wedit.showInfo", localHandler(function(enabled)
-    DebugRenderer.info.enabled = enabled
-    status.setStatusProperty("wedit.showingInfo", bool)
+    DebugRenderer.info.enabled = enabled    
+    status.setStatusProperty("wedit.info.visible", enabled)
+  end))
+
+  message.setHandler("wedit.info.setLineSpacing", localHandler(function(val) 
+    val = val or 1
+    DebugRenderer.info.lineSpacing = val
+    status.setStatusProperty("wedit.info.lineSpacing", val)
   end))
 end)

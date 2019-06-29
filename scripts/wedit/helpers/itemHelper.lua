@@ -16,6 +16,10 @@ function ItemHelper.oreParameters(shortDescription, description, category, inven
    }
 end
 
+function ItemHelper.spawnOre(params)
+  world.spawnItem("triangliumore", mcontroller.position(), 1, params)
+end
+
 function ItemHelper.setItemData(data)
   ItemHelper.itemData = data
 end

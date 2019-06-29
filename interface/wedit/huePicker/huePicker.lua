@@ -5,9 +5,6 @@ local wHue = "hue"
 local forceClosed = false
 
 function init()
-  -- Prevent multiples dye pickers.
-  -- If the value is somehow true while the interface is closed, a reload should fix this.
-  -- controller.lua forces them back to false on init.
   if status.statusProperty("wedit.huePicker.open") then
     forceClosed = true
     pane.dismiss()

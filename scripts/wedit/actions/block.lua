@@ -1,3 +1,4 @@
+local BrushHelper = include("/scripts/wedit/helpers/BrushHelper.lua")
 local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
@@ -32,10 +33,13 @@ local function Block()
     callback = debugCallback
   end
 
-  if wedit.getUserConfigData("brushShape") == "square" then
-    shapes.box(tech.aimPosition(), wedit.getUserConfigData("blockSize"), nil, callback)
-  elseif wedit.getUserConfigData("brushShape") == "circle" then
-    shapes.circle(tech.aimPosition(), wedit.getUserConfigData("blockSize"), callback)
+  local shape = BrushHelper.getShape()
+  local size = BrushHelper.getBlockSize()
+
+  if shape == "square" then
+    shapes.box(tech.aimPosition(), size, nil, callback)
+  elseif shape == "circle" then
+    shapes.circle(tech.aimPosition(), size, callback)
   end
 end
 

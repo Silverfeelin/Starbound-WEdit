@@ -2,15 +2,12 @@ local interface = {}
 local forceClosed = false
 
 function init()
-  -- Prevent multiples dye pickers.
-  -- If the value is somehow true while the interface is closed, a reload should fix this.
-  -- controller.lua forces them back to false on init.
   if status.statusProperty("wedit.compact.open") then
     forceClosed = true
     pane.dismiss()
   end
 
-  updateToggleInfoButton("toggleInfo", status.statusProperty("wedit.showingInfo"))
+  updateToggleInfoButton("toggleInfo", status.statusProperty("wedit.info.visible"))
 
   status.setStatusProperty("wedit.compact.action", widget.getData("data") or "WE_Select")
   status.setStatusProperty("wedit.compact.open", true)
@@ -24,9 +21,8 @@ function update(dt)
 end
 
 function uninit()
-  if not forceClosed then
-    status.setStatusProperty("wedit.compact.open", nil)
-  end
+  if forceClosed then return end
+  status.setStatusProperty("wedit.compact.open", nil)
 end
 
 function actionSelected(_, action)

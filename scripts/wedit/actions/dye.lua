@@ -1,5 +1,6 @@
 require "/interface/wedit/huePicker/huePickerUtil.lua"
 
+local BrushHelper = include("/scripts/wedit/helpers/BrushHelper.lua")
 local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
@@ -30,10 +31,13 @@ local function Dye()
         end
     end
 
-    if wedit.getUserConfigData("brushShape") == "square" then
-      shapes.box(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
-    elseif wedit.getUserConfigData("brushShape") == "circle" then
-      shapes.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
+    local shape = BrushHelper.getShape()
+    local size = BrushHelper.getBlockSize()
+
+    if brush == "square" then
+      shapes.box(tech.aimPosition(), size, nil, callback)
+    elseif brush == "circle" then
+      shapes.circle(tech.aimPosition(), size, callback)
     end
   end
 end

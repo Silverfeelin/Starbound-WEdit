@@ -11,11 +11,9 @@ local hooks = {}
 -- Returns the first non-nil value after calling all hooks.
 local function loop(hook, ...)
   local ret
-  for k,v in pairs(hook) do
-    if v then
-      local r = k(...)
-      if type(ret) == "nil" then ret = r end
-    end
+  for _,v in ipairs(hook) do
+    local r = v(...)
+    if type(ret) == "nil" then ret = r end
   end
   return ret
 end
@@ -47,5 +45,5 @@ end
 -- @param func Function to hook.
 function hook(name, func)
   local hook = createHook(name)
-  hook[func] = true
+  table.insert(hook, func)
 end
