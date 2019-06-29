@@ -34,14 +34,40 @@ local function toggleNoclip(val)
   end
 end
 
+function Noclip.setBind(newBind)
+  newBind = newBind or ""
+
+  local cfg = status.statusProperty("wedit.noclip") or {}
+  cfg.bind = newBind
+  Noclip.key = newBind
+  status.setStatusProperty("wedit.noclip", cfg)
+  
+  Noclip.bind:change(newBind)
+  if newBind == "" then
+    Noclip.bind:unbind()
+    toggleNoclip(false);
+  else
+    Noclip.bind:rebind()
+  end
+end
+
+function Noclip.setSpeed(newSpeed)
+  newSpeed = newSpeed or 0.75
+  newSpeed = math.abs(newSpeed)
+
+  local cfg = status.statusProperty("wedit.noclip") or {}
+  cfg.speed = newSpeed
+  status.setStatusProperty("wedit.noclip", cfg)
+  
+  Noclip.speed = newSpeed
+end
+
 hook("init", function()
-  local defaultConfig = Config.fromFile("/scripts/wedit/wedit.config", true).data.noclip
-  if not defaultConfig.enabled then return end
+  local cfg = status.statusProperty("wedit.noclip") or {}
+  Noclip.key = cfg.bind or "specialTwo"
+  Noclip.speed = cfg.speed or 0.75
 
-  Noclip.key = status.statusProperty("wedit.noclip.bind", defaultConfig.bind)
-  Noclip.speed = status.statusProperty("wedit.noclip.speed", defaultConfig.speed)
-
-  Noclip.bind = Bind.create(Noclip.key, function() toggleNoclip() end, false, noclipBind == "")
+  Noclip.bind = Bind.create(Noclip.key, function() toggleNoclip() end, false, Noclip.key == "")
 
   local adjustPosition = function(offset)
     local pos = mcontroller.position()
@@ -56,31 +82,18 @@ hook("init", function()
   table.insert(Noclip.binds, Bind.create("right", function() adjustPosition({Noclip.speed,0}) end, true, true))
   table.insert(Noclip.binds, Bind.create("up=false down=false left=false right=false", function() mcontroller.setVelocity({0,0}) end, false, true))
 
-  message.setHandler("wedit.noclip.setBind", localHandler(function(newBind)
-    newBind = newBind or ""
-    status.setStatusProperty("wedit.noclip.bind", newBind)
-
-    Noclip.bind:change(newBind)
-    if newBind == "" then
-      Noclip.bind:unbind()
-      toggleNoclip(false);
-    else
-      Noclip.bind:rebind()
-    end
-  end))
-
-  message.setHandler("wedit.noclip.setSpeed", localHandler(function(newSpeed)
-    Noclip.speed = math.abs(newSpeed)
-    status.setStatusProperty("wedit.noclip.speed", newSpeed)
-  end))
+  message.setHandler("wedit.noclip.setBind", localHandler(Noclip.setBind))
+  message.setHandler("wedit.noclip.setSpeed", localHandler(Noclip.setSpeed))
 end)
+
 
 hook("update", function()
   if Noclip.active then
     mcontroller.controlParameters(controlParameters)
   end
-  Logger.instance:setLogMap("Noclip",
-    string.format(Noclip.active and "Press '%s' to stop flying." or "Press '%s' to fly.", Noclip.key))
+  if Noclip.key ~= "" then
+    Logger.instance:setLogMap("Noclip", string.format(Noclip.active and "Press '%s' to stop flying." or "Press '%s' to fly.", Noclip.key))
+  end
 end)
 
 hook("uninit", function()

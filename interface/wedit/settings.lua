@@ -19,24 +19,31 @@ local brushShapes = {
   circle = 0
 }
 
+local clearSchematics = false
+
 function init()
-  widget.setText(widgets.noclipBind, weditInterface.getConfigData("noclip.bind") or "specialTwo")
-  widget.setText(widgets.noclipSpeed, weditInterface.getConfigData("noclipSpeed") or 0.75)
   widget.setChecked(widgets.clearSchematics, false)
-  widget.setText(widgets.lineSpacing, weditInterface.getConfigData("info.lineSpacing") or 1)
-  widget.setSelectedOption(widgets.brushShape, weditInterface.getConfigData("brushShapeIndex") or -1)
-  widget.setText(widgets.pencilSize, weditInterface.getConfigData("pencilSize") or 1)
-  widget.setText(widgets.blockSize, weditInterface.getConfigData("blockSize") or 1)
-  widget.setText(widgets.matmodSize, weditInterface.getConfigData("matmodSize") or 1)
+
+  local noclip = status.statusProperty("wedit.noclip") or {}
+  widget.setText(widgets.noclipBind, noclip.bind or "specialTwo")
+  widget.setText(widgets.noclipSpeed, noclip.speed or 0.75)
+  widget.setText(widgets.lineSpacing, status.statusProperty("wedit.info.lineSpacing") or 1)
+
+  local brush = status.statusProperty("wedit.brush") or {}
+  widget.setSelectedOption(widgets.brushShape, brush.shapeIndex or -1)
+  widget.setText(widgets.pencilSize, brush.pencilSize or 1)
+  widget.setText(widgets.blockSize, brush.blockSize or 1)
+  widget.setText(widgets.matmodSize, brush.modSize or 1)
+end
+
+function uninit()
+  if clearSchematics then 
+    world.sendEntityMessage(player.id(), "wedit.schematics.clear")
+  end
 end
 
 function weditInterface.setConfigData(key, value)
   status.setStatusProperty("wedit." .. key, value)
-end
-
-function weditInterface.getConfigData(key, default)
-  local config = status.statusProperty("wedit." .. key)
-  if config ~= nil then return config else return default end
 end
 
 function weditInterface.changeNoClipBind()
@@ -50,7 +57,7 @@ function weditInterface.changeNoClipSpeed()
 end
 
 function weditInterface.changeClearSchematics()
-  weditInterface.setConfigData("clearSchematics", widget.getChecked(widgets.clearSchematics))
+  clearSchematics = widget.getChecked(widgets.clearSchematics)
 end
 
 function weditInterface.changeLineSpacing()

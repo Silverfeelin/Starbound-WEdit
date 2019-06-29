@@ -22,7 +22,7 @@ function BrushHelper.getModSize()
 end
 
 hook("init", function()
-  BrushHelper.cfg = Config.fromFile("/scripts/wedit/wedit.config", true).data
+  BrushHelper.cfg = Config.fromFile("/scripts/wedit/wedit.config", true).data.brush
   BrushHelper.userCfg = Config.fromStatus("wedit.brush", {}).data
 
   message.setHandler("wedit.updateBrush", localHandler(function() 

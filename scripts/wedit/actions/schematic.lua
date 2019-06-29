@@ -13,7 +13,11 @@ local function Schematic()
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: DELETE Schematic.", {0,-2})
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-3})
 
-  if not storage.weditSchematics then return end
+  if not storage.weditSchematics then
+    DebugRenderer.info:drawPlayerText("^shadow;^yellow;No schematics found!", {0,-4})
+    return
+  end
+
   local itemData = ItemHelper.getItemData()
   local schematicID = itemData and itemData.schematicID
   local schematic
