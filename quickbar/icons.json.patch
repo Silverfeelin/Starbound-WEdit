@@ -4,8 +4,8 @@
     "path": "/normal/-",
     "value": {
       "label": "WEdit Settings",
-      "pane": "/interface/wedit/settings.config",
-      "icon": "/interface/wedit/iconSmall.png"
+      "pane": "/interface/wedit/settings/settings.config",
+      "icon": "/interface/wedit/settings/iconSmall.png"
     }
   }
 ]

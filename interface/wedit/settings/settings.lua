@@ -3,15 +3,15 @@
 weditInterface = {}
 
 local widgets = {
-  noclipBind = "weditScroll.noClipBind",
-  noclipSpeed = "weditScroll.noClipSpeed",
-  delay = "weditScroll.delay",
-  clearSchematics = "weditScroll.clearSchematics",
-  lineSpacing = "weditScroll.lineSpacing",
-  brushShape = "weditScroll.brushShape",
-  pencilSize = "weditScroll.pencilSize",
-  blockSize = "weditScroll.blockSize",
-  matmodSize = "weditScroll.matmodSize"
+  noclipBind = "noClipBind",
+  noclipSpeed = "noClipSpeed",
+  delay = "delay",
+  clearSchematics = "clearSchematics",
+  lineSpacing = "lineSpacing",
+  brushShape = "brushShape",
+  pencilSize = "pencilSize",
+  blockSize = "blockSize",
+  matmodSize = "matmodSize"
 }
 
 local brushShapes = {
@@ -46,12 +46,12 @@ function weditInterface.setConfigData(key, value)
   status.setStatusProperty("wedit." .. key, value)
 end
 
-function weditInterface.changeNoClipBind()
+function weditInterface.changeNoclipBind()
   local bind = widget.getText(widgets.noclipBind)
   world.sendEntityMessage(player.id(), "wedit.noclip.setBind", bind)
 end
 
-function weditInterface.changeNoClipSpeed()
+function weditInterface.changeNoclipSpeed()
   local speed = tonumber(widget.getText(widgets.noclipSpeed)) or 0.75
   world.sendEntityMessage(player.id(), "wedit.noclip.setSpeed", speed)
 end
@@ -70,6 +70,7 @@ function weditInterface.changeBrushShape(_, data)
   cfg.shape = data
   cfg.shapeIndex = brushShapes[data]
   status.setStatusProperty("wedit.brush", cfg)
+  sb.logInfo("brush %s", cfg)
   
   world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
@@ -80,6 +81,7 @@ function weditInterface.changePencilSize()
   local cfg = status.statusProperty("wedit.brush") or {}
   cfg.pencilSize = size
   status.setStatusProperty("wedit.brush", cfg)
+  sb.logInfo("brush %s", cfg)
 
   world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
@@ -90,6 +92,7 @@ function weditInterface.changeBlockSize()
   local cfg = status.statusProperty("wedit.brush") or {}
   cfg.blockSize = size
   status.setStatusProperty("wedit.brush", cfg)
+  sb.logInfo("brush %s", cfg)
 
   world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
@@ -100,6 +103,7 @@ function weditInterface.changeMatmodSize()
   local cfg = status.statusProperty("wedit.brush") or {}
   cfg.modSize = size
   status.setStatusProperty("wedit.brush", cfg)
+  sb.logInfo("brush %s", cfg)
 
   world.sendEntityMessage(player.id(), "wedit.updateBrush")
 end
