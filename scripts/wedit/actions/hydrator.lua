@@ -7,17 +7,26 @@ local SelectionHelper = include("/scripts/wedit/helpers/selectionHelper.lua")
 local function Hydrator()
   DebugRenderer.info:drawPlayerText("^shadow;^orange;WEdit: Hydrator")
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Primary Fire: Fill selection.", {0, -1})
-  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: Select liquid.", {0, -2})
-  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Liquid: ^red;" .. Palette.getLiquid().name .. "^yellow;.", {0, -3})
+  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: Clear selection.", {0,-2})
+  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Shift + Fire: Select liquid.", {0, -3})
+  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Liquid: ^red;" .. Palette.getLiquid().name .. "^yellow;.", {0, -4})
 
-  if not InputHelper.isLocked() then
-    if InputHelper.primary and SelectionHelper.isValid() then
-      LiquidHelper.fill(SelectionHelper.get(), Palette.getLiquid().liquidId)
-      InputHelper.lock()
-    elseif InputHelper.alt then
+  if InputHelper.isLocked() then return end
+  
+
+  if InputHelper.shift then
+    if not InputHelper.isShiftLocked() and (InputHelper.primary or InputHelper.alt) then
       require "/interface/wedit/liquidPicker/liquidPickerLoader.lua"
       liquidPickerLoader.initializeConfig()
       world.sendEntityMessage(entity.id(), "interact", "ScriptPane", liquidPickerLoader.config)
+      InputHelper.shiftLock()
+    end
+  elseif SelectionHelper.isValid() then
+    if InputHelper.primary then
+      LiquidHelper.fill(SelectionHelper.get(), Palette.getLiquid().liquidId)
+      InputHelper.lock()
+    elseif InputHelper.alt then
+      LiquidHelper.clear(SelectionHelper.get())
       InputHelper.lock()
     end
   end

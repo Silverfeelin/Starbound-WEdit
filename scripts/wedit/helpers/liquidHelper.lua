@@ -27,6 +27,6 @@ end
 
 function LiquidHelper.clear(shape)
   for p in shape:each() do
-    LiquidHelper.drain(p)
+    LiquidHelper.remove(p)
   end
 end
