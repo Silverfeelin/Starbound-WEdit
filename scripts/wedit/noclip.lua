@@ -13,7 +13,6 @@ local controlParameters = {
   collisionEnabled = false,
   standingPoly = {{0,0},{0,0}},
   crouchingPoly = {{0,0},{0,0}},
-  physicsEffectCategories = {"immovable"},
   mass = 0,
   runSpeed = 0,
   walkSpeed = 0,
@@ -27,6 +26,7 @@ local function toggleNoclip(val)
   else
     Noclip.active = not Noclip.active
   end
+
   tech.setParentState(Noclip.active and "fly" or nil)
 
   for _,v in ipairs(Noclip.binds) do
