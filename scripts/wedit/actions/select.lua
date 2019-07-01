@@ -1,3 +1,5 @@
+require "/scripts/vec2.lua"
+
 local Rectangle = include("/scripts/wedit/objects/shapes/rectangle.lua")
 
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
@@ -51,10 +53,13 @@ local function Select()
 
     -- Dragging selection; update second point.
     data.rawSelection[2] = tech.aimPosition()
+    
+    -- Fix wrapping by calculating rawSelection[2] as offset to rawSelection[1]
+    local dist = world.distance(data.rawSelection[2], data.rawSelection[1])
+    data.rawSelection[2] = vec2.add(data.rawSelection[1], dist)
 
     -- Update converted coordinates.
     -- Compare X (1 is smallest):
-
     local bottomLeft = {
       math.floor(math.min(data.rawSelection[1][1], data.rawSelection[2][1])),
       math.floor(math.min(data.rawSelection[1][2], data.rawSelection[2][2]))

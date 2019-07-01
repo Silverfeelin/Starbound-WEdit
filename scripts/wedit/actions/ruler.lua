@@ -1,3 +1,5 @@
+require "/scripts/vec2.lua"
+
 local BlockHelper = include("/scripts/wedit/helpers/blockHelper.lua")
 local DebugRenderer = include("/scripts/wedit/helpers/debugRenderer.lua")
 local InputHelper = include("/scripts/wedit/helpers/inputHelper.lua")
@@ -40,6 +42,10 @@ local function Ruler()
     data.bindA = Bind.create("primaryFire", function()
       -- Dragging selection; update second point.
       line[2] = tech.aimPosition()
+
+      -- Fix wrapping.
+      local dist = world.distance(line[2], line[1])
+      line[2] = vec2.add(line[1], dist)
 
       -- Round each value down.
       line[1][1] = math.floor(line[1][1])
