@@ -40,6 +40,11 @@ function Palette.getMod()
   return Palette.mod
 end
 
+function Palette.getModName(mod)
+  if mod == nil then mod = Palette.mod end
+  return mod or "remove"
+end
+
 function Palette.setMod(mod)
   Palette.mod = mod
 end

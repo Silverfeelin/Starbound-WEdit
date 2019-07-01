@@ -13,6 +13,8 @@ function matmodPickerLoader.initializeConfig()
   local mods = root.assetJson("/interface/wedit/matmodPicker/matmods.json")
 
   x, y, i = 0, 0, 0
+  
+  matmodPickerLoader.addNone()
 
   for _,v in ipairs(mods) do
     matmodPickerLoader.addMod(v)
@@ -34,6 +36,24 @@ function matmodPickerLoader.addMod(mod)
   }
 
   matmodPickerLoader.config.gui.modScroll.children[mod.name] = button
+  matmodPickerLoader.config.gui.modScroll.children.a2.position[2] = y
+
+  matmodPickerLoader.nextPosition()
+end
+
+
+function matmodPickerLoader.addNone()
+  local button = {
+		type = "button",
+		base = "/interface/wedit/matmodPicker/mods/none.png",
+		hover = "/interface/wedit/matmodPicker/mods/none.png?brightness=15",
+		pressedOffset = {0, -1},
+    position = {x, y},
+    data = false,
+		callback = "pickMod"
+	}
+
+  matmodPickerLoader.config.gui.modScroll.children["none"] = button
   matmodPickerLoader.config.gui.modScroll.children.a2.position[2] = y
 
   matmodPickerLoader.nextPosition()

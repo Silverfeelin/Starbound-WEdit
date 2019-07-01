@@ -12,11 +12,11 @@ local function Dye()
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Shift + Fire: Open Hue Picker.", {0,-3})
+  local hue = huePickerUtil.getSerializedHue() or 0
+  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Hue: ^red;" .. hue .. "^yellow;.", {0,-4})
 
   local layer = InputHelper.primary and "foreground" or
     InputHelper.alt and "background" or nil
-
-  local hue = huePickerUtil.getSerializedHue() or 0
 
   if InputHelper.shift then
     if not InputHelper.isShiftLocked() and (InputHelper.primary or InputHelper.alt) then
@@ -32,11 +32,11 @@ local function Dye()
     end
 
     local shape = BrushHelper.getShape()
-    local size = BrushHelper.getBlockSize()
+    local size = BrushHelper.getPencilSize()
 
-    if brush == "square" then
+    if shape == "square" then
       shapes.box(tech.aimPosition(), size, nil, callback)
-    elseif brush == "circle" then
+    elseif shape == "circle" then
       shapes.circle(tech.aimPosition(), size, callback)
     end
   end

@@ -9,7 +9,11 @@ local ModHelper = {}
 module = ModHelper
 
 function ModHelper.place(pos, layer, mod)
-  world.placeMod(pos, layer, mod, nil, false)
+  if mod then
+    world.placeMod(pos, layer, mod, nil, false)
+  elseif mod == false then
+    ModHelper.remove(pos, layer)
+  end
 end
 
 function ModHelper.remove(pos, layer)

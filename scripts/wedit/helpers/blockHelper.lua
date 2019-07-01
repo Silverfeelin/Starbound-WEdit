@@ -24,9 +24,14 @@ function BlockHelper.place(pos, layer, block, hueshift)
   local mod = world.mod(pos, layer)
 
   return taskManager:startNew(function()
-    -- Remove old block
+    -- Remove mod
+    if mod then
+      world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
+      util.waitFor(function() return not world.mod(pos, layer) end)
+    end
+
+    -- Remove block
     if not block or old then
-      -- TODO: Force break (i.e. grass fails on one damage tick).
       world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
       util.waitFor(function() return not world.material(pos, layer) end)
     end
@@ -38,7 +43,7 @@ function BlockHelper.place(pos, layer, block, hueshift)
     end
 
     -- Place mod
-    if mod then
+    if block and mod then
       world.placeMod(pos, layer, mod)
       util.waitFor(function() return world.mod(pos, layer) end)
     end

@@ -13,7 +13,7 @@ function materialPickerLoader.initializeConfig()
   local materials = root.assetJson("/interface/wedit/materialPicker/materials.json")
   local platforms = root.assetJson("/interface/wedit/materialPicker/platforms.json")
 
-  x, y, i = 0, -19, 0
+  x, y, i = 0, 0, 0
 
   materialPickerLoader.addAir()
 

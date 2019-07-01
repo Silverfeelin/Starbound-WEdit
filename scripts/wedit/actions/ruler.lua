@@ -28,8 +28,8 @@ local function Ruler()
   local line = data.selection
 
   -- Draw line
-  if not data.selecting and InputHelper.shift and InputHelper.primary and not InputHelper.isShiftLocked() then
-    InputHelper.shiftLock()
+  if not data.selecting and InputHelper.shift and InputHelper.primary and not InputHelper.isLocked() then
+    InputHelper.lock()
 
     -- Set first point
     line[1] = tech.aimPosition()
@@ -56,17 +56,21 @@ local function Ruler()
     end)
   end
 
+  if InputHelper.shift then
+    DebugRenderer.instance:drawBlock(tech.aimPosition())
+  end
+
   -- Fill / Clear line
-  if not InputHelper.isShiftLocked() and not data.selecting then
+  if not InputHelper.isLocked() and not data.selecting then
     if InputHelper.shift and InputHelper.alt then
       -- Clear line
-      InputHelper.shiftLock()
+      InputHelper.lock()
       data.selection = {{},{}}
     elseif not InputHelper.shift then
       -- Fill line
       local layer = InputHelper.primary and "foreground" or InputHelper.alt and "background" or nil
       if layer and validLine() then
-        InputHelper.shiftLock()
+        InputHelper.lock()
         local block = Palette.getMaterialName()
         if block ~= "air" and block ~= "none" then
           shapes.line(line[1], line[2], function(x, y) world.placeMaterial({x, y}, layer, block, 0, true) end)
@@ -91,7 +95,7 @@ local function Ruler()
     -- Calculate line length for display
     local w, h = math.abs(line[1][1] - line[2][1]) + 1, math.abs(line[1][2] - line[2][2]) + 1
     local length = w > h and w or h
-    DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Length: ^red;" .. length .. " ^yellow;blocks ^red;(" .. w .. "x" .. h .. ")^yellow;.", {0,-6})
+    DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Length: ^red;" .. length .. " ^yellow;blocks (^red;" .. w .. "^yellow;x^red;" .. h .. "^yellow;).", {0,-6})
   end
 end
 

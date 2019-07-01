@@ -5,12 +5,13 @@ local Palette = include("/scripts/wedit/helpers/palette.lua")
 
 local function Modifier()
   local mod = Palette.getMod()
+  local modName = Palette.getModName(mod)
 
   DebugRenderer.info:drawPlayerText("^shadow;^orange;WEdit: Modifier")
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Primary Fire: Modify foreground.", {0,-1})
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Alt Fire: Modify background.", {0,-2})
   DebugRenderer.info:drawPlayerText("^shadow;^yellow;Shift + Fire: Select mod.", {0,-3})
-  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Mod: ^red;" .. mod .. "^yellow;.", {0,-4})
+  DebugRenderer.info:drawPlayerText("^shadow;^yellow;Current Mod: ^red;" .. modName .. "^yellow;.", {0,-4})
 
   DebugRenderer.instance:drawBlock(tech.aimPosition())
 
@@ -22,10 +23,10 @@ local function Modifier()
       InputHelper.shiftLock()
     end
   elseif not InputHelper.isShiftLocked() then
-    if InputHelper.primary then
-      ModHelper.place(tech.aimPosition(), "foreground", mod)
-    elseif InputHelper.alt then
-      ModHelper.place(tech.aimPosition(), "background", mod)
+    local p = mod and ModHelper.place or ModHelper.remove
+    local l = InputHelper.primary and "foreground" or InputHelper.alt and "background" or nil
+    if l then
+      p(tech.aimPosition(), l, mod)
     end
   end
 end
