@@ -251,6 +251,7 @@ function controller.init()
       for i,v in ipairs(controller.noclipBinds) do
         v:unbind()
       end
+      mcontroller.setVelocity({0,0})
     end
   end, false, noclipBind == "")
 
