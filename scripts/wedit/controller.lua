@@ -316,7 +316,6 @@ function controller.update(args)
       collisionEnabled = false,
       standingPoly = {},
       crouchingPoly = {},
-      physicsEffectCategories = {"immovable"},
       mass = 0,
       runSpeed = 0,
       walkSpeed = 0,
