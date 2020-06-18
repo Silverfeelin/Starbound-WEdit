@@ -64,7 +64,7 @@
     "buttonImage": "biorock2.png"
   },
   {
-    "name": "black",
+    "name": "blackblock",
     "buttonImage": "black.png"
   },
   {
@@ -344,7 +344,7 @@
     "buttonImage": "limestone.png"
   },
   {
-    "name": "log",
+    "name": "logblock",
     "buttonImage": "log.png"
   },
   {
@@ -424,12 +424,16 @@
     "buttonImage": "ornatewood.png"
   },
   {
-    "name": "outposthorizontal",
+    "name": "outpost",
     "buttonImage": "outposthorizontal.png"
   },
   {
     "name": "outpostsupport",
     "buttonImage": "outpostsupport.png"
+  },
+  {
+    "name": "outpostwall1",
+    "buttonImage": "outpostwall1.png"
   },
   {
     "name": "outpostwall1",
@@ -496,7 +500,7 @@
     "buttonImage": "redtoyblock.png"
   },
   {
-    "name": "reeds",
+    "name": "reedblock",
     "buttonImage": "reeds.png"
   },
   {
@@ -622,6 +626,14 @@
   {
     "name": "slopedinsetpanel",
     "buttonImage": "slopedinsetpanel.png"
+  },
+  {
+    "name": "slopedglasspanel",
+    "buttonImage": "glass.png"
+  },
+  {
+    "name": "slopedpolygon",
+    "buttonImage": "slopedpolygon.png"
   },
   {
     "name": "slopedrustypanel",

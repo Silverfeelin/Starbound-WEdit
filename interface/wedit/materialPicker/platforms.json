@@ -4,7 +4,7 @@
     "buttonImage": "ancientplatform.png"
   },
   {
-    "name": "apexshipplatform",
+    "name": "apexshipplatformplatform",
     "buttonImage": "apexshipplatform.png"
   },
   {
@@ -14,6 +14,10 @@
   {
     "name": "copperplatform",
     "buttonImage": "copperplatform.png"
+  },
+  {
+    "name": "copperladder",
+    "buttonImage": "copperladder.png"
   },
   {
     "name": "goldenplatform",
@@ -34,6 +38,18 @@
   {
     "name": "plantplatform",
     "buttonImage": "plantplatform.png"
+  },
+  {
+    "name": "platform",
+    "buttonImage": "woodplatform.png"
+  },
+  {
+    "name": "platform2",
+    "buttonImage": "woodplatform2.png"
+  },
+  {
+    "name": "polygonplatform",
+    "buttonImage": "polygonplatform.png"
   },
   {
     "name": "pressurisedplatform",
@@ -66,14 +82,6 @@
   {
     "name": "woodenplatform",
     "buttonImage": "woodenplatform.png"
-  },
-  {
-    "name": "woodplatform",
-    "buttonImage": "woodplatform.png"
-  },
-  {
-    "name": "woodplatform2",
-    "buttonImage": "woodplatform2.png"
   },
   {
     "name": "wreckplatform",
