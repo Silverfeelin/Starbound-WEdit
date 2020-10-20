@@ -194,6 +194,8 @@ function controller.init()
   -- The interfaces stay open when warping, but it's a better solution to make users open them again than to have the mod break after a game crash.
   status.setStatusProperty("wedit.compact.open", nil)
   status.setStatusProperty("wedit.dyePicker.open", nil)
+  status.setStatusProperty("wedit.huePicker.open", nil)
+  status.setStatusProperty("wedit.randomPicker.open", nil)
   status.setStatusProperty("wedit.matmodPicker.open", nil)
   status.setStatusProperty("wedit.materialPicker.open", nil)
 

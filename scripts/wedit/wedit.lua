@@ -356,29 +356,52 @@ function wedit.breakBlocks(bottomLeft, topRight, layer)
   return copy
 end
 
+function wedit.random(bottomLeft, topRight, percentage, callback)
+  bottomLeft = wedit.clonePoint(bottomLeft)
+  topRight = wedit.clonePoint(topRight)
+
+  local width = topRight[1] - bottomLeft[1]
+  local height = topRight[2] - bottomLeft[2]
+
+  if width < 0 or height < 0 then error(string.format("WEdit: Attempted to fill an area smaller than 0 blocks: (%s, %s) > (%s, %s).", bottomLeft[1], bottomLeft[2], topRight[1], topRight[2])) end
+
+  wedit.forEach(bottomLeft, topRight, function(pos)
+    local n = math.random(1, 100)
+    if n <= percentage then
+      callback(pos)
+    end
+  end)
+end
+
 --- Draws a block. If there is already a block, replace it.
 -- @param pos World position to place the block at.
 -- @param layer foreground or background
 -- @param block Material name.
 -- @param[opt=wedit.neighborHueshift] hueshift Hueshift for the block. Determined by nearest blocks if omitted.
-function wedit.pencil(pos, layer, block, hueshift)
+-- @param[opt=false] force Force redrawing even if the block matches.
+function wedit.pencil(pos, layer, block, hueshift, force)
   if not hueshift then hueshift = wedit.neighborHueshift(pos, layer, block) or 0 end
 
   local mat = world.material(pos, layer)
-  if (mat and mat ~= block) or not block then
-    world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
-    if block and wedit.positionLocker:lock(layer, pos) then
-      wedit.taskManager:start(Task.new({function(task)
-        world.placeMaterial(pos, layer, block, hueshift, true)
-        wedit.positionLocker:unlock(layer, pos)
-        task:complete()
-      end}), wedit.getUserConfigData("delay"))
-    end
+  if force or ((mat and mat ~= block) or not block) then
+    wedit._pencil(pos, layer, block, hueshift)
   else
     world.placeMaterial(pos, layer, block, hueshift, true)
   end
 
   wedit.logger:setLogMap("Pencil", string.format("Drawn %s.", block))
+end
+
+function wedit._pencil(pos, layer, block, hueshift)
+  sb.logInfo("_pencil")
+  world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
+  if block and wedit.positionLocker:lock(layer, pos) then
+    wedit.taskManager:start(Task.new({function(task)
+      world.placeMaterial(pos, layer, block, hueshift, true)
+      wedit.positionLocker:unlock(layer, pos)
+      task:complete()
+    end}), wedit.getUserConfigData("delay"))
+  end
 end
 
 --- Gets the hueshift of a neighbouring same block.

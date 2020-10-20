@@ -4,6 +4,8 @@
 -- This script can not be used by itself, as it relies on data defined in or adjusted by wedit.lua and/or controller.lua.
 
 require "/interface/wedit/dyePicker/dyePickerUtil.lua"
+require "/interface/wedit/huePicker/huePickerUtil.lua"
+require "/interface/wedit/randomPicker/randomPickerUtil.lua"
 
 wedit.actions = wedit.actions or {}
 local controller = wedit.controller
@@ -756,6 +758,130 @@ function wedit.actions.WE_Dye()
         wedit.debugRenderer:drawBlock(pos)
         if layer then
           wedit.dye(pos, layer, colorIndex)
+        end
+    end
+
+    if wedit.getUserConfigData("brushShape") == "square" then
+      wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
+    elseif wedit.getUserConfigData("brushShape") == "circle" then
+      wedit.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
+    end
+  end
+end
+
+function wedit.actions.WE_Hue()
+  controller.info("^shadow;^orange;WEdit: Hue")
+  controller.info("^shadow;^yellow;Primary Fire: Dye foreground.", {0,-1})
+  controller.info("^shadow;^yellow;Alt Fire: Dye background.", {0,-2})
+  controller.info("^shadow;^yellow;Shift + Primary: Copy foreground.", {0,-3})
+  controller.info("^shadow;^yellow;Shift + Alt: Open interface.", {0,-4})
+
+  local layer = controller.primaryFire and "foreground" or
+    controller.altFire and "background" or nil
+  
+  local hue = huePickerUtil.getSerializedHue() or 0
+  controller.info("^shadow;^yellow;Current hue: ^red;" .. hue .. "^yellow;.", {0,-5})
+
+  if controller.shiftHeld then
+    if not controller.shiftFireLocked and controller.altFire then
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/huePicker/huePicker.config")
+      controller.shiftFireLock()
+    elseif controller.primaryFire then
+       local hue = world.materialHueShift(tech.aimPosition(), "foreground")
+       if hue then
+        huePickerUtil.serializeHue(hue)
+        world.sendEntityMessage(entity.id(), "wedit_hueChanged")
+       end
+    end
+  elseif not controller.shiftFireLocked then
+    local callback = function(pos)
+        wedit.debugRenderer:drawBlock(pos)
+        if layer then
+          local block = world.material(pos, layer)
+          local blockHue = world.materialHueShift(pos, layer)
+          if block and hue ~= blockHue then
+            wedit.pencil(pos, layer, block, hue, true)
+          end
+        end
+    end
+
+    if wedit.getUserConfigData("brushShape") == "square" then
+      wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), nil, callback)
+    elseif wedit.getUserConfigData("brushShape") == "circle" then
+      wedit.circle(tech.aimPosition(), wedit.getUserConfigData("pencilSize"), callback)
+    end
+  end
+end
+
+function wedit.actions.WE_RandomFill()
+  controller.info("^shadow;^orange;WEdit: Random fill")
+  controller.info("^shadow;^yellow;Primary Fire: Fill foreground.", {0,-1})
+  controller.info("^shadow;^yellow;Alt Fire: Fill background.", {0,-2})
+  controller.info("^shadow;^yellow;Shift + Fire: Open interface.", {0,-3})
+
+  local perc = randomPickerUtil.getSerializedPercentage() or 0
+  local hue = huePickerUtil.getSerializedHue() or 0
+  controller.info("^shadow;^yellow;Current percentage: ^red;" .. perc .. "^yellow;.", {0,-4})
+  controller.info("^shadow;^yellow;Current block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-5})
+  controller.info("^shadow;^yellow;Current hue: ^red;" .. hue .. "^yellow;.", {0,-6})
+  
+  local layer = controller.primaryFire and "foreground" or
+    controller.altFire and "background" or nil
+
+  if controller.shiftHeld then
+    if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/randomPicker/randomPicker.config")
+      controller.shiftFireLock()
+    end
+  elseif not controller.shiftFireLocked and layer and controller.validSelection() then
+    controller.shiftFireLock()
+    if layer then
+      wedit.random(controller.selection[1], controller.selection[2],  perc, function(pos)
+        if (not not controller.selectedBlock) ~= (not not world.material(pos, layer)) then
+          wedit.pencil(pos, layer, controller.selectedBlock, hue, true)
+        end
+      end)
+    end
+  end
+end
+
+function wedit.actions.WE_RandomPencil()
+  controller.info("^shadow;^orange;WEdit: Random pencil")
+  controller.info("^shadow;^yellow;Primary Fire: Draw on foreground.", {0,-1})
+  controller.info("^shadow;^yellow;Alt Fire: Draw on background.", {0,-2})
+  controller.info("^shadow;^yellow;Shift + Fire: Open interface.", {0,-3})
+
+  local perc = randomPickerUtil.getSerializedPercentage() or 0
+  local hue = huePickerUtil.getSerializedHue() or 0
+  controller.info("^shadow;^yellow;Current percentage: ^red;" .. perc .. "^yellow;.", {0,-4})
+  controller.info("^shadow;^yellow;Current block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-5})
+  controller.info("^shadow;^yellow;Current hue: ^red;" .. hue .. "^yellow;.", {0,-6})
+  
+  local layer = controller.primaryFire and "foreground" or
+    controller.altFire and "background" or nil
+
+  if controller.shiftHeld then
+    if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
+      world.sendEntityMessage(entity.id(), "interact", "ScriptPane", "/interface/wedit/randomPicker/randomPicker.config")
+      controller.shiftFireLock()
+    end
+  elseif not controller.shiftFireLocked then
+    if layer then 
+      controller.shiftFireLock()
+    end
+
+    local callback = function(pos)
+        wedit.debugRenderer:drawBlock(pos)
+
+        if layer then
+          local n = math.random(1, 100)
+          if n <= perc then
+            local mat = world.material(pos, layer)
+            if not mat or not controller.selectedBlock then
+              sb.logInfo("n %s perc %s", n, perc)
+              wedit.pencil(pos, layer, controller.selectedBlock, hue, true)
+            end
+          end
         end
     end
 
