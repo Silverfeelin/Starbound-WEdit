@@ -495,7 +495,9 @@ function wedit.actions.WE_Modifier()
   controller.info("^shadow;^yellow;Shift + Fire: Select mod.", {0,-3})
   controller.info("^shadow;^yellow;Current Mod: ^red;" .. controller.getSelectedMod() .. "^yellow;.", {0,-4})
 
-  wedit.debugRenderer:drawBlock(tech.aimPosition())
+  local debugCallback = function(pos)
+    wedit.debugRenderer:drawBlock(pos)
+  end
 
   if controller.shiftHeld then
     if not controller.shiftFireLocked and (controller.primaryFire or controller.altFire) then
@@ -505,12 +507,24 @@ function wedit.actions.WE_Modifier()
       controller.shiftFireLock()
     end
   elseif not controller.shiftFireLocked then
-    if controller.primaryFire then
-      wedit.placeMod(tech.aimPosition(), "foreground", controller.getSelectedMod())
-    elseif controller.altFire then
-      wedit.placeMod(tech.aimPosition(), "background", controller.getSelectedMod())
+    local layer = controller.primaryFire and "foreground" or controller.altFire and "background" or nil
+  
+    local callback
+    if layer then
+      callback = function(pos)
+        debugCallback(pos)
+        wedit.placeMod(pos, layer, controller.getSelectedMod())
+      end
+    else
+      callback = debugCallback
     end
-  end
+
+    if wedit.getUserConfigData("brushShape") == "square" then
+      wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), nil, callback)
+    elseif wedit.getUserConfigData("brushShape") == "circle" then
+      wedit.circle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), callback)
+    end
+  end 
 end
 
 --- Function to remove modifications from terrain (matmods).
@@ -519,13 +533,29 @@ function wedit.actions.WE_ModRemover()
   controller.info("^shadow;^yellow;Primary Fire: Remove from foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Remove from background.", {0,-2})
 
+  
+  local debugCallback = function(pos)
+    wedit.debugRenderer:drawBlock(pos)
+  end
+
+  local layer = controller.primaryFire and "foreground" or controller.altFire and "background" or nil
+  local callback
+  if layer then
+    callback = function(pos)
+      debugCallback(pos)
+      wedit.removeMod(pos, layer)
+    end
+  else
+    callback = debugCallback
+  end
+
   wedit.debugRenderer:drawBlock(tech.aimPosition())
 
   if not controller.fireLocked then
-    if controller.primaryFire then
-      wedit.removeMod(tech.aimPosition(), "foreground")
-    elseif controller.altFire then
-      wedit.removeMod(tech.aimPosition(), "background")
+    if wedit.getUserConfigData("brushShape") == "square" then
+      wedit.rectangle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), nil, callback)
+    elseif wedit.getUserConfigData("brushShape") == "circle" then
+      wedit.circle(tech.aimPosition(), wedit.getUserConfigData("matmodSize"), callback)
     end
   end
 end
