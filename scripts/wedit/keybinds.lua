@@ -85,24 +85,12 @@ local timeActive = {}
 function keybinds.initialize()
   if not keybinds.initialized then
     keybinds.initialized = true
-
-    -- Compatibility 'hack' for older versions of the game; use function input rather than update to update the input values (I know, right?!).
-    if input then
-      local originalInput = input
-
-      input = function(args)
-        keybinds.update(args)
-        return originalInput(args)
-      end
-    else
-      local originalUpdate = update
-
-      update = function(args)
-        keybinds.update(args)
-        originalUpdate(args)
-      end
-    end
-
+    
+    -- Workaround for Stardust Core.
+    -- Because the old update hooking doesn't work with it installed for some reason.
+    -- Relies on scriptHooks.lua being loaded (by weditTech.lua).
+    hook("update", keybinds.update)
+    
     sb.logInfo("Keybinds v%s initialized.", keybinds.version)
   end
 end

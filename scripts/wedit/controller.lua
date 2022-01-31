@@ -18,7 +18,7 @@ wedit.actions = {}
 local controller = wedit.controller
 
 -- Load dependencies
-require "/scripts/keybinds.lua"
+require "/scripts/wedit/keybinds.lua"
 require "/scripts/messageutil.lua"
 -- Load core library
 require "/scripts/wedit/wedit.lua"
