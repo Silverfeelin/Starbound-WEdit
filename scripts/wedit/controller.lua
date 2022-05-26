@@ -342,7 +342,9 @@ function controller.update(args)
       action = status.statusProperty("wedit.compact.action", "WE_Select")
     end
 
-    wedit.actions[action]()
+    if wedit.actions[action] then
+      wedit.actions[action]()
+    end
   end
 
   if controller.validSelection() then

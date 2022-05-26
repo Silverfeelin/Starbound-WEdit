@@ -393,7 +393,6 @@ function wedit.pencil(pos, layer, block, hueshift, force)
 end
 
 function wedit._pencil(pos, layer, block, hueshift)
-  sb.logInfo("_pencil")
   world.damageTiles({pos}, layer, pos, "blockish", 9999, 0)
   if block and wedit.positionLocker:lock(layer, pos) then
     wedit.taskManager:start(Task.new({function(task)
@@ -757,7 +756,9 @@ function wedit.paste(copy, position)
   end
   -- #endregion
 
-  if copy.options.objects and #copy.objects > 0 then
+  -- TODO: If rotated 180 degrees, it's possible to paste objects.
+  -- Currently objects aren't updated when rotating (wedit.rotate).
+  if (not copy.rotate or copy.rotate > 0 and copy.objectsRotated) and copy.options.objects and #copy.objects > 0 then
     local hasItems = false
 
     -- #region Stage 7: If copy has objects, place them.
@@ -932,6 +933,46 @@ function wedit.flip(copy, direction)
   end
 
   return copy
+end
+
+function wedit.rotate(copy, lr)
+  copy.rotate = copy.rotate or 0
+  copy.rotate = copy.rotate + (lr == 1 and 90 or -90)
+  copy.objectsRotated = false;
+
+  while copy.rotate < 0 do copy.rotate = copy.rotate + 360 end
+  while copy.rotate >= 360 do copy.rotate = copy.rotate - 360 end
+
+  local oWidth = copy.size[1]
+  local oHeight = copy.size[2]
+
+  copy.size = { copy.size[2], copy.size[1] }
+  local oBlocks = copy.blocks
+  local blocks = {}
+
+  for y=1,oHeight do blocks[y] = {} end
+
+  if lr == 1 then
+    -- Clockwise
+    for x=0,oHeight-1 do
+      for y=0,oWidth-1 do
+        blocks[x+1][y+1] = oBlocks[oWidth-y][x+1]
+        blocks[x+1][y+1].position = { copy.origin[1] + x + 0.5, copy.origin[2] + y + 0.5 }
+        blocks[x+1][y+1].offset = { x, y }
+      end
+    end
+  else
+    -- Counterclockwise
+    for x=0,oHeight-1 do
+      for y=0,oWidth-1 do
+        blocks[x+1][y+1] = oBlocks[y+1][oHeight-x]
+        blocks[x+1][y+1].position = { copy.origin[1] + x + 0.5, copy.origin[2] + y + 0.5 }
+        blocks[x+1][y+1].offset = { x, y }
+      end
+    end
+  end
+
+  copy.blocks = blocks
 end
 
 --- Replaces blocks in a selection.

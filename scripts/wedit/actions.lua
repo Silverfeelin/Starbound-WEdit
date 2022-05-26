@@ -202,7 +202,8 @@ function wedit.actions.WE_Pencil()
   controller.info("^shadow;^orange;WEdit: Pencil")
   controller.info("^shadow;^yellow;Primary Fire: Draw on foreground.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Draw on background.", {0,-2})
-  controller.info("^shadow;^yellow;Current Block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-3})
+  controller.info("^shadow;^yellow;Shift + Fire: Erase on layer.", {0,-3})
+  controller.info("^shadow;^yellow;Current Block: ^red;" .. controller.selectedBlockToString() .. "^yellow;.", {0,-4})
 
   local debugCallback = function(pos)
     wedit.debugRenderer:drawBlock(pos)
@@ -211,11 +212,14 @@ function wedit.actions.WE_Pencil()
   local layer = controller.primaryFire and "foreground" or
     controller.altFire and "background" or nil
 
+  local block = controller.selectedBlock
+  if controller.shiftHeld then block = false end
+
   local callback
   if controller.selectedBlock ~= nil and layer then
     callback = function(pos)
       debugCallback(pos)
-      wedit.pencil(pos, layer, controller.selectedBlock)
+      wedit.pencil(pos, layer, block)
     end
   else
     callback = debugCallback
@@ -332,7 +336,7 @@ function wedit.actions.WE_Stamp()
   controller.info("^shadow;^yellow;Primary Fire: Copy selection.", {0,-1})
   controller.info("^shadow;^yellow;Alt Fire: Paste selection.", {0,-2})
   controller.info("^shadow;^yellow;Shift + Primary Fire: Forget copy.", {0,-3})
-  controller.info("^shadow;^yellow;The paste area is defined by the bottom left point of your selection.", {0,-4})
+  controller.info("^shadow;^yellow;Paste area is defined by the bottom left point.", {0,-4})
 
   if controller.validSelection() then
     controller.showSelection()
@@ -390,6 +394,27 @@ function wedit.actions.WE_Flip()
     if c then
       storage.weditCopy = wedit.flip(storage.weditCopy, "vertical")
     end
+  end
+end
+
+function wedit.actions.WE_Rotate()
+  controller.info("^shadow;^orange;WEdit: Rotate Tool")
+  controller.info("^shadow;^yellow;Primary Fire: Rotate copy left.", {0,-1})
+  controller.info("^shadow;^yellow;Alt Fire: Rotate copy right.", {0,-2})
+  controller.info("^shadow;^yellow;Rotating copies may cause issues with objects, matmods and liquids.", {0,-3})
+
+  local c = storage.weditCopy
+  if c then
+    local msg = "^shadow;^yellow;Rotated: ^red;" .. (c.rotate or 0)
+    controller.info(msg, {0,-4})
+  end
+
+  if not controller.fireLocked and controller.primaryFire then
+    controller.fireLock()
+    if c then wedit.rotate(c, -1) end
+  elseif not controller.fireLocked and controller.altFire then
+    controller.fireLock()
+    if c then wedit.rotate(c, 1) end
   end
 end
 
